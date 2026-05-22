@@ -78,14 +78,10 @@ module LLMProxy
       puts "  GET  /v1/models              — List models"
       puts "  GET  /health                 — Health check"
 
-      Rack::Handler::Puma.run(
-        LLMProxy::Server.new,
-        Host: host,
-        Port: port,
-        Threads: "0:5",
-        Silent: false,
-        environment: env.to_s,
-      )
+      LLMProxy::Server.set :port, port
+      LLMProxy::Server.set :bind, host
+      LLMProxy::Server.set :environment, env.to_s
+      LLMProxy::Server.run!
     end
 
     def self.handle_codex(args, config)

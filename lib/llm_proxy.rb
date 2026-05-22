@@ -1,8 +1,7 @@
 require "ruby_llm"
 require "yaml"
 require "json"
-require "rack"
-require "rack/handler/puma"
+require "sinatra/base"
 
 module LLMProxy
   class Error < StandardError; end

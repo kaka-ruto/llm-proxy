@@ -3,6 +3,7 @@ source "https://rubygems.org"
 ruby ">= 3.2"
 
 gem "ruby_llm", "~> 1.14"
+gem "sinatra", "~> 4.0"
 gem "puma", "~> 6.0"
 gem "rackup", "~> 2.0"
 
