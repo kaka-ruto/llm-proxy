@@ -9,11 +9,12 @@ module LLMProxy
   class ToolCallStop < Error; end
 
   class << self
-    attr_accessor :protocols, :catalog
+    attr_accessor :protocols, :catalog, :default_model
   end
 
   self.protocols = {}
   self.catalog = nil
+  self.default_model = nil
 end
 
 require_relative "llm_proxy/providers/opencode"

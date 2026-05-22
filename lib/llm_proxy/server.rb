@@ -67,8 +67,18 @@ module LLMProxy
       model_info = LLMProxy.catalog.lookup(model_id)
 
       unless model_info
-        @logger.warn("  Unknown model: #{model_id}")
-        return error_stream("Unknown model: #{model_id}")
+        @logger.warn("  Unknown model: #{model_id}, falling back to default")
+        fallback_id = LLMProxy.default_model
+        fallback = fallback_id ? LLMProxy.catalog.lookup(fallback_id) : nil
+        fallback ||= LLMProxy.catalog.all.first
+        if fallback
+          @logger.info("  => using #{fallback.id} (#{fallback.provider}) as fallback")
+          body["model"] = fallback.id
+          model_id = fallback.id
+          model_info = fallback
+        else
+          return error_stream("Unknown model: #{model_id}")
+        end
       end
 
       normalized = protocol.normalize(body)

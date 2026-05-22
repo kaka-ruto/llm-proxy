@@ -1,6 +1,7 @@
 server:
   host: "127.0.0.1"
   port: 8765
+  default_model: "deepseek-v4-flash"
 
 models:
   - id: kimi-k2.6

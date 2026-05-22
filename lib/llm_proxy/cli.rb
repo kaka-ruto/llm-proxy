@@ -8,6 +8,7 @@ module LLMProxy
       config_path = ENV.fetch("LLM_PROXY_CONFIG", File.expand_path("../../config.yml", __dir__))
       config = LLMProxy::Config.load(config_path)
       LLMProxy.catalog = LLMProxy::ModelCatalog.new(config)
+      LLMProxy.default_model = config.server[:default_model]
       configure_ruby_llm
 
       command = args.first
