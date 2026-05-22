@@ -85,7 +85,7 @@ module LLMProxy
       msg_count = (normalized[:messages] || []).length
       tool_count = (normalized[:tools] || []).length
       @logger.info("  model=#{model_id} (#{model_info.provider}) msgs=#{msg_count} tools=#{tool_count}")
-      @logger.debug("  system=#{normalized[:system]&.length&.>(50) ? normalized[:system][..50] + '...' : normalized[:system].inspect}")
+      @logger.debug("  system=#{normalized[:system].inspect}")
       @logger.debug("  thinking=#{normalized[:thinking].inspect} stream=#{normalized[:stream]} max_tokens=#{normalized[:max_tokens]} temp=#{normalized[:temperature].inspect}")
 
       is_streaming = normalized[:stream] != false
@@ -206,7 +206,7 @@ module LLMProxy
       return "nil" unless str
       str = str.strip
       return "empty" if str.empty?
-      str.length > 500 ? str[..500] + "..." : str
+      str
     end
 
     def build_dynamic_tool(name, description, parameters)
