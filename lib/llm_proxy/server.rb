@@ -76,7 +76,7 @@ module LLMProxy
       tool_count = (normalized[:tools] || []).length
       @logger.info("  model=#{model_id} (#{model_info.provider}) msgs=#{msg_count} tools=#{tool_count}")
       @logger.debug("  system=#{normalized[:system]&.length&.>(50) ? normalized[:system][..50] + '...' : normalized[:system].inspect}")
-      @logger.debug("  thinking=#{normalized[:thinking].inspect} stream=#{normalized[:stream]} max_tokens=#{normalized[:max_tokens]} temp=#{normalized[:temperature]}")
+      @logger.debug("  thinking=#{normalized[:thinking].inspect} stream=#{normalized[:stream]} max_tokens=#{normalized[:max_tokens]} temp=#{normalized[:temperature].inspect}")
 
       is_streaming = normalized[:stream] != false
       start_events = protocol.start_events(model: model_info.id)

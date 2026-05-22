@@ -13,9 +13,6 @@ module LLMProxy
         input = body["input"] || []
         prev_messages = input.map { |item| response_item_to_message(item) }.compact
         raw_tools = body["tools"] || []
-        if raw_tools.any? { |t| (t["function"] || t)["name"].to_s.strip.empty? }
-          $stderr.puts "[LLMProxy] Filtering empty tool from request"
-        end
         tools = raw_tools.filter_map do |t|
           fn = t["function"] || t
           name = fn["name"].to_s.strip
