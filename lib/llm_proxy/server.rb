@@ -220,7 +220,9 @@ module LLMProxy
         else
           calls_text = buffer[:calls].map do |tc|
             fn = tc[:function] || tc
-            "#{fn[:name] || tc[:name]}(#{fn[:arguments] || tc[:arguments]})"
+            args = fn[:arguments] || tc[:arguments] || ""
+            args_str = args.is_a?(String) ? args : args.to_json
+            "> Tool: #{fn[:name] || tc[:name]}\n> Args: #{args_str}"
           end.join("\n")
           chat.add_message(role: :assistant, content: calls_text)
         end
@@ -244,7 +246,7 @@ module LLMProxy
             if match
               chat.add_message(role: :tool, content: msg[:content] || "", tool_call_id: call_id)
             else
-              chat.add_message(role: :user, content: "[Result: #{msg[:content].to_s.strip}]")
+              chat.add_message(role: :user, content: "> Output: #{msg[:content].to_s.strip}")
             end
           elsif msg[:content]
             attrs = { role: role, content: msg[:content] }
