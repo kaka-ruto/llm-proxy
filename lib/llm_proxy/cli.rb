@@ -53,8 +53,23 @@ module LLMProxy
         if list.empty?
           puts "No backups yet. Run: llm-proxy backup"
         else
-          puts "Available Codex backups:"
+          puts "Available Codex backups (#{File.expand_path("../../.codex-shim/backups", __dir__)}):"
           list.each { |b| puts "  #{b[:short]} (build #{b[:build]})" }
+        end
+      when "delete-backup"
+        if rest.first == "--all"
+          FileUtils.rm_rf(Codex::BACKUP_DIR)
+          puts "Deleted all backups."
+        elsif rest.first
+          Codex.list_backups.each do |b|
+            if b[:build] == rest.first
+              FileUtils.rm_rf(b[:path])
+              puts "Deleted backup build #{rest.first}."
+            end
+          end
+        else
+          puts "Usage: llm-proxy delete-backup <build> or --all"
+          Codex.list_backups.each { |b| puts "  #{b[:build]}  #{b[:short]}" }
         end
       when "-h", "--help"
         print_help
