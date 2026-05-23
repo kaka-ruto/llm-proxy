@@ -228,7 +228,9 @@ module LLMProxy
     end
 
     def build_dynamic_tool(name, description, parameters)
-      schema = (parameters || { "type" => "object", "properties" => {} }).transform_keys(&:to_sym)
+      schema = (parameters || {}).transform_keys(&:to_sym)
+      schema[:type] ||= "object"
+      schema[:properties] ||= {}
       schema[:additionalProperties] = false unless schema.key?(:additionalProperties)
 
       klass = Class.new(RubyLLM::Tool) do

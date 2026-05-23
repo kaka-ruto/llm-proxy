@@ -14,10 +14,13 @@ module LLMProxy
         prev_messages = input.map { |item| response_item_to_message(item) }.compact
         raw_tools = body["tools"] || []
         tools = raw_tools.filter_map do |t|
+          next unless t["type"] == "function" || t.key?("function")
           fn = t["function"] || t
           name = fn["name"].to_s.strip
           next if name.empty?
-          { name: name, description: fn["description"] || "", parameters: fn["parameters"] || {} }
+          params = fn["parameters"]
+          next unless params.is_a?(Hash)
+          { name: name, description: fn["description"] || "", parameters: params }
         end
 
         {
