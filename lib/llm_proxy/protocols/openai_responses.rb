@@ -359,7 +359,9 @@ module LLMProxy
         when "function_call_output"
           { role: :tool, content: item["output"], tool_call_id: item["call_id"] }
         when "reasoning"
-          nil
+          summary = item["summary"] || []
+          text = summary.map { |s| s["text"] }.compact.join("")
+          { role: :assistant, content: nil, summary: summary, thinking: text }
         when "item_reference"
           nil
         else
