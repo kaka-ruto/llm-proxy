@@ -1,0 +1,59 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://opencode.ai/zen/go/v1/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"model":"deepseek-v4-flash","messages":[{"role":"user","content":"Return
+        ONLY valid JSON: {\"name\": \"test\", \"value\": 42}. Not a word before or
+        after."}],"stream":false}'
+    headers:
+      User-Agent:
+      - Faraday v2.14.2
+      Authorization:
+      - Bearer <BEARER_TOKEN>
+      Content-Type:
+      - application/json
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Sat, 23 May 2026 15:00:01 GMT
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Cf-Placement:
+      - remote-
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - a004ed745b50450f-ATL
+    body:
+      encoding: ASCII-8BIT
+      string: '{"id":"5d816242-b32f-4faf-bfa7-baea9caeb127","object":"chat.completion","created":1779548399,"model":"deepseek-v4-flash","choices":[{"index":0,"message":{"role":"assistant","content":"{\"name\":
+        \"test\", \"value\": 42}","reasoning_content":"We need to return only the
+        JSON object as specified. The user says: \"Return ONLY valid JSON: {\"name\":
+        \"test\", \"value\": 42}. Not a word before or after.\" So we must output
+        exactly that JSON string, with no additional text.\n\nBut the instruction
+        also says \"Return ONLY valid JSON: ...\" so we should just output that JSON.
+        The user gave an example, but we need to output the exact JSON they specified?
+        Let me read carefully: \"Return ONLY valid JSON: {\"name\": \"test\", \"value\":
+        42}. Not a word before or after.\"\n\nSo they want us to return that JSON.
+        But the JSON itself contains double quotes. In the user''s message, it''s
+        written with escaped quotes? Actually they wrote: {\"name\": \"test\", \"value\":
+        42}. That''s a valid JSON. So we need to output that exact string.\n\nBut
+        careful: The instruction says \"Return ONLY valid JSON: ...\" and then the
+        example. So I will output the JSON exactly as given.\n\nThus my response should
+        be: {\"name\": \"test\", \"value\": 42}\n\nNo other text."},"logprobs":null,"finish_reason":"stop"}],"usage":{"prompt_tokens":107,"completion_tokens":247,"total_tokens":354,"prompt_tokens_details":{"cached_tokens":0},"completion_tokens_details":{"reasoning_tokens":234},"prompt_cache_hit_tokens":0,"prompt_cache_miss_tokens":107},"system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402","cost":"0"}'
+  recorded_at: Sat, 23 May 2026 15:00:01 GMT
+recorded_with: VCR 6.4.0

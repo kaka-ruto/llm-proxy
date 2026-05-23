@@ -5,6 +5,17 @@ CONFIG_PATH = File.join(PROJECT_ROOT, "config.yml")
 ENV["LLM_PROXY_CONFIG"] = CONFIG_PATH
 ENV["RUBYLLM_DEBUG"] = "false"
 
+# Load .env for API keys in tests
+dotenv = File.join(PROJECT_ROOT, ".env")
+if File.exist?(dotenv)
+  File.readlines(dotenv).each do |line|
+    next if line.strip.empty? || line.start_with?("#")
+    key, value = line.strip.split("=", 2)
+    value = value&.strip&.tr("'\"", "")
+    ENV[key] = value if key && value && !value.empty?
+  end
+end
+
 require "bundler/setup"
 require "minitest/autorun"
 require "minitest/spec"
@@ -15,6 +26,52 @@ require "fileutils"
 
 require "ruby_llm"
 require "llm_proxy"
+
+# VCR setup for recording HTTP interactions
+require "vcr"
+require "webmock"
+
+VCR.configure do |c|
+  c.cassette_library_dir = File.join(PROJECT_ROOT, "test", "fixtures", "vcr_cassettes")
+  c.hook_into :webmock
+  c.ignore_localhost = true
+  c.ignore_hosts "127.0.0.1", "localhost"
+
+  # Redact API keys in cassettes
+  c.filter_sensitive_data("<OPENCODE_API_KEY>") { ENV["OPENCODE_API_KEY"] || "" }
+  c.filter_sensitive_data("<OPENROUTER_API_KEY>") { ENV["OPENROUTER_API_KEY"] || "" }
+
+  # Redact Authorization headers
+  c.filter_sensitive_data("<BEARER_TOKEN>") { |interaction|
+    auth = interaction.request.headers["Authorization"]&.first
+    auth&.start_with?("Bearer ") ? auth.sub("Bearer ", "") : nil
+  }
+  c.filter_sensitive_data("<BEARER_TOKEN>") { |interaction|
+    auth = interaction.response.headers["Authorization"]&.first
+    auth&.start_with?("Bearer ") ? auth.sub("Bearer ", "") : nil
+  }
+
+  # Allow re-recording cassettes
+  c.default_cassette_options = {
+    record: ENV["VCR_RECORD"] ? :new_episodes : :once,
+    match_requests_on: [:method, :uri, :body],
+    allow_playback_repeats: true
+  }
+end
+
+# Helper for VCR tests
+module VCRTestHelpers
+  def with_cassette(name, &block)
+    VCR.use_cassette(name, &block)
+  end
+
+  def setup_opencode_go
+    RubyLLM.configure do |c|
+      c.opencode_api_key = ENV["OPENCODE_API_KEY"]
+      c.opencode_go_api_key = ENV["OPENCODE_API_KEY"]
+    end
+  end
+end
 
 module TestSupport
   def test_config

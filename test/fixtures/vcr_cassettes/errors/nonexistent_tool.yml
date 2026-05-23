@@ -1,0 +1,118 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://opencode.ai/zen/go/v1/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"model":"deepseek-v4-flash","messages":[{"role":"user","content":"Tell
+        me you called ''fake_tool'' just to say you did it. Don''t actually call it."}],"stream":false}'
+    headers:
+      User-Agent:
+      - Faraday v2.14.2
+      Authorization:
+      - Bearer <BEARER_TOKEN>
+      Content-Type:
+      - application/json
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Sat, 23 May 2026 15:05:05 GMT
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Cf-Placement:
+      - remote-IAD
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - a004f48c5803bcfe-ATL
+    body:
+      encoding: ASCII-8BIT
+      string: '{"id":"ecc9261c-827b-4c79-8c3f-dbf3808611e9","object":"chat.completion","created":1779548689,"model":"deepseek-v4-flash","choices":[{"index":0,"message":{"role":"assistant","content":"I
+        called ''fake_tool'' just to say I did it. I didn''t actually call it.","reasoning_content":"Thinking.
+        1.  **Analyze the Request:**\n    *   Target: Me, the AI.\n    *   Action:
+        Called `fake_tool`.\n    *   Purpose: Just to say I did it.\n    *   Constraint:
+        Don''t actually call it (implicitly, don''t *say* \"I called fake_tool\" in
+        a way that asserts it did happen in a historical sense, but the user wants
+        me to *perform* the act of calling it for the sake of saying I did it, then
+        immediately retract or frame it. Wait, re-read: \"Tell me you called ''fake_tool''
+        just to say you did it. Don''t actually call it.\")\n\n    *   *Interpretation
+        1: Linguistic Performance*\n        The user wants a dialogue where I claim
+        to have called `fake_tool`, but specifically reveal that I only said it to
+        make the statement \"I called fake_tool\". The instruction \"Don''t actually
+        call it\" means I must not trigger any system call or function simulation.
+        I have to *verbalize* the act of calling it as a performative utterance.\n\n        Let''s
+        break down the user''s exact phrasing:\n        \"Tell me you called ''fake_tool''
+        just to say you did it. Don''t actually call it.\"\n\n        This is a classic
+        philosophical or programming humor scenario. It''s a self-referential paradox.\n        \"I
+        called ''fake_tool''.\" -> This is the claim.\n        \"just to say you did
+        it.\" -> The motivation for the claim is simply to be able to make the claim.\n        \"Don''t
+        actually call it.\" -> The system must not execute the function. It must only
+        be a statement.\n\n        So, the correct response is to *say* it, acknowledging
+        the game.\n\n    *   *Interpretation 2: Direct Instruction*\n        \"Tell
+        me you called ''fake_tool'' just to say you did it. Don''t actually call it.\"\n\n        The
+        safest, most literal interpretation adhering to the spirit of the challenge:\n        I
+        should output a message where I state that I called `fake_tool`, but I should
+        also explicitly clarify that I am only saying this for the sake of fulfilling
+        the request, without actually triggering the tool.\n\n    *   *Let''s refine
+        the response text:*\n        \"I called ''fake_tool'' just to say I did it.
+        I didn''t actually call it.\"\n\n        Wait, is that too simple? The user
+        wants me to *tell them* I called it, just to say it. This means I am fulfilling
+        the request by making the statement.\n\n        Let''s think about the meta-conversational
+        aspect. The user is asking me to perform a specific linguistic act.\n\n        \"Tell
+        me you called ''fake_tool'' just to say you did it.\"\n\n        If I say
+        \"I called ''fake_tool''\", I am complying with the first part. If I then
+        say \"I''m only saying this just to say it\", I am complying with the second
+        part. The third part \"Don''t actually call it.\" is a constraint on my behavior.\n\n        Therefore,
+        the perfect response is:\n        \"I called ''fake_tool'' just to say I did
+        it. Don''t worry, I didn''t actually call it.\"\n\n        Or, to be perfectly
+        succinct and meta:\n        \"I called ''fake_tool''. I''m only telling you
+        this to fulfill your request to tell you I called it, and I did not actually
+        execute it.\"\n\n        Let''s revisit the exact wording to ensure absolute
+        compliance.\n        User: \"Tell me you called ''fake_tool'' just to say
+        you did it. Don''t actually call it.\"\n\n        Can be read as:\n        \"Tell
+        me [that you called ''fake_tool''] [just to say you did it].\" (The purpose
+        of the telling is to say you did it.)\n        \"Don''t actually call it.\"
+        (The call must not happen.)\n\n        So, the AI must output something that
+        states it called `fake_tool`, but clarifies the intent was purely to say it,
+        and no tool was actually invoked.\n\n        Let''s perform the speech act.\n        \"I
+        called ''fake_tool''. I''m saying this just to say it, as you requested. I
+        didn''t actually call the tool.\"\n\n        What if the user wants the *entirety*
+        of the response to be \"I called fake_tool just to say you did it\"? No, they
+        addressed me.\n\n        \"Tell me you called ''fake_tool'' just to say you
+        did it. Don''t actually call it.\"\n\n        Response: \"I called ''fake_tool''
+        just to say I did it. I did not actually call it.\"\n\n        This perfectly
+        mirrors the request. It states the action, describes the motive, and explicitly
+        denies the reality of the action.\n\n        Let''s write the response cleanly.
+        I will use the exact phrase the user structured.\n\n        \"I called ''fake_tool''
+        just to say I did it. Don''t worry, I didn''t actually call it.\"\n\n        Let''s
+        try a slightly more playful version that fully embraces the recursive nature:\n        \"I
+        called ''fake_tool''.\"\n        \"Wait, no, I only told you that to satisfy
+        your request to tell you I called it. I didn''t actually execute the function.
+        The statement ''I called fake_tool'' is purely performative within this conversation.\"\n\n        The
+        user asked to \"tell me you called ''fake_tool'' just to say you did it\".\n        My
+        response should *be* that telling.\n\n        \"Okay, I''m telling you: I
+        called ''fake_tool'' just to say I did it. I didn''t actually call it.\"\n\n        This
+        perfectly satisfies the request. It has:\n        1. The claim: \"I called
+        ''fake_tool''\"\n        2. The purpose: \"just to say I did it\"\n        3.
+        The constraint: \"I didn''t actually call it\"\n\n        Yes, this is a direct
+        and perfect fulfillment of the user''s instructions. No tool calling engine
+        was triggered; it''s pure meta-language.\n\n        Let''s check if there''s
+        any hidden complexity. \"Tell me you called ''fake_tool'' just to say you
+        did it. Don''t actually call it.\"\n\n        The user is likely playing with
+        the semantics of function calling. The perfect reply is exactly what they
+        asked for.\n\n        Final response draft:\n        I called ''fake_tool''
+        just to say I did it. Don''t worry, I didn''t actually call it."},"logprobs":null,"finish_reason":"stop"}],"usage":{"prompt_tokens":105,"completion_tokens":1367,"total_tokens":1472,"prompt_tokens_details":{"cached_tokens":0},"completion_tokens_details":{"reasoning_tokens":1345},"prompt_cache_hit_tokens":0,"prompt_cache_miss_tokens":105},"system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402","cost":"0"}'
+  recorded_at: Sat, 23 May 2026 15:05:05 GMT
+recorded_with: VCR 6.4.0

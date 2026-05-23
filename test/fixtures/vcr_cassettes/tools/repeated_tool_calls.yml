@@ -1,0 +1,142 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://opencode.ai/zen/go/v1/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"model":"deepseek-v4-flash","messages":[{"role":"user","content":"Add
+        10 and 20 using the adder tool. Tell me the result."}],"stream":false,"tools":[{"type":"function","function":{"name":"adder","description":"Add
+        two numbers","parameters":{"type":"object","properties":{"a":{"type":"number","description":"First
+        number"},"b":{"type":"number","description":"Second number"}},"required":["a","b"],"additionalProperties":false}}}]}'
+    headers:
+      User-Agent:
+      - Faraday v2.14.2
+      Authorization:
+      - Bearer <BEARER_TOKEN>
+      Content-Type:
+      - application/json
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Sat, 23 May 2026 15:00:59 GMT
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Cf-Placement:
+      - remote-
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - a004eee4cf6d69ef-ATL
+    body:
+      encoding: ASCII-8BIT
+      string: '{"id":"739cbafd-d68f-4ca4-a94d-fe221ae60a4b","object":"chat.completion","created":1779548457,"model":"deepseek-v4-flash","choices":[{"index":0,"message":{"role":"assistant","content":"","reasoning_content":"The
+        user wants me to add 10 and 20 using the adder tool. I''ll invoke the adder
+        tool with a=10, b=20.","tool_calls":[{"index":0,"id":"call_00_2MgL6O1wHehyGFPiXGf00087","type":"function","function":{"name":"adder","arguments":"{\"a\":
+        10, \"b\": 20}"}}]},"logprobs":null,"finish_reason":"tool_calls"}],"usage":{"prompt_tokens":394,"completion_tokens":90,"total_tokens":484,"prompt_tokens_details":{"cached_tokens":256},"completion_tokens_details":{"reasoning_tokens":31},"prompt_cache_hit_tokens":256,"prompt_cache_miss_tokens":138},"system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402","cost":"0"}'
+  recorded_at: Sat, 23 May 2026 15:00:59 GMT
+- request:
+    method: post
+    uri: https://opencode.ai/zen/go/v1/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"model":"deepseek-v4-flash","messages":[{"role":"user","content":"Add
+        10 and 20 using the adder tool."}],"stream":false,"tools":[{"type":"function","function":{"name":"adder","description":"Add
+        two numbers","parameters":{"type":"object","properties":{"a":{"type":"number"},"b":{"type":"number"}},"required":["a","b"],"additionalProperties":false}}}]}'
+    headers:
+      User-Agent:
+      - Faraday v2.14.2
+      Authorization:
+      - Bearer <BEARER_TOKEN>
+      Content-Type:
+      - application/json
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Sat, 23 May 2026 15:01:56 GMT
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Cf-Placement:
+      - remote-IAD
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - a004f04d7855676f-ATL
+    body:
+      encoding: ASCII-8BIT
+      string: '{"id":"99da525c-f788-4fa5-92d8-325d3b279835","object":"chat.completion","created":1779548515,"model":"deepseek-v4-flash","choices":[{"index":0,"message":{"role":"assistant","content":"","reasoning_content":"The
+        user wants me to add 10 and 20 using the adder tool. Let me invoke the adder
+        with parameters a=10, b=20.","tool_calls":[{"index":0,"id":"call_00_IDPTGca4qXjxSyvwnUKS5564","type":"function","function":{"name":"adder","arguments":"{\"a\":
+        10, \"b\": 20}"}}]},"logprobs":null,"finish_reason":"tool_calls"}],"usage":{"prompt_tokens":375,"completion_tokens":90,"total_tokens":465,"prompt_tokens_details":{"cached_tokens":256},"completion_tokens_details":{"reasoning_tokens":31},"prompt_cache_hit_tokens":256,"prompt_cache_miss_tokens":119},"system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402","cost":"0"}'
+  recorded_at: Sat, 23 May 2026 15:01:56 GMT
+- request:
+    method: post
+    uri: https://opencode.ai/zen/go/v1/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"model":"deepseek-v4-flash","messages":[{"role":"user","content":"Add
+        10 and 20 using the adder tool."},{"role":"assistant","content":"","tool_calls":[{"id":"call_00_IDPTGca4qXjxSyvwnUKS5564","type":"function","function":{"name":"adder","arguments":"{\"a\":10,\"b\":20}"}}],"reasoning":"The
+        user wants me to add 10 and 20 using the adder tool. Let me invoke the adder
+        with parameters a=10, b=20.","reasoning_content":"The user wants me to add
+        10 and 20 using the adder tool. Let me invoke the adder with parameters a=10,
+        b=20."},{"role":"tool","content":"30","tool_call_id":"call_00_IDPTGca4qXjxSyvwnUKS5564"}],"stream":false,"tools":[{"type":"function","function":{"name":"adder","description":"Add
+        two numbers","parameters":{"type":"object","properties":{"a":{"type":"number"},"b":{"type":"number"}},"required":["a","b"],"additionalProperties":false}}}]}'
+    headers:
+      User-Agent:
+      - Faraday v2.14.2
+      Authorization:
+      - Bearer <BEARER_TOKEN>
+      Content-Type:
+      - application/json
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Sat, 23 May 2026 15:01:58 GMT
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Cf-Placement:
+      - remote-IAD
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - a004f05c0dbc136c-MEM
+    body:
+      encoding: ASCII-8BIT
+      string: '{"id":"c95de457-3efe-4a39-b5f6-584eedb74283","object":"chat.completion","created":1779548518,"model":"deepseek-v4-flash","choices":[{"index":0,"message":{"role":"assistant","content":"The
+        sum of 10 and 20 is **30**.","reasoning_content":"The result is 30. I''ll
+        present that to the user."},"logprobs":null,"finish_reason":"stop"}],"usage":{"prompt_tokens":478,"completion_tokens":27,"total_tokens":505,"prompt_tokens_details":{"cached_tokens":384},"completion_tokens_details":{"reasoning_tokens":14},"prompt_cache_hit_tokens":384,"prompt_cache_miss_tokens":94},"system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402","cost":"0"}'
+  recorded_at: Sat, 23 May 2026 15:01:58 GMT
+recorded_with: VCR 6.4.0

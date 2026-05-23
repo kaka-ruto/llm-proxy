@@ -1,0 +1,112 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://opencode.ai/zen/go/v1/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"model":"deepseek-v4-flash","messages":[{"role":"user","content":"My
+        name is Bob."},{"role":"assistant","content":"Hi Bob!"},{"role":"user","content":"I
+        like Python."},{"role":"assistant","content":"Python is great!"},{"role":"user","content":"What
+        is my name and what do I like?"},{"role":"assistant","content":"Your name
+        is Bob and you like Python."},{"role":"user","content":"Correct! Now tell
+        me what is 2+2"}],"stream":false}'
+    headers:
+      User-Agent:
+      - Faraday v2.14.2
+      Authorization:
+      - Bearer <BEARER_TOKEN>
+      Content-Type:
+      - application/json
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Sat, 23 May 2026 14:54:46 GMT
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Cf-Placement:
+      - remote-IAD
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - a004e5c43e8e6744-ATL
+    body:
+      encoding: ASCII-8BIT
+      string: '{"id":"737ef552-4969-4f80-9417-7d55ab72fbc3","object":"chat.completion","created":1779548084,"model":"deepseek-v4-flash","choices":[{"index":0,"message":{"role":"assistant","content":"2+2
+        is 4.","reasoning_content":"We are asked: \"Correct! Now tell me what is 2+2\".
+        The user previously confirmed that the previous answers were correct. Now
+        they ask for 2+2. This is a simple arithmetic question. The answer is 4. However,
+        we need to respond appropriately. The conversation flow: user said \"Correct!\"
+        referring to my last statement that their name is Bob and they like Python.
+        Then they ask \"Now tell me what is 2+2\". So I should answer 4. But also
+        note the context: they might be testing if I remember the previous information?
+        But the question is straightforward. I''ll answer: 2+2 is 4."},"logprobs":null,"finish_reason":"stop"}],"usage":{"prompt_tokens":141,"completion_tokens":146,"total_tokens":287,"prompt_tokens_details":{"cached_tokens":0},"completion_tokens_details":{"reasoning_tokens":138},"prompt_cache_hit_tokens":0,"prompt_cache_miss_tokens":141},"system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402","cost":"0"}'
+  recorded_at: Sat, 23 May 2026 14:54:46 GMT
+- request:
+    method: post
+    uri: https://opencode.ai/zen/go/v1/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"model":"deepseek-v4-flash","messages":[{"role":"user","content":"My
+        name is Bob."},{"role":"assistant","content":"Hi Bob!"},{"role":"user","content":"I
+        like Python."},{"role":"assistant","content":"Python is great!"},{"role":"user","content":"What
+        is my name and what do I like?"}],"stream":false}'
+    headers:
+      User-Agent:
+      - Faraday v2.14.2
+      Authorization:
+      - Bearer <BEARER_TOKEN>
+      Content-Type:
+      - application/json
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Sat, 23 May 2026 15:04:10 GMT
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Cf-Placement:
+      - remote-IAD
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - a004f387fdf3bd28-ATL
+    body:
+      encoding: ASCII-8BIT
+      string: '{"id":"2380c768-7e9d-4ca8-8c6d-f067cefd854b","object":"chat.completion","created":1779548647,"model":"deepseek-v4-flash","choices":[{"index":0,"message":{"role":"assistant","content":"Your
+        name is Bob, and you like Python!","reasoning_content":"We need to parse the
+        user''s question: \"What is my name and what do I like?\" The user previously
+        said \"My name is Bob.\" and \"I like Python.\" So the answer is: Your name
+        is Bob and you like Python. However, note the user''s current message is asking
+        a question, and I need to respond appropriately. Also consider the conversation
+        history: user introduced themselves as Bob and said they like Python. Now
+        they ask \"What is my name and what do I like?\" So I should answer directly.
+        Also note the instruction: \"You are an AI assistant. Respond to the user.\"
+        So I should answer in a friendly manner.\n\nThus, the response: \"Your name
+        is Bob and you like Python.\"\n\nBut let''s ensure no confusion: The user''s
+        name is Bob from their first message. They like Python from the second message.
+        The current message is a question asking to recall that information. So answer
+        accordingly.\n\nI''ll produce a concise and accurate response."},"logprobs":null,"finish_reason":"stop"}],"usage":{"prompt_tokens":117,"completion_tokens":210,"total_tokens":327,"prompt_tokens_details":{"cached_tokens":0},"completion_tokens_details":{"reasoning_tokens":199},"prompt_cache_hit_tokens":0,"prompt_cache_miss_tokens":117},"system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402","cost":"0"}'
+  recorded_at: Sat, 23 May 2026 15:04:10 GMT
+recorded_with: VCR 6.4.0

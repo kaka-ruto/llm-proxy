@@ -1,0 +1,134 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://opencode.ai/zen/go/v1/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"model":"deepseek-v4-flash","messages":[{"role":"user","content":"My
+        name is Alice."}],"stream":false}'
+    headers:
+      User-Agent:
+      - Faraday v2.14.2
+      Authorization:
+      - Bearer <BEARER_TOKEN>
+      Content-Type:
+      - application/json
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Sat, 23 May 2026 15:00:10 GMT
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Cf-Placement:
+      - remote-IAD
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - a004ed9a2df7ae61-ATL
+    body:
+      encoding: ASCII-8BIT
+      string: !binary |-
+        eyJpZCI6ImY5NDU3NTVkLTBmNmUtNDA5Zi05ZGExLWE4OGFlMThlMmYwOSIsIm9iamVjdCI6ImNoYXQuY29tcGxldGlvbiIsImNyZWF0ZWQiOjE3Nzk1NDg0MDUsIm1vZGVsIjoiZGVlcHNlZWstdjQtZmxhc2giLCJjaG9pY2VzIjpbeyJpbmRleCI6MCwibWVzc2FnZSI6eyJyb2xlIjoiYXNzaXN0YW50IiwiY29udGVudCI6IkhlbGxvIEFsaWNlISBJdCdzIHdvbmRlcmZ1bCB0byBtZWV0IHlvdS4gSG93IGNhbiBJIGhlbHAgeW91IHRvZGF5PyIsInJlYXNvbmluZ19jb250ZW50IjoiVGhpbmtpbmcuIDEuICAqKkFuYWx5emUgdGhlIFJlcXVlc3Q6KipcbiAgICAqICAgVXNlcjogXCJBbGljZVwiXG4gICAgKiAgIFN0YXRlbWVudDogXCJNeSBuYW1lIGlzIEFsaWNlLlwiXG5cbjIuICAqKkRldGVybWluZSB0aGUgVXNlcidzIEdvYWw6KipcbiAgICAqICAgU2ltcGxlIGludHJvZHVjdGlvbi5cbiAgICAqICAgTmFtZXMgYXJlIHVzZWQgdG8gZXN0YWJsaXNoIGEgY29udmVyc2F0aW9uYWwgaWRlbnRpdHkuIFRoZSB1c2VyIGlzIHRlbGxpbmcgbWUgdGhlaXIgbmFtZSBzbyBJIGNhbiBhZGRyZXNzIHRoZW0gcGVyc29uYWxseS5cblxuMy4gICoqRm9ybXVsYXRlIHRoZSBSZXNwb25zZSBTdHJhdGVneToqKlxuICAgICogICBBY2tub3dsZWRnZSB0aGUgbmFtZS5cbiAgICAqICAgR3JlZXQgdGhlIHVzZXIgd2FybWx5IHVzaW5nIHRoZWlyIG5hbWUuXG4gICAgKiAgIE9mZmVyIGFzc2lzdGFuY2Ugb3IgY29udGludWUgdGhlIGNvbnZlcnNhdGlvbiBuYXR1cmFsbHkuXG4gICAgKiAgIFRvbmU6IEZyaWVuZGx5LCB3ZWxjb21pbmcsIGhlbHBmdWwuXG5cbjQuICAqKkRyYWZ0aW5nIHRoZSBSZXNwb25zZToqKlxuICAgICogICBcIkhlbGxvIEFsaWNlISBJdCdzIHZlcnkgbmljZSB0byBtZWV0IHlvdS5cIlxuICAgICogICBcIkhvdyBjYW4gSSBoZWxwIHlvdSB0b2RheT9cIlxuICAgICogICBcIldlbGNvbWUsIEFsaWNlLlwiXG4gICAgKiAgIENvbWJpbmF0aW9uOiBcIkhlbGxvIEFsaWNlISBJdCdzIGEgcGxlYXN1cmUgdG8gbWVldCB5b3UuIE15IG5hbWUgaXMgQXNzaXN0YW50LCBidXQgeW91IGNhbiBqdXN0IGNhbGwgbWUgd2hhdGV2ZXIgeW91IGxpa2UuIEhvdyBjYW4gSSBoZWxwIHlvdSB0b2RheT9cIlxuXG4gICAgTGV0J3MgcmVmaW5lIGl0IHNsaWdodGx5IHRvIGJlIG1vcmUgbmF0dXJhbCBhbmQgZW5nYWdpbmcgZm9yIGEgZmlyc3QgaW50ZXJhY3Rpb24uIFNpbmNlIEkga25vdyB0aGVpciBuYW1lLCBJIHNob3VsZCB1c2UgaXQuIFRoZSB0b25lIHNob3VsZCBiZSB3YXJtLlxuXG4gICAgXCJIZWxsbyBBbGljZSEgSXQncyB3b25kZXJmdWwgdG8gbWVldCB5b3UuIFdoYXQgY2FuIEkgaGVscCB5b3Ugd2l0aCB0b2RheT9cIlxuXG4gICAgKldhaXQsIGlzIHRoZXJlIGEgaGlkZGVuIHF1ZXN0aW9uPyogXCJNeSBuYW1lIGlzIEFsaWNlLlwiIE5vIGhpZGRlbiBxdWVzdGlvbi4gSXQncyBhIHN0cmFpZ2h0Zm9yd2FyZCBpbnRyb2R1Y3Rpb24uIEkgd2lsbCB0cmVhdCBpdCBhcyBhbiBpbnRyb2R1Y3Rpb24gYW5kIG9mZmVyIG15IHNlcnZpY2VzLlxuXG4gICAgTGV0J3MgbG9vayBhdCB1bmRlcmx5aW5nIHBhdHRlcm5zLiBNYW55IHVzZXJzIHN0YXJ0IGJ5IGdpdmluZyB0aGVpciBuYW1lIHRvIHBlcnNvbmFsaXplIHRoZSBjb252ZXJzYXRpb24uIEkgc2hvdWxkIGFja25vd2xlZGdlIGl0IGFuZCBwcm9jZWVkIHRvIG9mZmVyIGhlbHAuXG5cbiAgICBSZXNwb25zZTpcbiAgICBIZWxsbyBBbGljZSEgSXQncyBuaWNlIHRvIG1lZXQgeW91LiBJJ20gaGVyZSB0byBoZWxwIHlvdSB3aXRoIGFueXRoaW5nIHlvdSBuZWVk4oCUYW5zd2VyaW5nIHF1ZXN0aW9ucywgYnJhaW5zdG9ybWluZyBpZGVhcywgd3JpdGluZywgY29kaW5nLCBvciBqdXN0IGhhdmluZyBhIGNoYXQuIEhvdyBjYW4gSSBhc3Npc3QgeW91IHRvZGF5PyJ9LCJsb2dwcm9icyI6bnVsbCwiZmluaXNoX3JlYXNvbiI6InN0b3AifV0sInVzYWdlIjp7InByb21wdF90b2tlbnMiOjg4LCJjb21wbGV0aW9uX3Rva2VucyI6NDAzLCJ0b3RhbF90b2tlbnMiOjQ5MSwicHJvbXB0X3Rva2Vuc19kZXRhaWxzIjp7ImNhY2hlZF90b2tlbnMiOjB9LCJjb21wbGV0aW9uX3Rva2Vuc19kZXRhaWxzIjp7InJlYXNvbmluZ190b2tlbnMiOjM4NX0sInByb21wdF9jYWNoZV9oaXRfdG9rZW5zIjowLCJwcm9tcHRfY2FjaGVfbWlzc190b2tlbnMiOjg4fSwic3lzdGVtX2ZpbmdlcnByaW50IjoiZnBfOGIzMzBkMDJkMF9wcm9kMDgyMF9mcDhfa3ZjYWNoZV8yMDI2MDQwMiIsImNvc3QiOiIwIn0=
+  recorded_at: Sat, 23 May 2026 15:00:10 GMT
+- request:
+    method: post
+    uri: https://opencode.ai/zen/go/v1/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"model":"deepseek-v4-flash","messages":[{"role":"user","content":"My
+        name is Alice."},{"role":"assistant","content":"Hello Alice! It''s wonderful
+        to meet you. How can I help you today?","reasoning":"Thinking. 1.  **Analyze
+        the Request:**\n    *   User: \"Alice\"\n    *   Statement: \"My name is Alice.\"\n\n2.  **Determine
+        the User''s Goal:**\n    *   Simple introduction.\n    *   Names are used
+        to establish a conversational identity. The user is telling me their name
+        so I can address them personally.\n\n3.  **Formulate the Response Strategy:**\n    *   Acknowledge
+        the name.\n    *   Greet the user warmly using their name.\n    *   Offer
+        assistance or continue the conversation naturally.\n    *   Tone: Friendly,
+        welcoming, helpful.\n\n4.  **Drafting the Response:**\n    *   \"Hello Alice!
+        It''s very nice to meet you.\"\n    *   \"How can I help you today?\"\n    *   \"Welcome,
+        Alice.\"\n    *   Combination: \"Hello Alice! It''s a pleasure to meet you.
+        My name is Assistant, but you can just call me whatever you like. How can
+        I help you today?\"\n\n    Let''s refine it slightly to be more natural and
+        engaging for a first interaction. Since I know their name, I should use it.
+        The tone should be warm.\n\n    \"Hello Alice! It''s wonderful to meet you.
+        What can I help you with today?\"\n\n    *Wait, is there a hidden question?*
+        \"My name is Alice.\" No hidden question. It''s a straightforward introduction.
+        I will treat it as an introduction and offer my services.\n\n    Let''s look
+        at underlying patterns. Many users start by giving their name to personalize
+        the conversation. I should acknowledge it and proceed to offer help.\n\n    Response:\n    Hello
+        Alice! It''s nice to meet you. I''m here to help you with anything you need—answering
+        questions, brainstorming ideas, writing, coding, or just having a chat. How
+        can I assist you today?","reasoning_content":"Thinking. 1.  **Analyze the
+        Request:**\n    *   User: \"Alice\"\n    *   Statement: \"My name is Alice.\"\n\n2.  **Determine
+        the User''s Goal:**\n    *   Simple introduction.\n    *   Names are used
+        to establish a conversational identity. The user is telling me their name
+        so I can address them personally.\n\n3.  **Formulate the Response Strategy:**\n    *   Acknowledge
+        the name.\n    *   Greet the user warmly using their name.\n    *   Offer
+        assistance or continue the conversation naturally.\n    *   Tone: Friendly,
+        welcoming, helpful.\n\n4.  **Drafting the Response:**\n    *   \"Hello Alice!
+        It''s very nice to meet you.\"\n    *   \"How can I help you today?\"\n    *   \"Welcome,
+        Alice.\"\n    *   Combination: \"Hello Alice! It''s a pleasure to meet you.
+        My name is Assistant, but you can just call me whatever you like. How can
+        I help you today?\"\n\n    Let''s refine it slightly to be more natural and
+        engaging for a first interaction. Since I know their name, I should use it.
+        The tone should be warm.\n\n    \"Hello Alice! It''s wonderful to meet you.
+        What can I help you with today?\"\n\n    *Wait, is there a hidden question?*
+        \"My name is Alice.\" No hidden question. It''s a straightforward introduction.
+        I will treat it as an introduction and offer my services.\n\n    Let''s look
+        at underlying patterns. Many users start by giving their name to personalize
+        the conversation. I should acknowledge it and proceed to offer help.\n\n    Response:\n    Hello
+        Alice! It''s nice to meet you. I''m here to help you with anything you need—answering
+        questions, brainstorming ideas, writing, coding, or just having a chat. How
+        can I assist you today?"},{"role":"user","content":"What is my name?"}],"stream":false}'
+    headers:
+      User-Agent:
+      - Faraday v2.14.2
+      Authorization:
+      - Bearer <BEARER_TOKEN>
+      Content-Type:
+      - application/json
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Sat, 23 May 2026 15:00:13 GMT
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Cf-Placement:
+      - remote-IAD
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - a004edc2cc3e677f-ATL
+    body:
+      encoding: ASCII-8BIT
+      string: '{"id":"9651bd06-18ff-4057-be2c-b124586e2676","object":"chat.completion","created":1779548411,"model":"deepseek-v4-flash","choices":[{"index":0,"message":{"role":"assistant","content":"Your
+        name is Alice! You told me earlier in our conversation.","reasoning_content":"We
+        need to determine the user''s name. The user previously said \"My name is
+        Alice.\" So I can infer that the user''s name is Alice. The user is asking
+        \"What is my name?\" expecting me to recall that information from the conversation.
+        The assistant should answer \"Your name is Alice.\""},"logprobs":null,"finish_reason":"stop"}],"usage":{"prompt_tokens":114,"completion_tokens":75,"total_tokens":189,"prompt_tokens_details":{"cached_tokens":0},"completion_tokens_details":{"reasoning_tokens":61},"prompt_cache_hit_tokens":0,"prompt_cache_miss_tokens":114},"system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402","cost":"0"}'
+  recorded_at: Sat, 23 May 2026 15:00:13 GMT
+recorded_with: VCR 6.4.0

@@ -1,0 +1,144 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://opencode.ai/zen/go/v1/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"model":"deepseek-v4-flash","messages":[{"role":"user","content":"Add
+        100 and 200"},{"role":"assistant","content":"[Used calculator tool]"},{"role":"user","content":"[Tool
+        returned: 300]"},{"role":"user","content":"Now add 50 and 25 using the same
+        tool. What do you get?"}],"stream":false,"tools":[{"type":"function","function":{"name":"calculator","description":"Add
+        two numbers","parameters":{"type":"object","properties":{"a":{"type":"number","description":"First
+        number"},"b":{"type":"number","description":"Second number"}},"required":["a","b"],"additionalProperties":false}}}]}'
+    headers:
+      User-Agent:
+      - Faraday v2.14.2
+      Authorization:
+      - Bearer <BEARER_TOKEN>
+      Content-Type:
+      - application/json
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Sat, 23 May 2026 14:54:35 GMT
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Cf-Placement:
+      - remote-
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - a004e584288a4577-ATL
+    body:
+      encoding: ASCII-8BIT
+      string: '{"id":"1ec345cc-0348-4891-ae09-410d1459c15a","object":"chat.completion","created":1779548073,"model":"deepseek-v4-flash","choices":[{"index":0,"message":{"role":"assistant","content":"","reasoning_content":"The
+        user wants me to add 50 and 25 using the calculator tool. I need to invoke
+        the calculator with a=50 and b=25.","tool_calls":[{"index":0,"id":"call_00_5HbYKbk6BbVaX6zpzhUG9683","type":"function","function":{"name":"calculator","arguments":"{\"a\":
+        50, \"b\": 25}"}}]},"logprobs":null,"finish_reason":"tool_calls"}],"usage":{"prompt_tokens":417,"completion_tokens":90,"total_tokens":507,"prompt_tokens_details":{"cached_tokens":256},"completion_tokens_details":{"reasoning_tokens":31},"prompt_cache_hit_tokens":256,"prompt_cache_miss_tokens":161},"system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402","cost":"0"}'
+  recorded_at: Sat, 23 May 2026 14:54:35 GMT
+- request:
+    method: post
+    uri: https://opencode.ai/zen/go/v1/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"model":"deepseek-v4-flash","messages":[{"role":"user","content":"Add
+        100 and 200"},{"role":"assistant","content":"[Used calculator tool]"},{"role":"user","content":"[Tool
+        returned: 300]"},{"role":"user","content":"Now add 50 and 25 using the same
+        tool."}],"stream":false,"tools":[{"type":"function","function":{"name":"calculator","description":"Add
+        two numbers","parameters":{"type":"object","properties":{"a":{"type":"number"},"b":{"type":"number"}},"required":["a","b"],"additionalProperties":false}}}]}'
+    headers:
+      User-Agent:
+      - Faraday v2.14.2
+      Authorization:
+      - Bearer <BEARER_TOKEN>
+      Content-Type:
+      - application/json
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Sat, 23 May 2026 15:03:16 GMT
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Cf-Placement:
+      - remote-
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - a004f23cea2a673d-ATL
+    body:
+      encoding: ASCII-8BIT
+      string: '{"id":"14dda694-f422-4936-b029-0573edf67ed6","object":"chat.completion","created":1779548594,"model":"deepseek-v4-flash","choices":[{"index":0,"message":{"role":"assistant","content":"","reasoning_content":"The
+        user wants me to add 50 and 25 using the same tool. I already have the calculator
+        tool available. Let me invoke it.","tool_calls":[{"index":0,"id":"call_00_g72eKg5uozNOybXyrNPu9022","type":"function","function":{"name":"calculator","arguments":"{\"a\":
+        50, \"b\": 25}"}}]},"logprobs":null,"finish_reason":"tool_calls"}],"usage":{"prompt_tokens":398,"completion_tokens":88,"total_tokens":486,"prompt_tokens_details":{"cached_tokens":256},"completion_tokens_details":{"reasoning_tokens":29},"prompt_cache_hit_tokens":256,"prompt_cache_miss_tokens":142},"system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402","cost":"0"}'
+  recorded_at: Sat, 23 May 2026 15:03:16 GMT
+- request:
+    method: post
+    uri: https://opencode.ai/zen/go/v1/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"model":"deepseek-v4-flash","messages":[{"role":"user","content":"Add
+        100 and 200 using calculator. Result: 300"},{"role":"user","content":"Now
+        add 50 and 25 using the same tool."}],"stream":false,"tools":[{"type":"function","function":{"name":"calculator","description":"Add
+        two numbers","parameters":{"type":"object","properties":{"a":{"type":"number"},"b":{"type":"number"}},"required":["a","b"],"additionalProperties":false}}}]}'
+    headers:
+      User-Agent:
+      - Faraday v2.14.2
+      Authorization:
+      - Bearer <BEARER_TOKEN>
+      Content-Type:
+      - application/json
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Sat, 23 May 2026 15:04:25 GMT
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Cf-Placement:
+      - remote-IAD
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - a004f3ea685c44d1-ATL
+    body:
+      encoding: ASCII-8BIT
+      string: '{"id":"f11700c7-645d-4e94-b4ef-870a6be15fc6","object":"chat.completion","created":1779548663,"model":"deepseek-v4-flash","choices":[{"index":0,"message":{"role":"assistant","content":"","reasoning_content":"The
+        user wants me to add 50 and 25 using the calculator tool. I should invoke
+        the calculator with a=50, b=25.","tool_calls":[{"index":0,"id":"call_00_UejaXGdtgsHGZL1Tju061408","type":"function","function":{"name":"calculator","arguments":"{\"a\":
+        50, \"b\": 25}"}}]},"logprobs":null,"finish_reason":"tool_calls"}],"usage":{"prompt_tokens":390,"completion_tokens":89,"total_tokens":479,"prompt_tokens_details":{"cached_tokens":256},"completion_tokens_details":{"reasoning_tokens":30},"prompt_cache_hit_tokens":256,"prompt_cache_miss_tokens":134},"system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402","cost":"0"}'
+  recorded_at: Sat, 23 May 2026 15:04:24 GMT
+recorded_with: VCR 6.4.0

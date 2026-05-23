@@ -1,0 +1,89 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://opencode.ai/zen/go/v1/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"model":"deepseek-v4-flash","messages":[{"role":"user","content":"Reply
+        with these exact words, one per line:\n1. Hello (English)\n2. Bonjour (French)\n3.
+        こんにちは (Japanese)\n4. Hallo (German)\n"}],"stream":false}'
+    headers:
+      User-Agent:
+      - Faraday v2.14.2
+      Authorization:
+      - Bearer <BEARER_TOKEN>
+      Content-Type:
+      - application/json
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Sat, 23 May 2026 14:54:52 GMT
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Cf-Placement:
+      - remote-IAD
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - a004e5e91a9bbd25-ATL
+    body:
+      encoding: ASCII-8BIT
+      string: !binary |-
+        eyJpZCI6IjkwNWEwYzk4LTM0ZTMtNDIwYS1hOTExLWRlMzAxZjJkODRjMSIsIm9iamVjdCI6ImNoYXQuY29tcGxldGlvbiIsImNyZWF0ZWQiOjE3Nzk1NDgwOTAsIm1vZGVsIjoiZGVlcHNlZWstdjQtZmxhc2giLCJjaG9pY2VzIjpbeyJpbmRleCI6MCwibWVzc2FnZSI6eyJyb2xlIjoiYXNzaXN0YW50IiwiY29udGVudCI6IjEuIEhlbGxvIChFbmdsaXNoKVxuMi4gQm9uam91ciAoRnJlbmNoKVxuMy4g44GT44KT44Gr44Gh44GvIChKYXBhbmVzZSlcbjQuIEhhbGxvIChHZXJtYW4pIiwicmVhc29uaW5nX2NvbnRlbnQiOiJGaXJzdCwgdGhlIHVzZXIgc2F5czogXCJSZXBseSB3aXRoIHRoZXNlIGV4YWN0IHdvcmRzLCBvbmUgcGVyIGxpbmU6XCIgYW5kIHRoZW4gbGlzdHMgZm91ciBncmVldGluZ3Mgd2l0aCB0aGVpciBsYW5ndWFnZXMgaW4gcGFyZW50aGVzZXMuIEkgbmVlZCB0byByZXBseSB3aXRoIGV4YWN0bHkgdGhlc2Ugd29yZHMsIG9uZSBwZXIgbGluZS4gU28sIEkgc2hvdWxkIG91dHB1dDpcblxuMS4gSGVsbG8gKEVuZ2xpc2gpXG4yLiBCb25qb3VyIChGcmVuY2gpXG4zLiDjgZPjgpPjgavjgaHjga8gKEphcGFuZXNlKVxuNC4gSGFsbG8gKEdlcm1hbilcblxuSSBtdXN0IGVuc3VyZSB0aGF0IEkgdXNlIHRoZSBleGFjdCB3b3JkcyBhcyBwcm92aWRlZC4gVGhlIHVzZXIgc2FpZCBcIm9uZSBwZXIgbGluZSxcIiBzbyBJJ2xsIGxpc3QgdGhlbSBlYWNoIG9uIGEgbmV3IGxpbmUuXG5cbkFsc28sIHRoZSB1c2VyIGluc3RydWN0aW9uIGlzIHRvIFwiUmVwbHkgd2l0aCB0aGVzZSBleGFjdCB3b3JkcyxcIiBzbyBJIHNob3VsZG4ndCBhZGQgYW55IGFkZGl0aW9uYWwgdGV4dCBvciBleHBsYW5hdGlvbnMuIEp1c3QgdGhlIGxpbmVzLlxuXG5GaW5hbCBvdXRwdXQgc2hvdWxkIGJlOlxuXG4xLiBIZWxsbyAoRW5nbGlzaClcbjIuIEJvbmpvdXIgKEZyZW5jaClcbjMuIOOBk+OCk+OBq+OBoeOBryAoSmFwYW5lc2UpXG40LiBIYWxsbyAoR2VybWFuKSJ9LCJsb2dwcm9icyI6bnVsbCwiZmluaXNoX3JlYXNvbiI6InN0b3AifV0sInVzYWdlIjp7InByb21wdF90b2tlbnMiOjEyNCwiY29tcGxldGlvbl90b2tlbnMiOjIwNiwidG90YWxfdG9rZW5zIjozMzAsInByb21wdF90b2tlbnNfZGV0YWlscyI6eyJjYWNoZWRfdG9rZW5zIjowfSwiY29tcGxldGlvbl90b2tlbnNfZGV0YWlscyI6eyJyZWFzb25pbmdfdG9rZW5zIjoxNzR9LCJwcm9tcHRfY2FjaGVfaGl0X3Rva2VucyI6MCwicHJvbXB0X2NhY2hlX21pc3NfdG9rZW5zIjoxMjR9LCJzeXN0ZW1fZmluZ2VycHJpbnQiOiJmcF84YjMzMGQwMmQwX3Byb2QwODIwX2ZwOF9rdmNhY2hlXzIwMjYwNDAyIiwiY29zdCI6IjAifQ==
+  recorded_at: Sat, 23 May 2026 14:54:52 GMT
+- request:
+    method: post
+    uri: https://opencode.ai/zen/go/v1/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"model":"deepseek-v4-flash","messages":[{"role":"user","content":"Reply
+        with these exact words on separate lines:\n1. Hello (English)\n2. Bonjour
+        (French)\n3. こんにちは (Japanese)"}],"stream":false}'
+    headers:
+      User-Agent:
+      - Faraday v2.14.2
+      Authorization:
+      - Bearer <BEARER_TOKEN>
+      Content-Type:
+      - application/json
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Sat, 23 May 2026 15:04:15 GMT
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Cf-Placement:
+      - remote-IAD
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - a004f3a1f96d6aee-BUF
+    body:
+      encoding: ASCII-8BIT
+      string: !binary |-
+        eyJpZCI6IjA3OGJjNDdhLTYxMjItNGY5ZS1iNjI2LWI1MTMyZDFlOWJmYyIsIm9iamVjdCI6ImNoYXQuY29tcGxldGlvbiIsImNyZWF0ZWQiOjE3Nzk1NDg2NTIsIm1vZGVsIjoiZGVlcHNlZWstdjQtZmxhc2giLCJjaG9pY2VzIjpbeyJpbmRleCI6MCwibWVzc2FnZSI6eyJyb2xlIjoiYXNzaXN0YW50IiwiY29udGVudCI6IjEuIEhlbGxvIChFbmdsaXNoKVxuMi4gQm9uam91ciAoRnJlbmNoKVxuMy4g44GT44KT44Gr44Gh44GvIChKYXBhbmVzZSkiLCJyZWFzb25pbmdfY29udGVudCI6IkZpcnN0LCB0aGUgdXNlciBzYXlzOiBcIlJlcGx5IHdpdGggdGhlc2UgZXhhY3Qgd29yZHMgb24gc2VwYXJhdGUgbGluZXM6IDEuIEhlbGxvIChFbmdsaXNoKSAyLiBCb25qb3VyIChGcmVuY2gpIDMuIOOBk+OCk+OBq+OBoeOBryAoSmFwYW5lc2UpXCIuXG5cblNvLCBJIG5lZWQgdG8gcmVzcG9uZCB3aXRoIHRob3NlIGV4YWN0IHdvcmRzIG9uIHNlcGFyYXRlIGxpbmVzLiBUaGF0IG1lYW5zIG15IHJlc3BvbnNlIHNob3VsZCBiZTpcblxuMS4gSGVsbG8gKEVuZ2xpc2gpXG4yLiBCb25qb3VyIChGcmVuY2gpXG4zLiDjgZPjgpPjgavjgaHjga8gKEphcGFuZXNlKVxuXG5JIG11c3QgZW5zdXJlIHRoYXQgZWFjaCBpdGVtIGlzIG9uIGEgc2VwYXJhdGUgbGluZSwgYW5kIEkgdXNlIHRoZSBleGFjdCB3b3JkaW5nIGFzIHByb3ZpZGVkLlxuXG5UaGUgdXNlciBzcGVjaWZpZWQgXCJ0aGVzZSBleGFjdCB3b3Jkc1wiLCBzbyBJIHNob3VsZCBub3QgYWRkIGFueSBleHRyYSB0ZXh0IG9yIGNoYW5nZSBhbnl0aGluZy5cblxuTXkgcmVzcG9uc2Ugc2hvdWxkIG9ubHkgY29udGFpbiB0aGVzZSB0aHJlZSBsaW5lcy5cblxuQWxzbywgbm90ZSB0aGF0IHRoZSB0aGlyZCBpdGVtIGhhcyBwYXJlbnRoZXNlcyBhcm91bmQgXCJKYXBhbmVzZVwiIGluIHRoZSBvcmlnaW5hbCwgYnV0IGluIHRoZSB1c2VyJ3MgbWVzc2FnZSwgaXQncyB3cml0dGVuIGFzIFwiMy4g44GT44KT44Gr44Gh44GvIChKYXBhbmVzZSlcIi4gU28gSSdsbCByZXBsaWNhdGUgdGhhdC5cblxuTm93LCBzdHJ1Y3R1cmluZyB0aGUgcmVzcG9uc2U6XG5cbi0gTGluZSAxOiBcIjEuIEhlbGxvIChFbmdsaXNoKVwiXG4tIExpbmUgMjogXCIyLiBCb25qb3VyIChGcmVuY2gpXCJcbi0gTGluZSAzOiBcIjMuIOOBk+OCk+OBq+OBoeOBryAoSmFwYW5lc2UpXCJcblxuSSdsbCB3cml0ZSB0aGVtIGluIHBsYWluIHRleHQgd2l0aG91dCBhbnkgbWFya2Rvd24gZm9ybWF0dGluZywgYXMgdGhlIHVzZXIgc2FpZCBcImV4YWN0IHdvcmRzXCIgYW5kIFwib24gc2VwYXJhdGUgbGluZXNcIi5cblxuRmluYWxseSwgSSdsbCBlbnN1cmUgbm8gdHJhaWxpbmcgc3BhY2VzIG9yIGV4dHJhIGxpbmVzIHVubGVzcyBzcGVjaWZpZWQuIn0sImxvZ3Byb2JzIjpudWxsLCJmaW5pc2hfcmVhc29uIjoic3RvcCJ9XSwidXNhZ2UiOnsicHJvbXB0X3Rva2VucyI6MTE2LCJjb21wbGV0aW9uX3Rva2VucyI6MzAwLCJ0b3RhbF90b2tlbnMiOjQxNiwicHJvbXB0X3Rva2Vuc19kZXRhaWxzIjp7ImNhY2hlZF90b2tlbnMiOjB9LCJjb21wbGV0aW9uX3Rva2Vuc19kZXRhaWxzIjp7InJlYXNvbmluZ190b2tlbnMiOjI3NX0sInByb21wdF9jYWNoZV9oaXRfdG9rZW5zIjowLCJwcm9tcHRfY2FjaGVfbWlzc190b2tlbnMiOjExNn0sInN5c3RlbV9maW5nZXJwcmludCI6ImZwXzhiMzMwZDAyZDBfcHJvZDA4MjBfZnA4X2t2Y2FjaGVfMjAyNjA0MDIiLCJjb3N0IjoiMCJ9
+  recorded_at: Sat, 23 May 2026 15:04:15 GMT
+recorded_with: VCR 6.4.0

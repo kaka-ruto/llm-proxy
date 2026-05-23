@@ -1,0 +1,141 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://opencode.ai/zen/go/v1/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"model":"deepseek-v4-flash","messages":[{"role":"user","content":"Add
+        5 and 7 using the calculator tool."}],"stream":false,"tools":[{"type":"function","function":{"name":"calculator","description":"Add
+        two numbers","parameters":{"type":"object","properties":{"a":{"type":"number","description":"First
+        number"},"b":{"type":"number","description":"Second number"}},"required":["a","b"],"additionalProperties":false}}}]}'
+    headers:
+      User-Agent:
+      - Faraday v2.14.2
+      Authorization:
+      - Bearer <BEARER_TOKEN>
+      Content-Type:
+      - application/json
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Sat, 23 May 2026 14:54:40 GMT
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Cf-Placement:
+      - remote-IAD
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - a004e5a698bc6d11-ATL
+    body:
+      encoding: ASCII-8BIT
+      string: '{"id":"c071bdb5-94e9-4af0-a556-cb1f2a484c72","object":"chat.completion","created":1779548079,"model":"deepseek-v4-flash","choices":[{"index":0,"message":{"role":"assistant","content":"","reasoning_content":"The
+        user wants me to add 5 and 7 using the calculator tool. I''ll invoke the calculator
+        with a=5 and b=7.","tool_calls":[{"index":0,"id":"call_00_9Iz8YVUDD5blOmoxMZTG1819","type":"function","function":{"name":"calculator","arguments":"{\"a\":
+        5, \"b\": 7}"}}]},"logprobs":null,"finish_reason":"tool_calls"}],"usage":{"prompt_tokens":389,"completion_tokens":89,"total_tokens":478,"prompt_tokens_details":{"cached_tokens":256},"completion_tokens_details":{"reasoning_tokens":30},"prompt_cache_hit_tokens":256,"prompt_cache_miss_tokens":133},"system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402","cost":"0"}'
+  recorded_at: Sat, 23 May 2026 14:54:40 GMT
+- request:
+    method: post
+    uri: https://opencode.ai/zen/go/v1/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"model":"deepseek-v4-flash","messages":[{"role":"user","content":"Add
+        5 and 7 using the calculator tool."}],"stream":false,"tools":[{"type":"function","function":{"name":"calculator","description":"Add
+        two numbers","parameters":{"type":"object","properties":{"a":{"type":"number"},"b":{"type":"number"}},"required":["a","b"],"additionalProperties":false}}}]}'
+    headers:
+      User-Agent:
+      - Faraday v2.14.2
+      Authorization:
+      - Bearer <BEARER_TOKEN>
+      Content-Type:
+      - application/json
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Sat, 23 May 2026 15:03:25 GMT
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Cf-Placement:
+      - remote-IAD
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - a004f2766c2aa391-ATL
+    body:
+      encoding: ASCII-8BIT
+      string: '{"id":"aec385ec-49e4-46c8-9921-fc58f8a76aa4","object":"chat.completion","created":1779548604,"model":"deepseek-v4-flash","choices":[{"index":0,"message":{"role":"assistant","content":"","reasoning_content":"The
+        user wants me to add 5 and 7 using the calculator tool. I''ll invoke the calculator
+        with a=5 and b=7.","tool_calls":[{"index":0,"id":"call_00_P8rsi4GTmThhrI8U0hpL5679","type":"function","function":{"name":"calculator","arguments":"{\"a\":
+        5, \"b\": 7}"}}]},"logprobs":null,"finish_reason":"tool_calls"}],"usage":{"prompt_tokens":375,"completion_tokens":89,"total_tokens":464,"prompt_tokens_details":{"cached_tokens":256},"completion_tokens_details":{"reasoning_tokens":30},"prompt_cache_hit_tokens":256,"prompt_cache_miss_tokens":119},"system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402","cost":"0"}'
+  recorded_at: Sat, 23 May 2026 15:03:25 GMT
+- request:
+    method: post
+    uri: https://opencode.ai/zen/go/v1/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"model":"deepseek-v4-flash","messages":[{"role":"user","content":"Add
+        5 and 7 using the calculator tool."},{"role":"assistant","content":"","tool_calls":[{"id":"call_00_P8rsi4GTmThhrI8U0hpL5679","type":"function","function":{"name":"calculator","arguments":"{\"a\":5,\"b\":7}"}}],"reasoning":"The
+        user wants me to add 5 and 7 using the calculator tool. I''ll invoke the calculator
+        with a=5 and b=7.","reasoning_content":"The user wants me to add 5 and 7 using
+        the calculator tool. I''ll invoke the calculator with a=5 and b=7."},{"role":"tool","content":"12","tool_call_id":"call_00_P8rsi4GTmThhrI8U0hpL5679"}],"stream":false,"tools":[{"type":"function","function":{"name":"calculator","description":"Add
+        two numbers","parameters":{"type":"object","properties":{"a":{"type":"number"},"b":{"type":"number"}},"required":["a","b"],"additionalProperties":false}}}]}'
+    headers:
+      User-Agent:
+      - Faraday v2.14.2
+      Authorization:
+      - Bearer <BEARER_TOKEN>
+      Content-Type:
+      - application/json
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Sat, 23 May 2026 15:03:27 GMT
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Cf-Placement:
+      - remote-
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - a004f285fa2d6789-ATL
+    body:
+      encoding: ASCII-8BIT
+      string: '{"id":"83d951c6-c21b-497c-9cf2-68c5a5f17581","object":"chat.completion","created":1779548606,"model":"deepseek-v4-flash","choices":[{"index":0,"message":{"role":"assistant","content":"5
+        + 7 = **12**","reasoning_content":"The calculator returned 12. I''ll provide
+        the answer."},"logprobs":null,"finish_reason":"stop"}],"usage":{"prompt_tokens":477,"completion_tokens":21,"total_tokens":498,"prompt_tokens_details":{"cached_tokens":384},"completion_tokens_details":{"reasoning_tokens":12},"prompt_cache_hit_tokens":384,"prompt_cache_miss_tokens":93},"system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402","cost":"0"}'
+  recorded_at: Sat, 23 May 2026 15:03:27 GMT
+recorded_with: VCR 6.4.0

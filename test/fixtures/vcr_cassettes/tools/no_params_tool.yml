@@ -1,0 +1,89 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://opencode.ai/zen/go/v1/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"model":"deepseek-v4-flash","messages":[{"role":"user","content":"Call
+        the do_nothing tool."}],"stream":false,"tools":[{"type":"function","function":{"name":"do_nothing","description":"Does
+        nothing at all","parameters":{"type":"object","properties":{},"additionalProperties":false}}}]}'
+    headers:
+      User-Agent:
+      - Faraday v2.14.2
+      Authorization:
+      - Bearer <BEARER_TOKEN>
+      Content-Type:
+      - application/json
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Sat, 23 May 2026 15:00:54 GMT
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Cf-Placement:
+      - remote-IAD
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - a004eec6f843678a-ATL
+    body:
+      encoding: ASCII-8BIT
+      string: '{"id":"e6f49b97-8d27-4a79-bc63-265b3aefd6b7","object":"chat.completion","created":1779548453,"model":"deepseek-v4-flash","choices":[{"index":0,"message":{"role":"assistant","content":"","reasoning_content":"The
+        user wants me to call the do_nothing tool. Let me do that.","tool_calls":[{"index":0,"id":"call_00_7wliaVMY3ZeMj9X7BNAg9069","type":"function","function":{"name":"do_nothing","arguments":"{}"}}]},"logprobs":null,"finish_reason":"tool_calls"}],"usage":{"prompt_tokens":347,"completion_tokens":46,"total_tokens":393,"prompt_tokens_details":{"cached_tokens":256},"completion_tokens_details":{"reasoning_tokens":17},"prompt_cache_hit_tokens":256,"prompt_cache_miss_tokens":91},"system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402","cost":"0"}'
+  recorded_at: Sat, 23 May 2026 15:00:54 GMT
+- request:
+    method: post
+    uri: https://opencode.ai/zen/go/v1/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"model":"deepseek-v4-flash","messages":[{"role":"user","content":"Call
+        the do_nothing tool."}],"stream":false,"tools":[{"type":"function","function":{"name":"do_nothing","description":"Does
+        nothing","parameters":{"type":"object","properties":{},"additionalProperties":false}}}]}'
+    headers:
+      User-Agent:
+      - Faraday v2.14.2
+      Authorization:
+      - Bearer <BEARER_TOKEN>
+      Content-Type:
+      - application/json
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Sat, 23 May 2026 15:02:02 GMT
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Cf-Placement:
+      - remote-
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - a004f0754a841bca-MEM
+    body:
+      encoding: ASCII-8BIT
+      string: '{"id":"2e10bb65-2f42-4f57-ae01-ba1515a07022","object":"chat.completion","created":1779548522,"model":"deepseek-v4-flash","choices":[{"index":0,"message":{"role":"assistant","content":"","reasoning_content":"The
+        user wants me to call the do_nothing tool. Let me do that.","tool_calls":[{"index":0,"id":"call_00_5xKWMDd7petTHuZ5adnx0506","type":"function","function":{"name":"do_nothing","arguments":"{}"}}]},"logprobs":null,"finish_reason":"tool_calls"}],"usage":{"prompt_tokens":345,"completion_tokens":46,"total_tokens":391,"prompt_tokens_details":{"cached_tokens":256},"completion_tokens_details":{"reasoning_tokens":17},"prompt_cache_hit_tokens":256,"prompt_cache_miss_tokens":89},"system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402","cost":"0"}'
+  recorded_at: Sat, 23 May 2026 15:02:02 GMT
+recorded_with: VCR 6.4.0

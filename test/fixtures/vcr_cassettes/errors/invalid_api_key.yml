@@ -1,0 +1,44 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://opencode.ai/zen/go/v1/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"model":"deepseek-v4-flash","messages":[{"role":"user","content":"Hello"}],"stream":false}'
+    headers:
+      User-Agent:
+      - Faraday v2.14.2
+      Authorization:
+      - Bearer <BEARER_TOKEN>
+      Content-Type:
+      - application/json
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+  response:
+    status:
+      code: 401
+      message: Unauthorized
+    headers:
+      Date:
+      - Sat, 23 May 2026 15:05:06 GMT
+      Content-Type:
+      - text/plain;charset=UTF-8
+      Content-Length:
+      - '74'
+      Connection:
+      - keep-alive
+      Cf-Placement:
+      - remote-IAD
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - a004f4f65a2dadd7-ATL
+    body:
+      encoding: UTF-8
+      string: '{"type":"error","error":{"type":"AuthError","message":"Invalid API
+        key."}}'
+  recorded_at: Sat, 23 May 2026 15:05:06 GMT
+recorded_with: VCR 6.4.0

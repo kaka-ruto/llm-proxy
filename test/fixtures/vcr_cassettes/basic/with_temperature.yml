@@ -1,0 +1,57 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://opencode.ai/zen/go/v1/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"model":"deepseek-v4-flash","messages":[{"role":"user","content":"Say
+        hello in exactly 3 words: Hello there world"}],"stream":false,"temperature":0.0}'
+    headers:
+      User-Agent:
+      - Faraday v2.14.2
+      Authorization:
+      - Bearer <BEARER_TOKEN>
+      Content-Type:
+      - application/json
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Sat, 23 May 2026 15:00:22 GMT
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Cf-Placement:
+      - remote-IAD
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - a004edf6d8ab6730-ATL
+    body:
+      encoding: ASCII-8BIT
+      string: '{"id":"ccc6e075-9e61-4d75-8900-076b8b0e2f96","object":"chat.completion","created":1779548419,"model":"deepseek-v4-flash","choices":[{"index":0,"message":{"role":"assistant","content":"Hello
+        there world","reasoning_content":"First, the user says: \"Say hello in exactly
+        3 words: Hello there world\". This seems like a command or instruction. But
+        the user has already provided the exact phrase \"Hello there world\", which
+        is three words.\n\nThe user says: \"Say hello in exactly 3 words: Hello there
+        world\". So, I think the user is instructing me to output the words \"Hello
+        there world\" because that''s the three-word hello they want.\n\nBut the instruction
+        is \"Say hello in exactly 3 words:\", followed by \"Hello there world\". This
+        might be a test or a command. I need to respond accordingly.\n\nSince the
+        user already provided the three-word phrase, I should just repeat it as my
+        response.\n\nMy response should be \"Hello there world\" without any additional
+        text.\n\nThe user says \"Say hello in exactly 3 words\", so I must ensure
+        my response is exactly three words.\n\nThe user has given \"Hello there world\"
+        as the example, so I''ll use that.\n\nFinal response: \"Hello there world\""},"logprobs":null,"finish_reason":"stop"}],"usage":{"prompt_tokens":94,"completion_tokens":214,"total_tokens":308,"prompt_tokens_details":{"cached_tokens":0},"completion_tokens_details":{"reasoning_tokens":210},"prompt_cache_hit_tokens":0,"prompt_cache_miss_tokens":94},"system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402","cost":"0"}'
+  recorded_at: Sat, 23 May 2026 15:00:22 GMT
+recorded_with: VCR 6.4.0

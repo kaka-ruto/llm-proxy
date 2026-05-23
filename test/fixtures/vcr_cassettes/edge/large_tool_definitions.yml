@@ -1,0 +1,118 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://opencode.ai/zen/go/v1/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"model":"deepseek-v4-flash","messages":[{"role":"user","content":"Call
+        the many_params tool with param_1=''a'', param_2=''b''. Just make the call,
+        no response needed."}],"stream":false,"tools":[{"type":"function","function":{"name":"many_params","description":"A
+        tool with 20 parameters","parameters":{"type":"object","properties":{"param_1":{"type":"string","description":"Parameter
+        1"},"param_2":{"type":"string","description":"Parameter 2"},"param_3":{"type":"string","description":"Parameter
+        3"},"param_4":{"type":"string","description":"Parameter 4"},"param_5":{"type":"string","description":"Parameter
+        5"},"param_6":{"type":"string","description":"Parameter 6"},"param_7":{"type":"string","description":"Parameter
+        7"},"param_8":{"type":"string","description":"Parameter 8"},"param_9":{"type":"string","description":"Parameter
+        9"},"param_10":{"type":"string","description":"Parameter 10"},"param_11":{"type":"string","description":"Parameter
+        11"},"param_12":{"type":"string","description":"Parameter 12"},"param_13":{"type":"string","description":"Parameter
+        13"},"param_14":{"type":"string","description":"Parameter 14"},"param_15":{"type":"string","description":"Parameter
+        15"},"param_16":{"type":"string","description":"Parameter 16"},"param_17":{"type":"string","description":"Parameter
+        17"},"param_18":{"type":"string","description":"Parameter 18"},"param_19":{"type":"string","description":"Parameter
+        19"},"param_20":{"type":"string","description":"Parameter 20"}},"required":["param_1","param_2","param_3","param_4","param_5","param_6","param_7","param_8","param_9","param_10","param_11","param_12","param_13","param_14","param_15","param_16","param_17","param_18","param_19","param_20"],"additionalProperties":false}}}]}'
+    headers:
+      User-Agent:
+      - Faraday v2.14.2
+      Authorization:
+      - Bearer <BEARER_TOKEN>
+      Content-Type:
+      - application/json
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Sat, 23 May 2026 14:55:02 GMT
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Cf-Placement:
+      - remote-IAD
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - a004e619aeaf1fbd-ATL
+    body:
+      encoding: ASCII-8BIT
+      string: '{"id":"69a914bc-6fd2-4ee4-b5df-91a340d83f3b","object":"chat.completion","created":1779548097,"model":"deepseek-v4-flash","choices":[{"index":0,"message":{"role":"assistant","content":"","reasoning_content":"The
+        user wants me to call the many_params tool with param_1=''a'' and param_2=''b''.
+        The tool has 20 required parameters, all required. So I need to provide values
+        for all 20 parameters. Let me provide some default values for the rest. I''ll
+        use placeholders or empty strings? The description says it''s a tool with
+        20 parameters. Let me provide reasonable values. Since the user only specified
+        param_1 and param_2, I''ll fill the rest with some defaults. Let me just use
+        strings like ''c'', ''d'', etc. or maybe just empty strings? But they are
+        required. I''ll provide something for all.\n\nLet me call the tool with param_1=''a'',
+        param_2=''b'', and for the rest I''ll use placeholder strings like ''c'',
+        ''d'', ''e'', ... ''t'' or something. Or maybe just empty strings? The tool
+        might expect non-empty. I''ll use ''param_3'' etc. But to be safe, I''ll use
+        simple values.\n\nLet me just call it.","tool_calls":[{"index":0,"id":"call_00_jVH341KAupsXB5nz2WlK7479","type":"function","function":{"name":"many_params","arguments":"{\"param_1\":
+        \"a\", \"param_2\": \"b\", \"param_3\": \"c\", \"param_4\": \"d\", \"param_5\":
+        \"e\", \"param_6\": \"f\", \"param_7\": \"g\", \"param_8\": \"h\", \"param_9\":
+        \"i\", \"param_10\": \"j\", \"param_11\": \"k\", \"param_12\": \"l\", \"param_13\":
+        \"m\", \"param_14\": \"n\", \"param_15\": \"o\", \"param_16\": \"p\", \"param_17\":
+        \"q\", \"param_18\": \"r\", \"param_19\": \"s\", \"param_20\": \"t\"}"}}]},"logprobs":null,"finish_reason":"tool_calls"}],"usage":{"prompt_tokens":851,"completion_tokens":610,"total_tokens":1461,"prompt_tokens_details":{"cached_tokens":256},"completion_tokens_details":{"reasoning_tokens":222},"prompt_cache_hit_tokens":256,"prompt_cache_miss_tokens":595},"system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402","cost":"0"}'
+  recorded_at: Sat, 23 May 2026 14:55:02 GMT
+- request:
+    method: post
+    uri: https://opencode.ai/zen/go/v1/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"model":"deepseek-v4-flash","messages":[{"role":"user","content":"Call
+        many_params with param_1=''a'' and param_2=''b''."}],"stream":false,"tools":[{"type":"function","function":{"name":"many_params","description":"A
+        tool with 20 params","parameters":{"type":"object","properties":{"param_1":{"type":"string"},"param_2":{"type":"string"},"param_3":{"type":"string"},"param_4":{"type":"string"},"param_5":{"type":"string"},"param_6":{"type":"string"},"param_7":{"type":"string"},"param_8":{"type":"string"},"param_9":{"type":"string"},"param_10":{"type":"string"},"param_11":{"type":"string"},"param_12":{"type":"string"},"param_13":{"type":"string"},"param_14":{"type":"string"},"param_15":{"type":"string"},"param_16":{"type":"string"},"param_17":{"type":"string"},"param_18":{"type":"string"},"param_19":{"type":"string"},"param_20":{"type":"string"}},"required":["param_1","param_2"],"additionalProperties":false}}}]}'
+    headers:
+      User-Agent:
+      - Faraday v2.14.2
+      Authorization:
+      - Bearer <BEARER_TOKEN>
+      Content-Type:
+      - application/json
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Sat, 23 May 2026 15:04:01 GMT
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Cf-Placement:
+      - remote-IAD
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - a004f3553c921ecd-ATL
+    body:
+      encoding: ASCII-8BIT
+      string: '{"id":"dbcabf67-c601-4842-bc23-9a5de8fce404","object":"chat.completion","created":1779548639,"model":"deepseek-v4-flash","choices":[{"index":0,"message":{"role":"assistant","content":"","reasoning_content":"The
+        user wants me to call the many_params function with param_1=''a'' and param_2=''b''.
+        Let me do that.","tool_calls":[{"index":0,"id":"call_00_DgMlZr27pebbkak1ROuC6163","type":"function","function":{"name":"many_params","arguments":"{\"param_1\":
+        \"a\", \"param_2\": \"b\"}"}}]},"logprobs":null,"finish_reason":"tool_calls"}],"usage":{"prompt_tokens":591,"completion_tokens":93,"total_tokens":684,"prompt_tokens_details":{"cached_tokens":256},"completion_tokens_details":{"reasoning_tokens":29},"prompt_cache_hit_tokens":256,"prompt_cache_miss_tokens":335},"system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402","cost":"0"}'
+  recorded_at: Sat, 23 May 2026 15:04:00 GMT
+recorded_with: VCR 6.4.0

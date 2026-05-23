@@ -1,0 +1,182 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://opencode.ai/zen/go/v1/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"model":"deepseek-v4-flash","messages":[{"role":"user","content":"Read
+        this text and reply with exactly: ''done''. Text: The quick brown fox The
+        quick brown fox The quick brown fox The quick brown fox The quick brown fox
+        The quick brown fox The quick brown fox The quick brown fox The quick brown
+        fox The quick brown fox The quick brown fox The quick brown fox The quick
+        brown fox The quick brown fox The quick brown fox The quick brown fox The
+        quick brown fox The quick brown fox The quick brown fox The quick brown fox
+        The quick brown fox The quick brown fox The quick brown fox The quick brown
+        fox The quick brown fox The quick brown fox The quick brown fox The quick
+        brown fox The quick brown fox The quick brown fox The quick brown fox The
+        quick brown fox The quick brown fox The quick brown fox The quick brown fox
+        The quick brown fox The quick brown fox The quick brown fox The quick brown
+        fox The quick brown fox The quick brown fox The quick brown fox The quick
+        brown fox The quick brown fox The quick brown fox The quick brown fox The
+        quick brown fox The quick brown fox The quick brown fox The quick brown fox
+        The quick brown fox The quick brown fox The quick brown fox The quick brown
+        fox The quick brown fox The quick brown fox The quick brown fox The quick
+        brown fox The quick brown fox The quick brown fox The quick brown fox The
+        quick brown fox The quick brown fox The quick brown fox The quick brown fox
+        The quick brown fox The quick brown fox The quick brown fox The quick brown
+        fox The quick brown fox The quick brown fox The quick brown fox The quick
+        brown fox The quick brown fox The quick brown fox The quick brown fox The
+        quick brown fox The quick brown fox The quick brown fox The quick brown fox
+        The quick brown fox The quick brown fox The quick brown fox The quick brown
+        fox The quick brown fox The quick brown fox The quick brown fox The quick
+        brown fox The quick brown fox The quick brown fox The quick brown fox The
+        quick brown fox The quick brown fox The quick brown fox The quick brown fox
+        The quick brown fox The quick brown fox The quick brown fox The quick brown
+        fox The quick brown fox The quick brown fox The quick brown fox The quick
+        brown fox The quick brown fox The quick brown fox The quick brown fox The
+        quick brown fox The quick brown fox The quick brown fox The quick brown fox
+        The quick brown fox The quick brown fox The quick brown fox The quick brown
+        fox The quick brown fox The quick brown fox The quick brown fox The quick
+        brown fox The quick brown fox The quick brown fox The quick brown fox The
+        quick brown fox The quick brown fox The quick brown fox The quick brown fox
+        The quick brown fox The quick brown fox The quick brown fox The quick brown
+        fox The quick brown fox The quick brown fox The quick brown fox The quick
+        brown fox The quick brown fox The quick brown fox The quick brown fox The
+        quick brown fox The quick brown fox The quick brown fox The quick brown fox
+        The quick brown fox The quick brown fox The quick brown fox The quick brown
+        fox The quick brown fox The quick brown fox The quick brown fox The quick
+        brown fox The quick brown fox The quick brown fox The quick brown fox The
+        quick brown fox The quick brown fox The quick brown fox The quick brown fox
+        The quick brown fox The quick brown fox The quick brown fox The quick brown
+        fox The quick brown fox The quick brown fox The quick brown fox The quick
+        brown fox The quick brown fox The quick brown fox The quick brown fox The
+        quick brown fox The quick brown fox The quick brown fox The quick brown fox
+        The quick brown fox The quick brown fox The quick brown fox The quick brown
+        fox The quick brown fox The quick brown fox The quick brown fox The quick
+        brown fox The quick brown fox The quick brown fox The quick brown fox The
+        quick brown fox The quick brown fox The quick brown fox The quick brown fox
+        The quick brown fox The quick brown fox The quick brown fox The quick brown
+        fox The quick brown fox The quick brown fox The quick brown fox The quick
+        brown fox The quick brown fox The quick brown fox The quick brown fox The
+        quick brown fox The quick brown fox The quick brown fox The quick brown fox
+        The quick brown fox The quick brown fox The quick brown fox The quick brown
+        fox The quick brown fox The quick brown fox The quick brown fox The quick
+        brown fox The quick brown fox The quick brown fox The quick brown fox The
+        quick brown fox The quick brown fox The quick brown fox The quick brown fox
+        The quick brown fox The quick brown fox The quick brown fox The quick brown
+        fox The quick brown fox The quick brown fox The quick brown fox The quick
+        brown fox The quick brown fox The quick brown fox The quick brown fox The
+        quick brown fox The quick brown fox The quick brown fox The quick brown fox
+        The quick brown fox The quick brown fox The quick brown fox The quick brown
+        fox The quick brown fox The quick brown fox The quick brown fox The quick
+        brown fox The quick brown fox The quick brown fox The quick brown fox The
+        quick brown fox The quick brown fox The quick brown fox The quick brown fox
+        The quick brown fox The quick brown fox The quick brown fox The quick brown
+        fox The quick brown fox The quick brown fox The quick brown fox The quick
+        brown fox The quick brown fox The quick brown fox The quick brown fox The
+        quick brown fox The quick brown fox The quick brown fox The quick brown fox
+        The quick brown fox The quick brown fox The quick brown fox The quick brown
+        fox The quick brown fox The quick brown fox The quick brown fox The quick
+        brown fox The quick brown fox The quick brown fox The quick brown fox The
+        quick brown fox The quick brown fox The quick brown fox The quick brown fox
+        The quick brown fox The quick brown fox The quick brown fox The quick brown
+        fox The quick brown fox The quick brown fox The quick brown fox The quick
+        brown fox The quick brown fox The quick brown fox The quick brown fox The
+        quick brown fox The quick brown fox The quick brown fox The quick brown fox
+        The quick brown fox The quick brown fox The quick brown fox The quick brown
+        fox The quick brown fox The quick brown fox The quick brown fox The quick
+        brown fox The quick brown fox The quick brown fox The quick brown fox The
+        quick brown fox The quick brown fox The quick brown fox The quick brown fox
+        The quick brown fox The quick brown fox The quick brown fox The quick brown
+        fox The quick brown fox The quick brown fox The quick brown fox The quick
+        brown fox The quick brown fox The quick brown fox The quick brown fox The
+        quick brown fox The quick brown fox The quick brown fox The quick brown fox
+        The quick brown fox The quick brown fox The quick brown fox The quick brown
+        fox The quick brown fox The quick brown fox The quick brown fox The quick
+        brown fox The quick brown fox The quick brown fox The quick brown fox The
+        quick brown fox The quick brown fox The quick brown fox The quick brown fox
+        The quick brown fox The quick brown fox The quick brown fox The quick brown
+        fox The quick brown fox The quick brown fox The quick brown fox The quick
+        brown fox The quick brown fox The quick brown fox The quick brown fox The
+        quick brown fox The quick brown fox The quick brown fox The quick brown fox
+        The quick brown fox The quick brown fox The quick brown fox The quick brown
+        fox The quick brown fox The quick brown fox The quick brown fox The quick
+        brown fox The quick brown fox The quick brown fox The quick brown fox The
+        quick brown fox The quick brown fox The quick brown fox The quick brown fox
+        The quick brown fox The quick brown fox The quick brown fox The quick brown
+        fox The quick brown fox The quick brown fox The quick brown fox The quick
+        brown fox The quick brown fox The quick brown fox The quick brown fox The
+        quick brown fox The quick brown fox The quick brown fox The quick brown fox
+        The quick brown fox The quick brown fox The quick brown fox The quick brown
+        fox The quick brown fox The quick brown fox The quick brown fox The quick
+        brown fox The quick brown fox The quick brown fox The quick brown fox The
+        quick brown fox The quick brown fox The quick brown fox The quick brown fox
+        The quick brown fox The quick brown fox The quick brown fox The quick brown
+        fox The quick brown fox The quick brown fox The quick brown fox The quick
+        brown fox The quick brown fox The quick brown fox The quick brown fox The
+        quick brown fox The quick brown fox The quick brown fox The quick brown fox
+        The quick brown fox The quick brown fox The quick brown fox The quick brown
+        fox The quick brown fox The quick brown fox The quick brown fox The quick
+        brown fox The quick brown fox The quick brown fox The quick brown fox The
+        quick brown fox The quick brown fox The quick brown fox The quick brown fox
+        The quick brown fox The quick brown fox The quick brown fox The quick brown
+        fox The quick brown fox The quick brown fox The quick brown fox The quick
+        brown fox The quick brown fox The quick brown fox The quick brown fox The
+        quick brown fox The quick brown fox The quick brown fox The quick brown fox
+        The quick brown fox The quick brown fox The quick brown fox The quick brown
+        fox The quick brown fox The quick brown fox The quick brown fox The quick
+        brown fox The quick brown fox The quick brown fox The quick brown fox The
+        quick brown fox The quick brown fox The quick brown fox The quick brown fox
+        The quick brown fox The quick brown fox The quick brown fox The quick brown
+        fox The quick brown fox The quick brown fox The quick brown fox The quick
+        brown fox The quick brown fox The quick brown fox The quick brown fox The
+        quick brown fox The quick brown fox The quick brown fox The quick brown fox
+        The quick brown fox The quick brown fox The quick brown fox The quick brown
+        fox The quick brown fox The quick brown fox The quick brown fox The quick
+        brown fox The quick brown fox The quick brown fox The quick brown fox The
+        quick brown fox The quick brown fox The quick brown fox The quick brown fox
+        The quick brown fox The quick brown fox The quick brown fox The quick brown
+        fox The quick brown fox The quick brown fox The quick brown fox The quick
+        brown fox The quick brown fox The quick brown fox The quick brown fox The
+        quick brown fox The quick brown fox The quick brown fox The quick brown fox
+        "}],"stream":false}'
+    headers:
+      User-Agent:
+      - Faraday v2.14.2
+      Authorization:
+      - Bearer <BEARER_TOKEN>
+      Content-Type:
+      - application/json
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Sat, 23 May 2026 15:00:25 GMT
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Cf-Placement:
+      - remote-IAD
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - a004ee10eee3677f-ATL
+    body:
+      encoding: ASCII-8BIT
+      string: '{"id":"86035c6b-f36c-475d-a3cb-fea1bc127282","object":"chat.completion","created":1779548424,"model":"deepseek-v4-flash","choices":[{"index":0,"message":{"role":"assistant","content":"done","reasoning_content":"We
+        are asked to read the text and reply with exactly: ''done''. The text provided
+        is a repetition of the phrase \"The quick brown fox \" many times. The instruction
+        is clear: after reading the text, we should output ''done''. So I will do
+        that."},"logprobs":null,"finish_reason":"stop"}],"usage":{"prompt_tokens":2097,"completion_tokens":57,"total_tokens":2154,"prompt_tokens_details":{"cached_tokens":2048},"completion_tokens_details":{"reasoning_tokens":55},"prompt_cache_hit_tokens":2048,"prompt_cache_miss_tokens":49},"system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402","cost":"0"}'
+  recorded_at: Sat, 23 May 2026 15:00:25 GMT
+recorded_with: VCR 6.4.0

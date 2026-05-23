@@ -1,0 +1,115 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://opencode.ai/zen/go/v1/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"model":"deepseek-v4-flash","messages":[{"role":"user","content":"What
+        does this Ruby code do? Reply in one sentence.\n\ndef fib(n)\n  n <= 1 ? n
+        : fib(n-1) + fib(n-2)\nend\n"}],"stream":false}'
+    headers:
+      User-Agent:
+      - Faraday v2.14.2
+      Authorization:
+      - Bearer <BEARER_TOKEN>
+      Content-Type:
+      - application/json
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Sat, 23 May 2026 14:54:56 GMT
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Cf-Placement:
+      - remote-IAD
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - a004e5ff3e3e4583-ATL
+    body:
+      encoding: ASCII-8BIT
+      string: '{"id":"58fa38d0-a3b9-4090-9812-dc98c96d26d2","object":"chat.completion","created":1779548093,"model":"deepseek-v4-flash","choices":[{"index":0,"message":{"role":"assistant","content":"This
+        Ruby function recursively calculates the nth Fibonacci number, returning n
+        for 0 or 1 and the sum of the two preceding numbers otherwise.","reasoning_content":"First,
+        the user asks: \"What does this Ruby code do? Reply in one sentence.\" And
+        then they provide a Ruby function:\n\ndef fib(n)\n  n <= 1 ? n : fib(n-1)
+        + fib(n-2)\nend\n\nI need to describe what this code does in one sentence.
+        This is a classic recursive implementation of the Fibonacci sequence. The
+        function `fib` takes an integer `n` and returns the nth Fibonacci number,
+        where the sequence starts with F(0)=0, F(1)=1, and each subsequent number
+        is the sum of the two preceding ones. The condition `n <= 1 ? n : fib(n-1)
+        + fib(n-2)` handles the base cases (0 and 1) and recursively computes the
+        sum for larger n.\n\nSo, a concise sentence: \"This Ruby function recursively
+        calculates the nth Fibonacci number, returning n for 0 or 1 and the sum of
+        the two preceding numbers otherwise.\"\n\nI need to keep it to one sentence.
+        The user said \"Reply in one sentence.\" So I''ll provide just that."},"logprobs":null,"finish_reason":"stop"}],"usage":{"prompt_tokens":120,"completion_tokens":252,"total_tokens":372,"prompt_tokens_details":{"cached_tokens":0},"completion_tokens_details":{"reasoning_tokens":223},"prompt_cache_hit_tokens":0,"prompt_cache_miss_tokens":120},"system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402","cost":"0"}'
+  recorded_at: Sat, 23 May 2026 14:54:56 GMT
+- request:
+    method: post
+    uri: https://opencode.ai/zen/go/v1/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"model":"deepseek-v4-flash","messages":[{"role":"user","content":"What
+        does this do?\n\ndef fib(n)\n  n <= 1 ? n : fib(n-1) + fib(n-2)\nend\nReply
+        in one sentence."}],"stream":false}'
+    headers:
+      User-Agent:
+      - Faraday v2.14.2
+      Authorization:
+      - Bearer <BEARER_TOKEN>
+      Content-Type:
+      - application/json
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Sat, 23 May 2026 15:04:19 GMT
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Cf-Placement:
+      - remote-
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - a004f3bda810455a-ATL
+    body:
+      encoding: ASCII-8BIT
+      string: '{"id":"4dd004fa-dab3-41ae-861b-f65ce913e8f5","object":"chat.completion","created":1779548656,"model":"deepseek-v4-flash","choices":[{"index":0,"message":{"role":"assistant","content":"This
+        function recursively calculates the nth Fibonacci number.","reasoning_content":"First,
+        the user asks: \"What does this do?\" and then provides a Ruby code snippet:\n\n```\ndef
+        fib(n)\n  n <= 1 ? n : fib(n-1) + fib(n-2)\nend\n```\n\nI need to reply in
+        one sentence. So, I should explain what this function does concisely.\n\nThe
+        code defines a method called `fib` that takes an argument `n`. It uses a ternary
+        operator: if `n` is less than or equal to 1, it returns `n`; otherwise, it
+        returns the sum of `fib(n-1)` and `fib(n-2)`. This is a classic recursive
+        implementation of the Fibonacci sequence.\n\nThe Fibonacci sequence is typically
+        defined as: F(0) = 0, F(1) = 1, and for n > 1, F(n) = F(n-1) + F(n-2). This
+        function mirrors that.\n\nSo, in one sentence, I should say that this function
+        computes the nth Fibonacci number recursively.\n\nThe user said \"Reply in
+        one sentence,\" so I need to keep my response to a single sentence.\n\nFinal
+        response structure: One sentence explaining the function.\n\nExample sentence:
+        \"This function recursively calculates the nth Fibonacci number.\""},"logprobs":null,"finish_reason":"stop"}],"usage":{"prompt_tokens":118,"completion_tokens":265,"total_tokens":383,"prompt_tokens_details":{"cached_tokens":0},"completion_tokens_details":{"reasoning_tokens":255},"prompt_cache_hit_tokens":0,"prompt_cache_miss_tokens":118},"system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402","cost":"0"}'
+  recorded_at: Sat, 23 May 2026 15:04:19 GMT
+recorded_with: VCR 6.4.0

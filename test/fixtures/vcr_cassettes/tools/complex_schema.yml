@@ -1,0 +1,94 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://opencode.ai/zen/go/v1/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"model":"deepseek-v4-flash","messages":[{"role":"user","content":"Run
+        ls -la command using exec_command. Set cmd to: ls -la"}],"stream":false,"tools":[{"type":"function","function":{"name":"exec_command","description":"Execute
+        a shell command","parameters":{"type":"object","properties":{"cmd":{"type":"string","description":"Command
+        to run"},"workdir":{"anyOf":[{"type":"string"},{"type":"null"}],"description":"Working
+        directory"},"timeout":{"type":"integer","description":"Timeout in ms"}},"required":["cmd"],"additionalProperties":false}}}]}'
+    headers:
+      User-Agent:
+      - Faraday v2.14.2
+      Authorization:
+      - Bearer <BEARER_TOKEN>
+      Content-Type:
+      - application/json
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Sat, 23 May 2026 15:00:48 GMT
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Cf-Placement:
+      - remote-IAD
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - a004eea07997add7-ATL
+    body:
+      encoding: ASCII-8BIT
+      string: '{"id":"1a9b6c33-8b9e-4342-b4e7-053a21e37142","object":"chat.completion","created":1779548447,"model":"deepseek-v4-flash","choices":[{"index":0,"message":{"role":"assistant","content":"","reasoning_content":"The
+        user wants me to run the \"ls -la\" command using the exec_command tool. They
+        specify the cmd parameter should be \"ls -la\". Let me execute that.","tool_calls":[{"index":0,"id":"call_00_3kFYz0i1ycitwuxq0MFQ4449","type":"function","function":{"name":"exec_command","arguments":"{\"cmd\":
+        \"ls -la\"}"}}]},"logprobs":null,"finish_reason":"tool_calls"}],"usage":{"prompt_tokens":425,"completion_tokens":82,"total_tokens":507,"prompt_tokens_details":{"cached_tokens":256},"completion_tokens_details":{"reasoning_tokens":36},"prompt_cache_hit_tokens":256,"prompt_cache_miss_tokens":169},"system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402","cost":"0"}'
+  recorded_at: Sat, 23 May 2026 15:00:48 GMT
+- request:
+    method: post
+    uri: https://opencode.ai/zen/go/v1/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"model":"deepseek-v4-flash","messages":[{"role":"user","content":"Run
+        the exec_command tool with cmd=''ls''"}],"stream":false,"tools":[{"type":"function","function":{"name":"exec_command","description":"Execute
+        a shell command","parameters":{"type":"object","properties":{"cmd":{"type":"string"},"workdir":{"anyOf":[{"type":"string"},{"type":"null"}]}},"required":["cmd"],"additionalProperties":false}}}]}'
+    headers:
+      User-Agent:
+      - Faraday v2.14.2
+      Authorization:
+      - Bearer <BEARER_TOKEN>
+      Content-Type:
+      - application/json
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Sat, 23 May 2026 15:01:54 GMT
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Cf-Placement:
+      - remote-
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - a004f03f7f54395a-CLT
+    body:
+      encoding: ASCII-8BIT
+      string: '{"id":"a28c9cd7-6331-47f3-992f-8b002926cb2c","object":"chat.completion","created":1779548513,"model":"deepseek-v4-flash","choices":[{"index":0,"message":{"role":"assistant","content":"","reasoning_content":"The
+        user wants me to run the exec_command tool with cmd=''ls''. Let me do that.","tool_calls":[{"index":0,"id":"call_00_QxKsx2PHblK12MgM8hRN2087","type":"function","function":{"name":"exec_command","arguments":"{\"cmd\":
+        \"ls\"}"}}]},"logprobs":null,"finish_reason":"tool_calls"}],"usage":{"prompt_tokens":386,"completion_tokens":64,"total_tokens":450,"prompt_tokens_details":{"cached_tokens":256},"completion_tokens_details":{"reasoning_tokens":20},"prompt_cache_hit_tokens":256,"prompt_cache_miss_tokens":130},"system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402","cost":"0"}'
+  recorded_at: Sat, 23 May 2026 15:01:54 GMT
+recorded_with: VCR 6.4.0

@@ -1,0 +1,51 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://opencode.ai/zen/go/v1/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"model":"deepseek-v4-flash","messages":[{"role":"user","content":"Call
+        tool_a with x=''hello'' AND tool_b with y=''world'' at the same time."}],"stream":false,"tools":[{"type":"function","function":{"name":"tool_a","description":"Tool
+        A","parameters":{"type":"object","properties":{"x":{"type":"string"}},"required":["x"],"additionalProperties":false}}},{"type":"function","function":{"name":"tool_b","description":"Tool
+        B","parameters":{"type":"object","properties":{"y":{"type":"string"}},"required":["y"],"additionalProperties":false}}}]}'
+    headers:
+      User-Agent:
+      - Faraday v2.14.2
+      Authorization:
+      - Bearer <BEARER_TOKEN>
+      Content-Type:
+      - application/json
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Sat, 23 May 2026 14:54:42 GMT
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Cf-Placement:
+      - remote-
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - a004e5b4cd88b362-ATL
+    body:
+      encoding: ASCII-8BIT
+      string: '{"id":"01f53b57-54e3-4f63-a099-be9c99daca1b","object":"chat.completion","created":1779548081,"model":"deepseek-v4-flash","choices":[{"index":0,"message":{"role":"assistant","content":"","reasoning_content":"The
+        user wants me to call tool_a with x=''hello'' and tool_b with y=''world''
+        at the same time. I can invoke both tools simultaneously since they are independent.
+        Let me do that.","tool_calls":[{"index":0,"id":"call_00_kyDun3cYQGuuXeVOVVsc2248","type":"function","function":{"name":"tool_a","arguments":"{\"x\":
+        \"hello\"}"}},{"index":1,"id":"call_01_EYQrKcpTT1sQAnXdDfie2769","type":"function","function":{"name":"tool_b","arguments":"{\"y\":
+        \"world\"}"}}]},"logprobs":null,"finish_reason":"tool_calls"}],"usage":{"prompt_tokens":421,"completion_tokens":116,"total_tokens":537,"prompt_tokens_details":{"cached_tokens":256},"completion_tokens_details":{"reasoning_tokens":42},"prompt_cache_hit_tokens":256,"prompt_cache_miss_tokens":165},"system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402","cost":"0"}'
+  recorded_at: Sat, 23 May 2026 14:54:42 GMT
+recorded_with: VCR 6.4.0
