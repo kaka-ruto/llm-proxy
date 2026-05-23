@@ -233,8 +233,9 @@ module LLMProxy
       end
 
       auth = JSON.parse(File.read(auth_path))
-      access_token = auth.dig("tokens", "access_token")
-      account_id = auth["account_id"] || ""
+      tokens = auth["tokens"] || {}
+      access_token = tokens["access_token"]
+      account_id = tokens["account_id"] || ""
 
       unless access_token
         @log.warn("  No ChatGPT access token")
@@ -246,6 +247,7 @@ module LLMProxy
       end
 
       body["model"] = "gpt-5.5"
+      body["store"] = false
       headers = {
         "Authorization" => "Bearer #{access_token}",
         "Content-Type" => "application/json",
@@ -266,10 +268,17 @@ module LLMProxy
       req.body = JSON.generate(body)
       headers.each { |k, v| req[k] = v }
 
+      body_str = JSON.generate(body)
+      @log.debug("  ChatGPT request: #{body_str[..200]}...")
+      req = Net::HTTP::Post.new(uri.path)
+      req.body = body_str
+      headers.each { |k, v| req[k] = v }
+
       http.request(req) do |response|
         unless response.code.to_i == 200
-          @log.error("  ChatGPT returned #{response.code}")
-          out << SSE.format({ type: "error", error: { message: "ChatGPT API error: #{response.code}" } })
+          error_body = response.body.to_s[..500]
+          @log.error("  ChatGPT returned #{response.code}: #{error_body}")
+          out << SSE.format({ type: "error", error: { message: "ChatGPT error (#{response.code}). Try re-signing in Codex (ChatGPT icon)." } })
           out << SSE.format({ type: "response.completed", response: { id: "resp_0", status: "completed", model: body["model"], output: [] } })
           out << "data: [DONE]\n\n"
           out.close
@@ -278,7 +287,7 @@ module LLMProxy
 
         chunks = 0
         response.read_body { |chunk| out << chunk; chunks += 1 }
-        @log.info("  ChatGPT: #{chunks} chunks")
+        @log.info("  ChatGPT: #{chunks} chunks streamed")
       end
 
       out << "data: [DONE]\n\n"
