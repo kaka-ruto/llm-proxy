@@ -51,6 +51,33 @@ module LLMProxy
       { object: "list", data: LLMProxy.catalog.to_openai_list }.to_json
     end
 
+    get "/auth/login" do
+      url = LLMProxy::OAuth.login_url
+      redirect url
+    end
+
+    get "/auth/callback" do
+      result = LLMProxy::OAuth.handle_callback(code: params["code"], state: params["state"])
+      if result[:success]
+        content_type :json
+        { status: "ok", message: "Signed in to ChatGPT", account_id: result[:account_id] }.to_json
+      else
+        content_type :json
+        { status: "error", message: result[:error] }.to_json
+      end
+    end
+
+    get "/auth/status" do
+      content_type :json
+      { logged_in: LLMProxy::OAuth.logged_in?, account_id: LLMProxy::OAuth.get_account_id }.to_json
+    end
+
+    post "/auth/logout" do
+      LLMProxy::OAuth.logout
+      content_type :json
+      { status: "ok", message: "Signed out" }.to_json
+    end
+
     [
       Protocols::OpenAICompletions,
       Protocols::OpenAIResponses,
@@ -222,29 +249,17 @@ module LLMProxy
     end
 
     def chatgpt_passthrough(out, body)
-      auth_path = File.expand_path("~/.codex/auth.json")
-      unless File.exist?(auth_path)
-        @log.warn("  ~/.codex/auth.json not found — sign into ChatGPT in Codex")
-        out << SSE.format({ type: "error", error: { message: "Sign into ChatGPT in Codex first (ChatGPT icon in top-right)" } })
-        out << SSE.format({ type: "response.completed", response: { id: "resp_0", status: "completed", model: body["model"], output: [] } })
-        out << "data: [DONE]\n\n"
-        out.close
-        return
-      end
-
-      auth = JSON.parse(File.read(auth_path))
-      tokens = auth["tokens"] || {}
-      access_token = tokens["access_token"]
-      account_id = tokens["account_id"] || ""
-
+      access_token = LLMProxy::OAuth.get_token
       unless access_token
-        @log.warn("  No ChatGPT access token")
-        out << SSE.format({ type: "error", error: { message: "No ChatGPT access token. Re-sign in." } })
+        @log.warn("  Not signed into ChatGPT")
+        out << SSE.format({ type: "error", error: { message: "Sign into ChatGPT first: http://127.0.0.1:8765/auth/login" } })
         out << SSE.format({ type: "response.completed", response: { id: "resp_0", status: "completed", model: body["model"], output: [] } })
         out << "data: [DONE]\n\n"
         out.close
         return
       end
+
+      account_id = LLMProxy::OAuth.get_account_id || ""
 
       body["model"] = "gpt-5.5"
       body["store"] = false

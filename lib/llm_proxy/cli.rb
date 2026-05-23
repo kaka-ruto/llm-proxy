@@ -25,6 +25,21 @@ module LLMProxy
         Codex.patch_asar
       when "restore"
         Codex.restore_asar
+      when "login"
+        puts "Opening browser for ChatGPT login..."
+        url = LLMProxy::OAuth.login_url
+        system("open", url)
+        puts "Waiting for OAuth callback on http://localhost:1455/auth/callback..."
+        start_callback_server
+      when "logout"
+        LLMProxy::OAuth.logout
+        puts "Signed out of ChatGPT."
+      when "status"
+        if LLMProxy::OAuth.logged_in?
+          puts "Signed in to ChatGPT (account: #{LLMProxy::OAuth.get_account_id})"
+        else
+          puts "Not signed in to ChatGPT. Run: llm-proxy login"
+        end
       when "-h", "--help"
         print_help
       when "-v", "--version"
@@ -124,6 +139,46 @@ module LLMProxy
       puts "  LLM_PROXY_CONFIG    Path to config.yml (default: config.yml)"
       puts "  OPENCODE_API_KEY    Your OpenCode API key"
       puts "  OPENROUTER_API_KEY  Your OpenRouter API key"
+    end
+
+    def self.start_callback_server
+      require "socket"
+
+      server = TCPServer.new("127.0.0.1", 1455)
+      puts "  Listening on http://127.0.0.1:1455/auth/callback"
+
+      client = server.accept
+      request = client.gets
+      path = request&.split(" ")&.[](1) || ""
+
+      if path.start_with?("/auth/callback")
+        query = URI.decode_www_form(path.split("?").last || "").to_h rescue {}
+        result = LLMProxy::OAuth.handle_callback(code: query["code"], state: query["state"])
+
+        if result[:success]
+          body = "<html><body><h1>✅ Signed in to ChatGPT</h1><p>Account: #{result[:account_id]}</p><p>You can close this window.</p></body></html>"
+        else
+          body = "<html><body><h1>❌ Login failed</h1><p>#{result[:error]}</p></body></html>"
+        end
+
+        client.puts "HTTP/1.1 200 OK"
+        client.puts "Content-Type: text/html"
+        client.puts "Content-Length: #{body.bytesize}"
+        client.puts "Connection: close"
+        client.puts
+        client.puts body
+      end
+
+      client.close
+      server.close
+
+      if result && result[:success]
+        puts "  ✅ Signed in to ChatGPT (account: #{result[:account_id]})"
+      else
+        puts "  ❌ Login failed: #{result&.dig(:error) || 'Unknown error'}"
+      end
+    rescue => e
+      puts "  ❌ OAuth error: #{e.message}"
     end
   end
 end
