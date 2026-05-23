@@ -228,14 +228,16 @@ module LLMProxy
     end
 
     def build_dynamic_tool(name, description, parameters)
+      schema = (parameters || { "type" => "object", "properties" => {} }).transform_keys(&:to_sym)
+      schema[:additionalProperties] = false unless schema.key?(:additionalProperties)
+
       klass = Class.new(RubyLLM::Tool) do
         description(description || "")
-        (parameters || {}).dig("properties")&.each do |prop_name, prop_schema|
-          param prop_name.to_sym, type: prop_schema["type"] || "string", description: prop_schema["description"] || ""
-        end
         define_method(:execute) { |**| raise LLMProxy::ToolCallStop }
       end
       klass.define_method(:name) { name }
+      sd = RubyLLM::Tool::SchemaDefinition.new(schema: schema)
+      klass.instance_variable_set(:@params_schema_definition, sd)
       klass
     end
   end
