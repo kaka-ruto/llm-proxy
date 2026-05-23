@@ -124,7 +124,12 @@ module LLMProxy
 
       unless is_streaming
         chat = build_chat(model_info, normalized)
-        chat.complete
+        chat.before_tool_call { raise ToolCallStop }
+        begin
+          chat.complete
+        rescue ToolCallStop
+          # Tool call was made in non-streaming — return it as response.completed
+        end
         final_msg = chat.messages.last
         usage = token_usage(final_msg)
         @log.info("  Usage: #{usage.inspect}")
@@ -165,8 +170,9 @@ module LLMProxy
         out << SSE.format(complete_events)
 
       rescue ToolCallStop
-        @log.info("  Tool call stop (streamed tool calls)")
         final_msg = chat&.messages&.last rescue nil
+        tool_calls_info = final_msg&.tool_call? ? final_msg.tool_calls.values.map { |tc| { id: tc.id, name: tc.name } } : []
+        @log.info("  Tool call stop: #{tool_calls_info}")
         usage = token_usage(final_msg)
         @log.info("  Usage: #{usage.inspect}") if usage
         out << SSE.format(protocol.complete_events(model: model_info.id, usage: usage))
