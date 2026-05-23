@@ -115,11 +115,6 @@ module LLMProxy
 
       model_info = LLMProxy.catalog.lookup(model_id)
 
-      if model_id.start_with?("gpt-")
-        @log.info("  model=#{model_id} (ChatGPT native)")
-        return chatgpt_passthrough(out, body)
-      end
-
       unless model_info
         fallback_id = LLMProxy.default_model
         fallback = fallback_id ? LLMProxy.catalog.lookup(fallback_id) : nil
