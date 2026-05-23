@@ -115,6 +115,11 @@ module LLMProxy
 
       model_info = LLMProxy.catalog.lookup(model_id)
 
+      if model_id.start_with?("chatgpt-")
+        @log.info("  model=#{model_id} (ChatGPT via OAuth)")
+        return chatgpt_passthrough(out, body)
+      end
+
       unless model_info
         fallback_id = LLMProxy.default_model
         fallback = fallback_id ? LLMProxy.catalog.lookup(fallback_id) : nil
@@ -256,7 +261,12 @@ module LLMProxy
 
       account_id = LLMProxy::OAuth.get_account_id || ""
 
-      body["model"] = "gpt-5.5"
+      # Map catalog slug to ChatGPT API model name
+      # chatgpt-gpt-5-5 -> gpt-5.5, chatgpt-gpt-5-4-pro -> gpt-5.4-pro
+      model_name = body["model"].sub(/\Achatgpt-gpt-/, "gpt-")
+      # Replace remaining dashes in version numbers: gpt-5-5 -> gpt-5.5, gpt-5-4-pro -> gpt-5.4-pro
+      model_name = model_name.gsub(/(\d+)-(\d+)/) { "#{$1}.#{$2}" }
+      body["model"] = model_name
       body["store"] = false
       headers = {
         "Authorization" => "Bearer #{access_token}",
