@@ -1,6 +1,7 @@
 require "sinatra/base"
 require "logger"
 require "fileutils"
+require "set"
 
 module LLMProxy
   class Server < Sinatra::Base
@@ -206,26 +207,19 @@ module LLMProxy
         role = msg[:role].to_s.to_sym
 
         if msg[:tool_calls]
-          tool_calls_hash = msg[:tool_calls].to_h do |tc|
+          text = msg[:tool_calls].map do |tc|
             fn = tc[:function] || tc
             name = fn[:name] || tc[:name] || ""
-            call_id = tc[:id] || "call_0"
-            args = parse_tool_args(fn[:arguments] || tc[:arguments])
-            [call_id, RubyLLM::ToolCall.new(id: call_id, name: name, arguments: args)]
-          end
-          attrs = { role: :assistant, content: nil, tool_calls: tool_calls_hash }
-          attrs[:thinking] = RubyLLM::Thinking.new(text: pending_thinking) if pending_thinking
-          chat.add_message(attrs)
+            args = fn[:arguments] || tc[:arguments] || ""
+            args_str = args.is_a?(String) ? args : args.to_json
+            "#{name}(#{args_str})"
+          end.join("\n")
+          chat.add_message(role: :assistant, content: text)
           pending_thinking = nil
         elsif role == :tool
-          attrs = { role: :tool, content: msg[:content] || "" }
-          attrs[:tool_call_id] = msg[:tool_call_id] if msg[:tool_call_id]
-          chat.add_message(attrs)
+          chat.add_message(role: :user, content: "[Result: #{msg[:content]}]")
         elsif msg[:content]
           attrs = { role: role, content: msg[:content] }
-          if role == :assistant && msg[:thinking]
-            attrs[:thinking] = RubyLLM::Thinking.new(text: msg[:thinking])
-          end
           chat.add_message(attrs)
         elsif role == :assistant && msg[:summary]
           pending_thinking = msg[:summary].map { |s| s.is_a?(Hash) ? (s["text"] || s[:text]) : s.to_s }.join
