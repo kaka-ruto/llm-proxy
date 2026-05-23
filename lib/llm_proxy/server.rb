@@ -203,34 +203,58 @@ module LLMProxy
       end
 
       pending_thinking = nil
+      buffer = nil  # accumulates consecutive function_call items
+
+      flush_buffer = lambda do
+        return unless buffer
+        tc_hash = buffer[:calls].to_h do |tc|
+          fn = tc[:function] || tc
+          name = fn[:name] || tc[:name] || ""
+          call_id = tc[:id] || "call_#{buffer[:calls].index(tc)}"
+          args = parse_tool_args(fn[:arguments] || tc[:arguments])
+          [call_id, RubyLLM::ToolCall.new(id: call_id, name: name, arguments: args)]
+        end
+        if buffer[:thinking]
+          chat.add_message(role: :assistant, content: nil, tool_calls: tc_hash,
+                            thinking: RubyLLM::Thinking.new(text: buffer[:thinking]))
+        else
+          calls_text = buffer[:calls].map do |tc|
+            fn = tc[:function] || tc
+            "#{fn[:name] || tc[:name]}(#{fn[:arguments] || tc[:arguments]})"
+          end.join("\n")
+          chat.add_message(role: :assistant, content: calls_text)
+        end
+        buffer = nil
+      end
+
       (normalized[:messages] || []).each do |msg|
         role = msg[:role].to_s.to_sym
 
         if msg[:tool_calls]
-          text = msg[:tool_calls].map do |tc|
-            fn = tc[:function] || tc
-            name = fn[:name] || tc[:name] || ""
-            args = fn[:arguments] || tc[:arguments] || ""
-            args_str = args.is_a?(String) ? args : args.to_json
-            "#{name}(#{args_str})"
-          end.join("\n")
-          chat.add_message(role: :assistant, content: text)
-          pending_thinking = nil
-        elsif role == :tool
-          last = chat.messages.last
-          result_text = msg[:content].to_s.strip
-          if last && last.role == :assistant
-            last.content = "#{last.content}\n\n#{result_text}"
-          else
-            chat.add_message(role: :user, content: result_text)
+          if buffer.nil?
+            buffer = { calls: [], thinking: pending_thinking }
+            pending_thinking = nil
           end
-        elsif msg[:content]
-          attrs = { role: role, content: msg[:content] }
-          chat.add_message(attrs)
-        elsif role == :assistant && msg[:summary]
-          pending_thinking = msg[:summary].map { |s| s.is_a?(Hash) ? (s["text"] || s[:text]) : s.to_s }.join
+          buffer[:calls].concat(msg[:tool_calls])
+        else
+          flush_buffer.call
+          if role == :tool
+            call_id = msg[:tool_call_id]
+            match = chat.messages.reverse.find { |m| m.role == :assistant && m.tool_call? && m.tool_calls.key?(call_id) }
+            if match
+              chat.add_message(role: :tool, content: msg[:content] || "", tool_call_id: call_id)
+            else
+              chat.add_message(role: :user, content: "[Result: #{msg[:content].to_s.strip}]")
+            end
+          elsif msg[:content]
+            attrs = { role: role, content: msg[:content] }
+            chat.add_message(attrs)
+          elsif role == :assistant && msg[:summary]
+            pending_thinking = msg[:summary].map { |s| s.is_a?(Hash) ? (s["text"] || s[:text]) : s.to_s }.join
+          end
         end
       end
+      flush_buffer.call
 
       chat
     end
