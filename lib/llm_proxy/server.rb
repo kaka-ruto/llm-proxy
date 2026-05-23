@@ -217,7 +217,13 @@ module LLMProxy
           chat.add_message(role: :assistant, content: text)
           pending_thinking = nil
         elsif role == :tool
-          chat.add_message(role: :user, content: "[Result: #{msg[:content]}]")
+          last = chat.messages.last
+          result_text = msg[:content].to_s.strip
+          if last && last.role == :assistant
+            last.content = "#{last.content}\n\n#{result_text}"
+          else
+            chat.add_message(role: :user, content: result_text)
+          end
         elsif msg[:content]
           attrs = { role: role, content: msg[:content] }
           chat.add_message(attrs)
