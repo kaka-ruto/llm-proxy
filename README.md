@@ -1,6 +1,8 @@
 # llm-proxy
 
-A Ruby HTTP proxy that exposes any LLM provider (OpenAI, Anthropic, Google, OpenRouter, OpenCode Go/Zen, etc.) through multiple wire protocols simultaneously. Lets you use the same models in **Codex Desktop**, **Claude Code**, **Cursor**, and any other client, without changing provider configs per tool.
+> **For Research Purposes Only**
+
+A Ruby HTTP proxy that exposes any LLM provider through multiple wire protocols simultaneously. Lets you use the same models in **Codex Desktop**, **Claude Code**, **Cursor**, and any other client, without changing provider configs per tool.
 
 Built on [RubyLLM](https://rubyllm.com) — one API for 15+ providers.
 
@@ -17,32 +19,73 @@ Built on [RubyLLM](https://rubyllm.com) — one API for 15+ providers.
 ```bash
 cd ~/Code/Anywaye/llm-proxy
 bundle install
-
-# Set your API keys
-export OPENCODE_API_KEY="your-key-from-https://opencode.ai/zen"
-export OPENROUTER_API_KEY="your-key-from-https://openrouter.ai/keys"
+cp .env.example .env   # add your API keys
 
 # Start the proxy
-ruby bin/llm-proxy
+ruby bin/llm-proxy server
 ```
 
-The server starts on `http://127.0.0.1:8765` with 20+ models ready to use.
+The server starts on `http://127.0.0.1:8765` with models ready to use.
 
-## Usage with different clients
+## Models included (21 via config.yml)
 
-### Codex Desktop
+| Provider | Models | Source |
+|----------|--------|--------|
+| **OpenCode Go** | Kimi K2.5/2.6, DeepSeek V4 Flash/Pro, Qwen 3.5+/3.6+, GLM-5, MIMO V2.5, MiniMax M2.7 | `opencode.ai/zen/go/v1` |
+| **OpenCode Zen** | Claude Sonnet 4/4.6, Opus 4.5/4.7, Haiku 4.5, Gemini 3 Flash, DeepSeek V4 Flash Free | `opencode.ai/zen/v1` |
+| **OpenRouter** | GPT-4o, Claude Sonnet 4.6/Opus 4.7, DeepSeek V4 Flash, Gemini 3 Flash | `openrouter.ai/api/v1` |
+
+## CLI commands
 
 ```bash
-codex -c model_providers.llm-proxy.name="LLM Proxy" \
-      -c model_providers.llm-proxy.base_url="http://127.0.0.1:8765/v1" \
-      -c model_providers.llm-proxy.wire_api="responses" \
-      -c model_providers.llm-proxy.experimental_bearer_token="dummy" \
-      -c model="kimi-k2.6"
+llm-proxy server            # Start the HTTP proxy (keep running)
+
+llm-proxy enable            # Install proxy provider into Codex config
+llm-proxy disable           # Restore Codex to native (ChatGPT)
+llm-proxy toggle            # Switch between proxy and native
+
+llm-proxy codex launch      # Quit Codex, enable proxy, relaunch
+llm-proxy codex patch       # Patch Codex ASAR for custom model picker
+llm-proxy codex restore     # Restore original ASAR from backup
+
+llm-proxy backup            # Save current Codex app.asar (for rollback)
+llm-proxy backups           # List saved backups
+llm-proxy restore <build>   # Restore Codex to a backed up version
+llm-proxy delete-backup <build>  # Remove a backup
+llm-proxy delete-backup --all    # Remove all backups
+
+llm-proxy catalog           # Generate the Codex model catalog JSON
+
+llm-proxy login             # ChatGPT OAuth login (opens browser)
+llm-proxy logout            # Clear ChatGPT OAuth token
+llm-proxy status            # Show ChatGPT login status
 ```
 
-Or use the generated catalog at `file:///Users/kaka/Code/Cowork/codex-shim/.codex-shim/custom_model_catalog.json` and point Codex at the proxy.
+## Usage with Codex Desktop
 
-### Claude Code
+The proxy integrates with Codex as a custom model provider. Enable it:
+
+```bash
+llm-proxy enable
+```
+
+This adds the `[model_providers.llm_proxy]` section to `~/.codex/config.toml` and generates a model catalog with 21 proxy models.
+
+**If the Codex model picker only shows "Custom"**, the ASAR patch is needed:
+
+```bash
+llm-proxy codex patch
+```
+
+This patches Codex's bundled JS to allow custom models in the picker. Re-apply after each Codex update.
+
+**If a Codex update breaks custom models** (pattern changes), rollback:
+
+```bash
+llm-proxy restore 3044    # restore the last working build
+```
+
+## Usage with Claude Code
 
 ```bash
 ANTHROPIC_BASE_URL=http://127.0.0.1:8765 \
@@ -57,15 +100,13 @@ Or add to `~/.claude/settings.local.json`:
 {
   "env": {
     "ANTHROPIC_BASE_URL": "http://127.0.0.1:8765",
-    "ANTHROPIC_AUTH_TOKEN": "ignore",
-    "ANTHROPIC_MODEL": "claude-sonnet-4-6"
+    "ANTHROPIC_AUTH_TOKEN": "ignore"
   }
 }
 ```
 
-### Cursor / Aider / open-interpreter
+## Usage with Cursor / Aider
 
-Point to the OpenAI-compatible endpoint:
 ```bash
 # Cursor: Settings → Models → OpenAI Base URL
 http://127.0.0.1:8765/v1
@@ -78,9 +119,27 @@ aider --openai-api-base http://127.0.0.1:8765/v1 --model kimi-k2.6
 
 | Endpoint | Format | Client |
 |----------|--------|--------|
-| `POST /v1/chat/completions` | OpenAI chat completions | Cursor, Aider, open-interpreter, most tools |
+| `POST /v1/chat/completions` | OpenAI chat completions | Cursor, Aider, open-interpreter |
 | `POST /v1/responses` | OpenAI Responses API | Codex Desktop |
 | `POST /v1/messages` | Anthropic Messages API | Claude Code CLI |
+| `GET /v1/models` | OpenAI models list | Model discovery |
+| `GET /health` | Health check | Monitoring |
+
+## Architecture
+
+```
+Client request ──▶ Sinatra route ──▶ Protocol.normalize() ──▶ RubyLLM.chat()
+                    │                                              │
+                    │    Protocol.chunk_events() ◀── streaming ◀───┘
+                    │
+                    ▼
+            SSE stream back to client
+```
+
+- **Protocols** (`lib/llm_proxy/protocols/`) translate wire format ↔ unified format
+- **RubyLLM** routes to providers and handles streaming
+- **Config** (`config.yml`) defines which models to expose
+- **OpenCode Go/Zen providers** registered automatically at startup
 
 ## Adding models
 
@@ -96,27 +155,9 @@ models:
     capabilities: [tools, streaming, reasoning, vision]
 ```
 
-Supported providers (via RubyLLM): `openai`, `anthropic`, `google`, `openrouter`, `deepseek`, `xai`, `mistral`, `groq`, `bedrock`, `ollama`, `perplexity`, `azure`, `vertexai`, `gpustack`, plus `opencode` and `opencode_go` (registered by this project).
+Supported providers (via RubyLLM): `openai`, `anthropic`, `google`, `openrouter`, `deepseek`, `xai`, `mistral`, `groq`, `bedrock`, `ollama`, `perplexity`, `azure`, `vertexai`, `gpustack`, plus `opencode` and `opencode_go`.
 
-## Architecture
-
-```
-Client request ──▶ Sinatra route ──▶ Protocol.normalize() ──▶ RubyLLM.chat()
-                    │                                              │
-                    │    Protocol.chunk_events() ◀── streaming ◀───┘
-                    │
-                    ▼
-            SSE stream back to client
-```
-
-- **Protocols** translate wire format ↔ unified format
-- **RubyLLM** routes to providers and handles streaming
-- **Config** defines which models to expose
-- Adding a new protocol = subclass `Protocols::Base` + register in server
-
-## Custom providers
-
-RubyLLM supports custom OpenAI-compatible providers:
+## Adding a custom provider
 
 ```ruby
 # lib/llm_proxy/providers/my_provider.rb
@@ -128,3 +169,72 @@ RubyLLM::Provider.register :my_provider, RubyLLM::Providers::MyProvider
 ```
 
 Then reference it in `config.yml` with `provider: my_provider`.
+
+## API keys
+
+Keys go in `.env` (gitignored):
+
+```bash
+OPENCODE_API_KEY=sk-...    # https://opencode.ai/zen
+OPENROUTER_API_KEY=sk-...  # https://openrouter.ai/keys
+ANTHROPIC_API_KEY=sk-...   # direct Anthropic access
+OPENAI_API_KEY=sk-...      # direct OpenAI access
+```
+
+## Logging
+
+All requests are logged to `logs/development.log` with full request/response details:
+
+```
+POST /v1/responses
+  Headers: {...}
+  Body: {"model":"deepseek-v4-flash",...}
+  model=deepseek-v4-flash (opencode_go) msgs=1 tools=0
+  Starting stream...
+  Streamed 50 events...
+  Streamed 433 events total
+  Usage: {input: 84, output: 433}
+  Finish reason: stop
+  complete_events count=6
+  response.completed output items=2
+  => 200 (5621.9ms)
+```
+
+## Project layout
+
+```
+llm-proxy/
+├── bin/llm-proxy              # CLI entry point
+├── config.yml                 # Model definitions
+├── .env                       # API keys (gitignored)
+├── logs/development.log       # Request log
+├── .codex-shim/               # Generated catalog, ASAR backups
+└── lib/
+    ├── llm_proxy.rb           # Entry point
+    └── llm_proxy/
+        ├── server.rb          # Sinatra HTTP server
+        ├── cli.rb             # CLI command dispatch
+        ├── codex.rb           # Codex integration (catalog, patch, backup, enable)
+        ├── config.rb          # YAML config loader
+        ├── model_catalog.rb   # Model lookup
+        ├── auth.rb            # ChatGPT OAuth login (PKCE)
+        ├── providers/
+        │   ├── opencode.rb    # OpenCode Zen provider for RubyLLM
+        │   └── opencode_go.rb # OpenCode Go provider for RubyLLM
+        └── protocols/
+            ├── base.rb                  # Protocol base class
+            ├── openai_completions.rb     # POST /v1/chat/completions
+            ├── openai_responses.rb       # POST /v1/responses (Codex)
+            └── anthropic_messages.rb     # POST /v1/messages (Claude Code)
+```
+
+## Dependencies
+
+- Ruby 3.2+
+- RubyLLM ~> 1.14
+- Sinatra ~> 4.0
+- Puma ~> 6.0
+
+## License
+
+MIT
