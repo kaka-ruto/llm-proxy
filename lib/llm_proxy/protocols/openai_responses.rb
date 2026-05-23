@@ -85,18 +85,19 @@ module LLMProxy
 
         @tool_calls.each_value do |tc|
           next if tc[:closed]
+          args = tc[:arguments].empty? ? "{}" : tc[:arguments]
           events << {
             type: "response.function_call_arguments.done",
             item_id: tc[:id],
             output_index: tc[:index],
-            arguments: tc[:arguments]
+            arguments: args
           }
           events << {
             type: "response.output_item.done",
             output_index: tc[:index],
             item: {
               id: tc[:id], type: "function_call", status: "completed",
-              call_id: tc[:id], name: tc[:name], arguments: tc[:arguments]
+              call_id: tc[:id], name: tc[:name], arguments: args
             }
           }
           tc[:closed] = true
@@ -156,9 +157,10 @@ module LLMProxy
         end
 
         @tool_calls.each_value do |tc|
+          args = tc[:arguments].empty? ? "{}" : tc[:arguments]
           output << [tc[:index], {
             id: tc[:id], type: "function_call", status: "completed",
-            call_id: tc[:id], name: tc[:name], arguments: tc[:arguments]
+            call_id: tc[:id], name: tc[:name], arguments: args
           }]
         end
 
@@ -292,26 +294,35 @@ module LLMProxy
           key = id
           state = @tool_calls[key]
 
+          arg_text = tc.arguments.is_a?(String) ? tc.arguments : JSON.generate(tc.arguments)
+
           if state.nil?
             events.concat(close_message) if @message_opened && !@message_closed
             idx = next_index
-            state = { id: id, index: idx, name: tc.name, arguments: "", closed: false }
+            state = { id: id, index: idx, name: tc.name, arguments: arg_text, closed: false }
             @tool_calls[key] = state
-            events << {
-              type: "response.output_item.added",
-              output_index: idx,
-              item: { id: id, type: "function_call", status: "in_progress", call_id: id, name: tc.name, arguments: "" }
-            }
-          end
 
-          arg_text = tc.arguments.is_a?(String) ? tc.arguments : JSON.generate(tc.arguments)
-          delta = arg_text[state[:arguments].length..]
-          if delta&.length&.> 0
-            state[:arguments] += delta
-            events << {
-              type: "response.function_call_arguments.delta",
-              item_id: id, output_index: state[:index], delta: delta
-            }
+            if arg_text.length > 0
+              events << {
+                type: "response.output_item.added",
+                output_index: idx,
+                item: { id: id, type: "function_call", status: "in_progress", call_id: id, name: tc.name, arguments: arg_text }
+              }
+            else
+              events << {
+                type: "response.output_item.added",
+                output_index: idx,
+                item: { id: id, type: "function_call", status: "in_progress", call_id: id, name: tc.name, arguments: "" }
+              }
+            end
+          else
+            delta = arg_text[state[:arguments].length..]
+            if delta&.length&.> 0
+              events << {
+                type: "response.function_call_arguments.delta",
+                item_id: id, output_index: state[:index], delta: delta
+              }
+            end
           end
         end
         events
