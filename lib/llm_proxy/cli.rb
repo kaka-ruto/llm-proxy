@@ -88,6 +88,8 @@ module LLMProxy
       dotenv = File.expand_path("../../.env", __dir__)
       return unless File.exist?(dotenv)
 
+      File.chmod(0600, dotenv) unless File.stat(dotenv).mode & 077 == 0
+
       File.readlines(dotenv).each do |line|
         next if line.strip.empty? || line.start_with?("#")
         key, value = line.strip.split("=", 2)

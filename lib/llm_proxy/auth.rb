@@ -190,6 +190,7 @@ module LLMProxy
         path = session_path
         FileUtils.mkdir_p(File.dirname(path))
         File.write(path, JSON.generate(data))
+        File.chmod(0600, path)
       end
 
       def load_session
@@ -218,6 +219,7 @@ module LLMProxy
           expires_at: creds.expires_at,
           account_id: creds.account_id,
         }))
+        File.chmod(0600, STORE_PATH)
       end
 
       def load_credentials

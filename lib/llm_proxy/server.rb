@@ -9,7 +9,9 @@ module LLMProxy
 
     configure do
       FileUtils.mkdir_p(LOG_DIR)
+      File.chmod(0700, LOG_DIR)
       logger = Logger.new(LOG_FILE, "daily")
+      File.chmod(0600, LOG_FILE) if File.exist?(LOG_FILE)
       logger.level = Logger::DEBUG
       logger.formatter = proc { |severity, datetime, _progname, msg|
         "[#{datetime.strftime("%Y-%m-%d %H:%M:%S %z")}] #{severity}: #{msg}\n"
@@ -23,10 +25,15 @@ module LLMProxy
     before do
       @log = settings.logger
       @log.info("#{request.request_method} #{request.path_info}")
-      @log.debug("  Headers: #{request.env.select { |k, _| k.start_with?("HTTP_") }.to_json}")
+
+      headers = request.env.select { |k, _| k.start_with?("HTTP_") }
+      headers = headers.merge("HTTP_AUTHORIZATION" => "[REDACTED]") if headers.key?("HTTP_AUTHORIZATION")
+      @log.debug("  Headers: #{headers.to_json}")
+
       body_str = request.body.read
       request.body.rewind
-      @log.debug("  Body: #{body_str}")
+      safe_body = body_str.gsub(/(?:"apiKey"|"key")\s*:\s*"[^"]+"/, '\1: "[REDACTED]"')
+      @log.debug("  Body: #{safe_body}")
       @request_body = body_str
       @_streaming = false
       @_start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)

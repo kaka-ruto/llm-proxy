@@ -2,6 +2,7 @@ require "open3"
 require "fileutils"
 require "digest"
 require "zlib"
+require "securerandom"
 
 module LLMProxy
   module Codex
@@ -67,7 +68,7 @@ module LLMProxy
 
         data = Zlib::GzipReader.open(asar_gz) { |gz| gz.read }
         File.write(APP_ASAR, data, mode: "wb")
-        `codesign --force --deep --sign - /Applications/Codex.app 2>/dev/null`
+        system("codesign", "--force", "--deep", "--sign", "-", "/Applications/Codex.app")
         size_mb = (data.bytesize.to_f / 1024 / 1024).round(1)
         puts "✅ Restored Codex #{target[:short]} (build #{target[:build]}) — #{size_mb}MB"
         puts "   Quit and reopen Codex."
@@ -234,13 +235,14 @@ module LLMProxy
           #{MANAGED_END}
         TOP
 
+        token = SecureRandom.hex(32)
         prov = <<~PROV
           #{MANAGED_BEGIN}
           [model_providers.llm_proxy]
           name = "LLM Proxy"
           base_url = "http://127.0.0.1:#{port}/v1"
           wire_api = "responses"
-          experimental_bearer_token = "dummy"
+          experimental_bearer_token = "#{token}"
           request_max_retries = 3
           stream_max_retries = 3
           stream_idle_timeout_ms = 600000
@@ -376,7 +378,7 @@ module LLMProxy
       end
 
       def command?(cmd)
-        system("which #{cmd} > /dev/null 2>&1")
+        system("which", cmd)
       end
 
       def asar_hash(path)
