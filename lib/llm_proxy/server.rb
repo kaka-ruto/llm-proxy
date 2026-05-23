@@ -196,14 +196,30 @@ module LLMProxy
       end
 
       (normalized[:messages] || []).each do |msg|
-        next unless msg[:content]
         role = msg[:role].to_s.to_sym
-        attrs = { role: role, content: msg[:content] }
-        attrs[:tool_call_id] = msg[:tool_call_id] if msg[:tool_call_id]
-        chat.add_message(attrs)
+
+        if msg[:tool_calls] && !msg[:content]
+          tool_text = msg[:tool_calls].map do |tc|
+            fn = tc[:function] || tc
+            "[Called tool: #{fn[:name] || tc[:name]} with args: #{fn[:arguments] || tc[:arguments]}]"
+          end.join("\n")
+          chat.add_message(role: :assistant, content: tool_text)
+        elsif role == :tool
+          chat.add_message(role: :user, content: "[Tool result: #{msg[:content]}]")
+        elsif msg[:content]
+          attrs = { role: role, content: msg[:content] }
+          attrs[:tool_call_id] = msg[:tool_call_id] if msg[:tool_call_id]
+          chat.add_message(attrs)
+        end
       end
 
       chat
+    end
+
+    def parse_arguments(args)
+      return {} if args.nil? || args.empty?
+      return args if args.is_a?(Hash)
+      JSON.parse(args) rescue { _raw: args.to_s }
     end
 
     def token_usage(msg)
