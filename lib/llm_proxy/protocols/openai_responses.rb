@@ -291,36 +291,42 @@ module LLMProxy
       def tool_call_events(tool_calls)
         events = []
         tool_calls.each do |id, tc|
-          key = id
-          state = @tool_calls[key]
+          # Streaming deltas may arrive with nil id — find the matching open
+          # tool call by position
+          key = id || @tool_calls.keys.find { |k| k != nil && !@tool_calls[k][:closed] }
+          state = key ? @tool_calls[key] : nil
 
           arg_text = tc.arguments.is_a?(String) ? tc.arguments : JSON.generate(tc.arguments)
 
           if state.nil?
             events.concat(close_message) if @message_opened && !@message_closed
             idx = next_index
-            state = { id: id, index: idx, name: tc.name, arguments: arg_text, closed: false }
-            @tool_calls[key] = state
+            call_id = id || tc.name || "call_#{idx}"
+            state = { id: call_id, index: idx, name: tc.name || call_id, arguments: arg_text, closed: false }
+            @tool_calls[call_id] = state
 
             if arg_text.length > 0
               events << {
                 type: "response.output_item.added",
                 output_index: idx,
-                item: { id: id, type: "function_call", status: "in_progress", call_id: id, name: tc.name, arguments: arg_text }
+                item: { id: call_id, type: "function_call", status: "in_progress",
+                        call_id: call_id, name: state[:name], arguments: arg_text }
               }
             else
               events << {
                 type: "response.output_item.added",
                 output_index: idx,
-                item: { id: id, type: "function_call", status: "in_progress", call_id: id, name: tc.name, arguments: "" }
+                item: { id: call_id, type: "function_call", status: "in_progress",
+                        call_id: call_id, name: state[:name], arguments: "" }
               }
             end
           else
             delta = arg_text[state[:arguments].length..]
             if delta&.length&.> 0
+              state[:arguments] += delta
               events << {
                 type: "response.function_call_arguments.delta",
-                item_id: id, output_index: state[:index], delta: delta
+                item_id: state[:id], output_index: state[:index], delta: delta
               }
             end
           end
