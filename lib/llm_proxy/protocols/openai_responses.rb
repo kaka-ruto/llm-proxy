@@ -321,12 +321,13 @@ module LLMProxy
               }
             end
           else
-            delta = arg_text[state[:arguments].length..]
-            if delta&.length&.> 0
-              state[:arguments] += delta
+            # RubyLLM streams each delta character individually, not accumulated.
+            # We must append directly rather than computing diffs.
+            if arg_text.length > 0
+              state[:arguments] += arg_text
               events << {
                 type: "response.function_call_arguments.delta",
-                item_id: state[:id], output_index: state[:index], delta: delta
+                item_id: state[:id], output_index: state[:index], delta: arg_text
               }
             end
           end
