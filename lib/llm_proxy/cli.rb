@@ -44,6 +44,18 @@ module LLMProxy
           Codex.enable(port: config.server[:port] || 8765)
         end
         puts "Quit and reopen Codex to see the change."
+      when "backup"
+        Codex.backup
+      when "restore"
+        Codex.restore(build: rest.first)
+      when "backups"
+        list = Codex.list_backups
+        if list.empty?
+          puts "No backups yet. Run: llm-proxy backup"
+        else
+          puts "Available Codex backups:"
+          list.each { |b| puts "  #{b[:short]} (build #{b[:build]})" }
+        end
       when "-h", "--help"
         print_help
       when "-v", "--version"

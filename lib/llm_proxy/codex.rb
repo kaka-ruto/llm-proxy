@@ -1,6 +1,7 @@
 require "open3"
 require "fileutils"
 require "digest"
+require "zlib"
 
 module LLMProxy
   module Codex
@@ -13,9 +14,81 @@ module LLMProxy
     MANAGED_END = "# <<< llm-proxy managed <<<"
     PLAN_TIERS = %w[free plus pro team business enterprise].freeze
 
+    BACKUP_DIR = File.join(RUNTIME_DIR, "backups")
+
     class << self
       def catalog_path
         CATALOG_PATH
+      end
+
+      def backup
+        version = codex_version
+        backup_path = File.join(BACKUP_DIR, version[:build])
+        FileUtils.mkdir_p(backup_path)
+
+        dest = File.join(backup_path, "app.asar.gz")
+        unless File.exist?(dest)
+          data = File.read(APP_ASAR, mode: "rb")
+          Zlib::GzipWriter.open(dest) { |gz| gz.write(data) }
+          File.write(File.join(backup_path, "version.txt"), "#{version[:short]} (build #{version[:build]})\n")
+          File.write(File.join(backup_path, "asar.sha256"), Digest::SHA256.hexdigest(data) + "\n")
+          size_mb = (data.bytesize.to_f / 1024 / 1024).round(1)
+          puts "✅ Backed up Codex #{version[:short]} (#{version[:build]}) — #{size_mb}MB"
+        else
+          puts "ℹ️  Codex #{version[:short]} (#{version[:build]}) already backed up"
+        end
+        version
+      end
+
+      def restore(build: nil)
+        backups = list_backups
+        if backups.empty?
+          puts "No backups found."
+          return
+        end
+
+        target = if build
+          backups.find { |b| b[:build] == build }
+        else
+          backups.last
+        end
+
+        unless target
+          puts "No backup found for build #{build}. Available:"
+          backups.each { |b| puts "  #{b[:short]} (build #{b[:build]})" }
+          return
+        end
+
+        asar_gz = File.join(target[:path], "app.asar.gz")
+        unless File.exist?(asar_gz)
+          puts "Backup file missing: #{asar_gz}"
+          return
+        end
+
+        data = Zlib::GzipReader.open(asar_gz) { |gz| gz.read }
+        File.write(APP_ASAR, data, mode: "wb")
+        `codesign --force --deep --sign - /Applications/Codex.app 2>/dev/null`
+        size_mb = (data.bytesize.to_f / 1024 / 1024).round(1)
+        puts "✅ Restored Codex #{target[:short]} (build #{target[:build]}) — #{size_mb}MB"
+        puts "   Quit and reopen Codex."
+      end
+
+      def list_backups
+        return [] unless Dir.exist?(BACKUP_DIR)
+        Dir.entries(BACKUP_DIR).filter_map do |entry|
+          path = File.join(BACKUP_DIR, entry)
+          next unless File.directory?(path) && entry.match?(/\A\d+\z/)
+          version_file = File.join(path, "version.txt")
+          version = File.exist?(version_file) ? File.read(version_file).strip : "unknown"
+          { build: entry, short: version.split("(").first&.strip || version, path: path }
+        end.sort_by { |b| b[:build].to_i }
+      end
+
+      def codex_version
+        plist = "/Applications/Codex.app/Contents/Info.plist"
+        short = `/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "#{plist}" 2>/dev/null`.strip
+        build = `/usr/libexec/PlistBuddy -c "Print :CFBundleVersion" "#{plist}" 2>/dev/null`.strip
+        { short: short, build: build }
       end
 
       def generate_catalog(models, port: 8765)
