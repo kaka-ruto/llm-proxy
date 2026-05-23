@@ -2,3 +2,5 @@
 .codex-shim/
 *.pid
 *.log
+.auth.json
+.oauth_session.json
