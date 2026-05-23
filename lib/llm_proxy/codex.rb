@@ -21,12 +21,11 @@ module LLMProxy
       def generate_catalog(models, port: 8765)
         Dir.mkdir(RUNTIME_DIR) unless Dir.exist?(RUNTIME_DIR)
 
-        entries = [chatgpt_entry]
-        entries.concat(models.map { |m| catalog_entry(m) })
+        entries = models.map { |m| catalog_entry(m) }
         payload = { models: entries }
         File.write(CATALOG_PATH, JSON.pretty_generate(payload) + "\n")
 
-        default_slug = "gpt-5.5"
+        default_slug = entries.first[:slug]
         puts "Generated #{entries.size} model entries: #{CATALOG_PATH}"
         default_slug
       end
@@ -152,53 +151,6 @@ module LLMProxy
 
       private
 
-      def chatgpt_entry
-        {
-          slug: "gpt-5.5",
-          display_name: "GPT-5.5",
-          description: "OpenAI GPT-5.5 — your ChatGPT subscription model.",
-          context_window: 400000,
-          max_context_window: 400000,
-          auto_compact_token_limit: 320000,
-          truncation_policy: { mode: "tokens", limit: 64000 },
-          default_reasoning_level: "medium",
-          supported_reasoning_levels: [
-            { effort: "minimal", description: "Minimal reasoning" },
-            { effort: "low", description: "Faster, lighter reasoning" },
-            { effort: "medium", description: "Balanced" },
-            { effort: "high", description: "Deeper reasoning" },
-            { effort: "xhigh", description: "Maximum reasoning" },
-          ],
-          default_reasoning_summary: "auto",
-          reasoning_summary_format: "experimental",
-          supports_reasoning_summaries: true,
-          default_verbosity: "medium",
-          support_verbosity: true,
-          apply_patch_tool_type: "freeform",
-          web_search_tool_type: "text_and_image",
-          supports_search_tool: true,
-          supports_parallel_tool_calls: true,
-          experimental_supported_tools: [],
-          input_modalities: %w[text image],
-          supports_image_detail_original: true,
-          shell_type: "shell_command",
-          visibility: "list",
-          minimal_client_version: "0.0.1",
-          supported_in_api: true,
-          availability_nux: nil,
-          upgrade: nil,
-          isDefault: true,
-          priority: 10000,
-          prefer_websockets: false,
-          available_in_plans: PLAN_TIERS,
-          base_instructions: "You are Codex, a coding agent powered by GPT-5.5.",
-          model_messages: {
-            instructions_template: "You are Codex, a coding agent powered by GPT-5.5.",
-            instructions_variables: { model_name: "GPT-5.5" },
-          },
-        }
-      end
-
       def install_config(slug, port)
         Dir.mkdir(File.dirname(CODEX_CONFIG)) unless Dir.exist?(File.dirname(CODEX_CONFIG))
         Dir.mkdir(RUNTIME_DIR) unless Dir.exist?(RUNTIME_DIR)
@@ -209,16 +161,7 @@ module LLMProxy
         end
 
         cleaned = remove_managed_sections(original)
-        cleaned = remove_top_level_keys(cleaned, %w[model model_provider model_catalog_json])
         cleaned = remove_section(cleaned, "model_providers.llm_proxy")
-
-        top_block = <<~TOP
-          #{MANAGED_BEGIN}
-          model = "gpt-5.5"
-          model_provider = "llm_proxy"
-          model_catalog_json = "#{CATALOG_PATH}"
-          #{MANAGED_END}
-        TOP
 
         provider_block = <<~PROV
           #{MANAGED_BEGIN}
@@ -233,8 +176,9 @@ module LLMProxy
           #{MANAGED_END}
         PROV
 
-        File.write(CODEX_CONFIG, top_block + "\n" + cleaned.lstrip + "\n" + provider_block)
-        puts "Installed llm-proxy config into #{CODEX_CONFIG}."
+        File.write(CODEX_CONFIG, cleaned.lstrip + "\n" + provider_block)
+        puts "Added LLM Proxy as a model provider in #{CODEX_CONFIG}."
+        puts "In Codex, select 'LLM Proxy' from the model picker to use proxy models."
       end
 
       def remove_managed_sections(text)
