@@ -31,15 +31,19 @@ module LLMProxy
         system("open", url)
         puts "Waiting for OAuth callback on http://localhost:1455/auth/callback..."
         start_callback_server
-      when "logout"
-        LLMProxy::OAuth.logout
-        puts "Signed out of ChatGPT."
-      when "status"
-        if LLMProxy::OAuth.logged_in?
-          puts "Signed in to ChatGPT (account: #{LLMProxy::OAuth.get_account_id})"
+      when "enable"
+        Codex.enable(port: config.server[:port] || 8765)
+        puts "Quit and reopen Codex to see proxy models."
+      when "disable"
+        Codex.disable
+        puts "Quit and reopen Codex to restore native models."
+      when "toggle"
+        if Codex.enabled?
+          Codex.disable
         else
-          puts "Not signed in to ChatGPT. Run: llm-proxy login"
+          Codex.enable(port: config.server[:port] || 8765)
         end
+        puts "Quit and reopen Codex to see the change."
       when "-h", "--help"
         print_help
       when "-v", "--version"

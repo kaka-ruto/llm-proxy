@@ -18,40 +18,19 @@ module LLMProxy
         CATALOG_PATH
       end
 
-      GPT_MODELS = [
-        { slug: "chatgpt-gpt-5-5", name: "GPT-5.5 (ChatGPT)", context: 400000, default: true },
-        { slug: "chatgpt-gpt-5-4", name: "GPT-5.4 (ChatGPT)", context: 128000 },
-        { slug: "chatgpt-gpt-5-4-pro", name: "GPT-5.4 Pro (ChatGPT)", context: 128000 },
-        { slug: "chatgpt-gpt-5-4-mini", name: "GPT-5.4 Mini (ChatGPT)", context: 128000 },
-        { slug: "chatgpt-gpt-5-4-nano", name: "GPT-5.4 Nano (ChatGPT)", context: 128000 },
-        { slug: "chatgpt-gpt-5-3-codex", name: "GPT-5.3 Codex (ChatGPT)", context: 128000 },
-        { slug: "chatgpt-gpt-5-2-codex", name: "GPT-5.2 Codex (ChatGPT)", context: 128000 },
-        { slug: "chatgpt-gpt-5-1-codex", name: "GPT-5.1 Codex (ChatGPT)", context: 128000 },
-        { slug: "chatgpt-gpt-5-codex", name: "GPT-5 Codex (ChatGPT)", context: 128000 },
-        { slug: "chatgpt-gpt-5-nano", name: "GPT-5 Nano (ChatGPT)", context: 128000 },
-        { slug: "chatgpt-gpt-5", name: "GPT-5 (ChatGPT)", context: 128000 },
-        { slug: "chatgpt-gpt-5-1", name: "GPT-5.1 (ChatGPT)", context: 128000 },
-        { slug: "chatgpt-gpt-5-2", name: "GPT-5.2 (ChatGPT)", context: 128000 },
-      ].freeze
-
       def generate_catalog(models, port: 8765)
         Dir.mkdir(RUNTIME_DIR) unless Dir.exist?(RUNTIME_DIR)
 
-        entries = GPT_MODELS.map { |m| gpt_catalog_entry(m) }
-        entries.concat(models.map { |m| proxy_catalog_entry(m) })
+        entries = models.map { |m| proxy_catalog_entry(m) }
         payload = { models: entries }
         File.write(CATALOG_PATH, JSON.pretty_generate(payload) + "\n")
 
-        puts "Generated #{entries.size} model entries (#{GPT_MODELS.size} GPT + #{models.size} proxy): #{CATALOG_PATH}"
-        "gpt-5.5"
+        puts "Generated #{entries.size} proxy model entries: #{CATALOG_PATH}"
+        entries.first[:slug]
       end
 
       def launch_app(port: 8765, model_slug: nil)
-        models = LLMProxy.catalog.all
-        slug = generate_catalog(models, port:) unless File.exist?(CATALOG_PATH)
-        slug ||= model_slug || default_slug(models)
-
-        install_config(slug, port)
+        enable(port:)
         quit
         system("codex", "app", ".")
         foreground
@@ -158,16 +137,10 @@ module LLMProxy
         end
       end
 
-      def quit
-        script = 'tell application "Codex" to if it is running then quit'
-        system("osascript", "-e", script)
-        sleep 0.5
-      rescue
-      end
+      def enable(port: 8765)
+        generate_catalog(LLMProxy.catalog.all, port:)
+        slug = LLMProxy.catalog.all.first&.id&.gsub(/[^a-zA-Z0-9]+/, "-")&.downcase || "model"
 
-      private
-
-      def install_config(slug, port)
         Dir.mkdir(File.dirname(CODEX_CONFIG)) unless Dir.exist?(File.dirname(CODEX_CONFIG))
         Dir.mkdir(RUNTIME_DIR) unless Dir.exist?(RUNTIME_DIR)
 
@@ -180,15 +153,15 @@ module LLMProxy
         cleaned = remove_top_level_keys(cleaned, %w[model model_provider model_catalog_json])
         cleaned = remove_section(cleaned, "model_providers.llm_proxy")
 
-        top_block = <<~TOP
+        top = <<~TOP
           #{MANAGED_BEGIN}
-          model = "gpt-5.5"
+          model = "#{slug}"
           model_provider = "llm_proxy"
           model_catalog_json = "#{CATALOG_PATH}"
           #{MANAGED_END}
         TOP
 
-        provider_block = <<~PROV
+        prov = <<~PROV
           #{MANAGED_BEGIN}
           [model_providers.llm_proxy]
           name = "LLM Proxy"
@@ -201,11 +174,41 @@ module LLMProxy
           #{MANAGED_END}
         PROV
 
-        File.write(CODEX_CONFIG, top_block + "\n" + cleaned.lstrip + "\n" + provider_block)
-        puts "Installed config: #{CODEX_CONFIG}"
-        puts "  All 34 models in picker (13 GPT + 21 proxy)"
-        puts "  Sign into ChatGPT: llm-proxy login"
+        File.write(CODEX_CONFIG, top + "\n" + cleaned.lstrip + "\n" + prov)
+        puts "✅ Proxy mode enabled — #{LLMProxy.catalog.all.size} models available"
       end
+
+      def disable
+        unless File.exist?(CODEX_BACKUP)
+          unless File.exist?(CODEX_CONFIG)
+            puts "No config to restore."
+            return
+          end
+          current = File.read(CODEX_CONFIG)
+          restored = remove_managed_sections(current)
+          File.write(CODEX_CONFIG, restored.lstrip)
+          puts "✅ Proxy mode disabled — Codex is back to native"
+          return
+        end
+
+        File.write(CODEX_CONFIG, File.read(CODEX_BACKUP))
+        FileUtils.rm(CODEX_BACKUP)
+        puts "✅ Proxy mode disabled — Codex restored to original config"
+      end
+
+      def enabled?
+        return false unless File.exist?(CODEX_CONFIG)
+        File.read(CODEX_CONFIG).include?(MANAGED_BEGIN)
+      end
+
+      def quit
+        script = 'tell application "Codex" to if it is running then quit'
+        system("osascript", "-e", script)
+        sleep 0.5
+      rescue
+      end
+
+      private
 
       def remove_managed_sections(text)
         while text.include?(MANAGED_BEGIN)
@@ -247,51 +250,6 @@ module LLMProxy
           out << line unless skip
         end
         out.join
-      end
-
-      def gpt_catalog_entry(m)
-        {
-          slug: m[:slug],
-          display_name: m[:name],
-          description: "#{m[:name]} — via llm-proxy ChatGPT OAuth.",
-          context_window: m[:context],
-          max_context_window: m[:context],
-          auto_compact_token_limit: (m[:context] * 0.8).to_i,
-          truncation_policy: { mode: "tokens", limit: [64000, (m[:context] * 0.32).to_i].min },
-          default_reasoning_level: "medium",
-          supported_reasoning_levels: [
-            { effort: "minimal", description: "Minimal" }, { effort: "low", description: "Low" },
-            { effort: "medium", description: "Medium" }, { effort: "high", description: "High" },
-            { effort: "xhigh", description: "Maximum" },
-          ],
-          default_reasoning_summary: "auto",
-          reasoning_summary_format: "experimental",
-          supports_reasoning_summaries: true,
-          default_verbosity: "medium",
-          support_verbosity: true,
-          apply_patch_tool_type: "freeform",
-          web_search_tool_type: "text_and_image",
-          supports_search_tool: true,
-          supports_parallel_tool_calls: true,
-          experimental_supported_tools: [],
-          input_modalities: %w[text image],
-          supports_image_detail_original: true,
-          shell_type: "shell_command",
-          visibility: "list",
-          minimal_client_version: "0.0.1",
-          supported_in_api: true,
-          availability_nux: nil,
-          upgrade: nil,
-          isDefault: m[:default] || false,
-          priority: m[:default] ? 10000 : 1000,
-          prefer_websockets: false,
-          available_in_plans: %w[free plus pro team business enterprise],
-          base_instructions: "You are Codex, a coding agent powered by #{m[:name]}.",
-          model_messages: {
-            instructions_template: "You are Codex, a coding agent powered by #{m[:name]}.",
-            instructions_variables: { model_name: m[:name] },
-          },
-        }
       end
 
       def proxy_catalog_entry(model)

@@ -1,8 +1,6 @@
 require "sinatra/base"
 require "logger"
 require "fileutils"
-require "net/http"
-require "uri"
 
 module LLMProxy
   class Server < Sinatra::Base
@@ -51,32 +49,7 @@ module LLMProxy
       { object: "list", data: LLMProxy.catalog.to_openai_list }.to_json
     end
 
-    get "/auth/login" do
-      url = LLMProxy::OAuth.login_url
-      redirect url
-    end
 
-    get "/auth/callback" do
-      result = LLMProxy::OAuth.handle_callback(code: params["code"], state: params["state"])
-      if result[:success]
-        content_type :json
-        { status: "ok", message: "Signed in to ChatGPT", account_id: result[:account_id] }.to_json
-      else
-        content_type :json
-        { status: "error", message: result[:error] }.to_json
-      end
-    end
-
-    get "/auth/status" do
-      content_type :json
-      { logged_in: LLMProxy::OAuth.logged_in?, account_id: LLMProxy::OAuth.get_account_id }.to_json
-    end
-
-    post "/auth/logout" do
-      LLMProxy::OAuth.logout
-      content_type :json
-      { status: "ok", message: "Signed out" }.to_json
-    end
 
     [
       Protocols::OpenAICompletions,
@@ -114,11 +87,6 @@ module LLMProxy
       model_id = protocol.model_from(body)
 
       model_info = LLMProxy.catalog.lookup(model_id)
-
-      if model_id.start_with?("chatgpt-")
-        @log.info("  model=#{model_id} (ChatGPT via OAuth)")
-        return chatgpt_passthrough(out, body)
-      end
 
       unless model_info
         fallback_id = LLMProxy.default_model
@@ -246,72 +214,6 @@ module LLMProxy
       end
       klass.define_method(:name) { name }
       klass
-    end
-
-    def chatgpt_passthrough(out, body)
-      access_token = LLMProxy::OAuth.get_token
-      unless access_token
-        @log.warn("  Not signed into ChatGPT")
-        out << SSE.format({ type: "error", error: { message: "Sign into ChatGPT first: http://127.0.0.1:8765/auth/login" } })
-        out << SSE.format({ type: "response.completed", response: { id: "resp_0", status: "completed", model: body["model"], output: [] } })
-        out << "data: [DONE]\n\n"
-        out.close
-        return
-      end
-
-      account_id = LLMProxy::OAuth.get_account_id || ""
-
-      # Map catalog slug to ChatGPT API model name
-      # chatgpt-gpt-5-5 -> gpt-5.5, chatgpt-gpt-5-4-pro -> gpt-5.4-pro
-      model_name = body["model"].sub(/\Achatgpt-gpt-/, "gpt-")
-      # Replace remaining dashes in version numbers: gpt-5-5 -> gpt-5.5, gpt-5-4-pro -> gpt-5.4-pro
-      model_name = model_name.gsub(/(\d+)-(\d+)/) { "#{$1}.#{$2}" }
-      body["model"] = model_name
-      body["store"] = false
-      headers = {
-        "Authorization" => "Bearer #{access_token}",
-        "Content-Type" => "application/json",
-        "Accept" => "text/event-stream",
-        "OpenAI-Beta" => "responses=2026-02-06",
-        "originator" => "codex_cli_rs",
-        "chatgpt-account-id" => account_id,
-        "session_id" => request.env["HTTP_SESSION_ID"].to_s,
-      }
-
-      @log.debug("  Forwarding to chatgpt.com...")
-      uri = URI("https://chatgpt.com/backend-api/codex/responses")
-      http = Net::HTTP.new(uri.host, uri.port)
-      http.use_ssl = true
-      http.read_timeout = 300
-
-      req = Net::HTTP::Post.new(uri.path)
-      req.body = JSON.generate(body)
-      headers.each { |k, v| req[k] = v }
-
-      body_str = JSON.generate(body)
-      @log.debug("  ChatGPT request: #{body_str[..200]}...")
-      req = Net::HTTP::Post.new(uri.path)
-      req.body = body_str
-      headers.each { |k, v| req[k] = v }
-
-      http.request(req) do |response|
-        unless response.code.to_i == 200
-          error_body = response.body.to_s[..500]
-          @log.error("  ChatGPT returned #{response.code}: #{error_body}")
-          out << SSE.format({ type: "error", error: { message: "ChatGPT error (#{response.code}). Try re-signing in Codex (ChatGPT icon)." } })
-          out << SSE.format({ type: "response.completed", response: { id: "resp_0", status: "completed", model: body["model"], output: [] } })
-          out << "data: [DONE]\n\n"
-          out.close
-          return
-        end
-
-        chunks = 0
-        response.read_body { |chunk| out << chunk; chunks += 1 }
-        @log.info("  ChatGPT: #{chunks} chunks streamed")
-      end
-
-      out << "data: [DONE]\n\n"
-      out.close
     end
   end
 
