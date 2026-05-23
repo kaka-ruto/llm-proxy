@@ -18,15 +18,33 @@ module LLMProxy
         CATALOG_PATH
       end
 
+      NATIVE_MODELS = [
+        { slug: "gpt-5.5", name: "GPT-5.5", context: 400000, default: true },
+        { slug: "gpt-5.4", name: "GPT-5.4", context: 128000 },
+        { slug: "gpt-5.4-pro", name: "GPT-5.4 Pro", context: 128000 },
+        { slug: "gpt-5.4-mini", name: "GPT-5.4 Mini", context: 128000 },
+        { slug: "gpt-5.4-nano", name: "GPT-5.4 Nano", context: 128000 },
+        { slug: "gpt-5.3-codex", name: "GPT-5.3 Codex", context: 128000 },
+        { slug: "gpt-5.2-codex", name: "GPT-5.2 Codex", context: 128000 },
+        { slug: "gpt-5.1-codex", name: "GPT-5.1 Codex", context: 128000 },
+        { slug: "gpt-5-codex", name: "GPT-5 Codex", context: 128000 },
+        { slug: "gpt-5-nano", name: "GPT-5 Nano", context: 128000 },
+        { slug: "gpt-5", name: "GPT-5", context: 128000 },
+        { slug: "gpt-5.1", name: "GPT-5.1", context: 128000 },
+        { slug: "gpt-5.2", name: "GPT-5.2", context: 128000 },
+        { slug: "gpt-5.5-codex", name: "GPT-5.5 Codex", context: 400000 },
+      ].freeze
+
       def generate_catalog(models, port: 8765)
         Dir.mkdir(RUNTIME_DIR) unless Dir.exist?(RUNTIME_DIR)
 
-        entries = models.map { |m| catalog_entry(m) }
+        entries = NATIVE_MODELS.map { |m| native_catalog_entry(m) }
+        entries.concat(models.map { |m| proxy_catalog_entry(m) })
         payload = { models: entries }
         File.write(CATALOG_PATH, JSON.pretty_generate(payload) + "\n")
 
-        default_slug = entries.first[:slug]
-        puts "Generated #{entries.size} model entries: #{CATALOG_PATH}"
+        default_slug = "gpt-5.5"
+        puts "Generated #{entries.size} model entries (#{NATIVE_MODELS.size} native + #{models.size} proxy): #{CATALOG_PATH}"
         default_slug
       end
 
@@ -161,7 +179,16 @@ module LLMProxy
         end
 
         cleaned = remove_managed_sections(original)
+        cleaned = remove_top_level_keys(cleaned, %w[model model_provider model_catalog_json])
         cleaned = remove_section(cleaned, "model_providers.llm_proxy")
+
+        top_block = <<~TOP
+          #{MANAGED_BEGIN}
+          model = "gpt-5.5"
+          model_provider = "llm_proxy"
+          model_catalog_json = "#{CATALOG_PATH}"
+          #{MANAGED_END}
+        TOP
 
         provider_block = <<~PROV
           #{MANAGED_BEGIN}
@@ -176,9 +203,10 @@ module LLMProxy
           #{MANAGED_END}
         PROV
 
-        File.write(CODEX_CONFIG, cleaned.lstrip + "\n" + provider_block)
-        puts "Added LLM Proxy as a model provider in #{CODEX_CONFIG}."
-        puts "In Codex, select 'LLM Proxy' from the model picker to use proxy models."
+        File.write(CODEX_CONFIG, top_block + "\n" + cleaned.lstrip + "\n" + provider_block)
+        puts "Installed config: #{CODEX_CONFIG}"
+        puts "  Default: gpt-5.5 (ChatGPT) — sign in via ChatGPT icon"
+        puts "  Proxy models also available in picker"
       end
 
       def remove_managed_sections(text)
@@ -227,7 +255,54 @@ module LLMProxy
         models.first&.id&.gsub(/[^a-zA-Z0-9]+/, "-")&.downcase || "model"
       end
 
-      def catalog_entry(model)
+      def native_catalog_entry(m)
+        {
+          slug: m[:slug],
+          display_name: m[:name],
+          description: "#{m[:name]} — your ChatGPT subscription model.",
+          context_window: m[:context],
+          max_context_window: m[:context],
+          auto_compact_token_limit: (m[:context] * 0.8).to_i,
+          truncation_policy: { mode: "tokens", limit: [64000, (m[:context] * 0.32).to_i].min },
+          default_reasoning_level: "medium",
+          supported_reasoning_levels: [
+            { effort: "minimal", description: "Minimal reasoning" },
+            { effort: "low", description: "Faster, lighter reasoning" },
+            { effort: "medium", description: "Balanced" },
+            { effort: "high", description: "Deeper reasoning" },
+            { effort: "xhigh", description: "Maximum reasoning" },
+          ],
+          default_reasoning_summary: "auto",
+          reasoning_summary_format: "experimental",
+          supports_reasoning_summaries: true,
+          default_verbosity: "medium",
+          support_verbosity: true,
+          apply_patch_tool_type: "freeform",
+          web_search_tool_type: "text_and_image",
+          supports_search_tool: true,
+          supports_parallel_tool_calls: true,
+          experimental_supported_tools: [],
+          input_modalities: %w[text image],
+          supports_image_detail_original: true,
+          shell_type: "shell_command",
+          visibility: "list",
+          minimal_client_version: "0.0.1",
+          supported_in_api: true,
+          availability_nux: nil,
+          upgrade: nil,
+          isDefault: m[:default] || false,
+          priority: m[:default] ? 10000 : 1000,
+          prefer_websockets: false,
+          available_in_plans: PLAN_TIERS,
+          base_instructions: "You are Codex, a coding agent powered by #{m[:name]}.",
+          model_messages: {
+            instructions_template: "You are Codex, a coding agent powered by #{m[:name]}.",
+            instructions_variables: { model_name: m[:name] },
+          },
+        }
+      end
+
+      def proxy_catalog_entry(model)
         context = model.context_window || 128_000
         compact = [8_000, (context * 0.8).to_i].max
         truncation = [64_000, [8_000, (context * 0.32).to_i].max].min

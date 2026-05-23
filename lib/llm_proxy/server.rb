@@ -1,6 +1,8 @@
 require "sinatra/base"
 require "logger"
 require "fileutils"
+require "net/http"
+require "uri"
 
 module LLMProxy
   class Server < Sinatra::Base
@@ -85,6 +87,11 @@ module LLMProxy
       model_id = protocol.model_from(body)
 
       model_info = LLMProxy.catalog.lookup(model_id)
+
+      if model_id.start_with?("gpt-")
+        @log.info("  model=#{model_id} (ChatGPT native)")
+        return chatgpt_passthrough(out, body)
+      end
 
       unless model_info
         fallback_id = LLMProxy.default_model
@@ -212,6 +219,70 @@ module LLMProxy
       end
       klass.define_method(:name) { name }
       klass
+    end
+
+    def chatgpt_passthrough(out, body)
+      auth_path = File.expand_path("~/.codex/auth.json")
+      unless File.exist?(auth_path)
+        @log.warn("  ~/.codex/auth.json not found — sign into ChatGPT in Codex")
+        out << SSE.format({ type: "error", error: { message: "Sign into ChatGPT in Codex first (ChatGPT icon in top-right)" } })
+        out << SSE.format({ type: "response.completed", response: { id: "resp_0", status: "completed", model: body["model"], output: [] } })
+        out << "data: [DONE]\n\n"
+        out.close
+        return
+      end
+
+      auth = JSON.parse(File.read(auth_path))
+      access_token = auth.dig("tokens", "access_token")
+      account_id = auth["account_id"] || ""
+
+      unless access_token
+        @log.warn("  No ChatGPT access token")
+        out << SSE.format({ type: "error", error: { message: "No ChatGPT access token. Re-sign in." } })
+        out << SSE.format({ type: "response.completed", response: { id: "resp_0", status: "completed", model: body["model"], output: [] } })
+        out << "data: [DONE]\n\n"
+        out.close
+        return
+      end
+
+      body["model"] = "gpt-5.5"
+      headers = {
+        "Authorization" => "Bearer #{access_token}",
+        "Content-Type" => "application/json",
+        "Accept" => "text/event-stream",
+        "OpenAI-Beta" => "responses=2026-02-06",
+        "originator" => "codex_cli_rs",
+        "chatgpt-account-id" => account_id,
+        "session_id" => request.env["HTTP_SESSION_ID"].to_s,
+      }
+
+      @log.debug("  Forwarding to chatgpt.com...")
+      uri = URI("https://chatgpt.com/backend-api/codex/responses")
+      http = Net::HTTP.new(uri.host, uri.port)
+      http.use_ssl = true
+      http.read_timeout = 300
+
+      req = Net::HTTP::Post.new(uri.path)
+      req.body = JSON.generate(body)
+      headers.each { |k, v| req[k] = v }
+
+      http.request(req) do |response|
+        unless response.code.to_i == 200
+          @log.error("  ChatGPT returned #{response.code}")
+          out << SSE.format({ type: "error", error: { message: "ChatGPT API error: #{response.code}" } })
+          out << SSE.format({ type: "response.completed", response: { id: "resp_0", status: "completed", model: body["model"], output: [] } })
+          out << "data: [DONE]\n\n"
+          out.close
+          return
+        end
+
+        chunks = 0
+        response.read_body { |chunk| out << chunk; chunks += 1 }
+        @log.info("  ChatGPT: #{chunks} chunks")
+      end
+
+      out << "data: [DONE]\n\n"
+      out.close
     end
   end
 
