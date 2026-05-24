@@ -292,8 +292,9 @@ module LLMProxy
         events = []
         tool_calls.each do |id, tc|
           # Streaming deltas may arrive with nil id — find the matching open
-          # tool call by position
-          key = id || @tool_calls.keys.find { |k| k != nil && !@tool_calls[k][:closed] }
+          # tool call by position. Use the LAST open tool call so parallel
+          # calls don't all clobber the first one.
+          key = id || @tool_calls.keys.reverse.find { |k| k != nil && !@tool_calls[k][:closed] }
           state = key ? @tool_calls[key] : nil
 
           arg_text = tc.arguments.is_a?(String) ? tc.arguments : JSON.generate(tc.arguments)

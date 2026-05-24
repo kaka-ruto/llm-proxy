@@ -147,27 +147,18 @@ module LLMProxy
         end
 
         bundle = find_model_queries_bundle(workdir)
-        unless bundle
-          puts "Could not find model picker filter in Codex Desktop."
-          puts "Try running 'codex app' once to ensure the app is downloaded, then retry."
-          return false
+        if bundle
+          patch_model_queries(bundle) || return
+        else
+          puts "! Could not find model picker bundle — model list may be limited."
         end
 
-        needle = "let u=c.useHiddenModels&&o!==`amazonBedrock`,d;"
-        replacement = "let u=!1,d;"
-        text = File.read(bundle)
-
-        if text.include?(replacement)
-          puts "Model picker patch is already applied."
-          return true
+        goal_bundle = find_goal_handler_bundle(workdir)
+        if goal_bundle
+          patch_goal_handlers(goal_bundle) || puts("! Goal handler patch failed — /goal may not work.")
+        else
+          puts "! Could not find goal handler bundle — /goal may not work."
         end
-
-        unless text.include?(needle)
-          puts "Could not find the expected pattern in model picker JS."
-          return false
-        end
-
-        File.write(bundle, text.sub(needle, replacement))
 
         system("npx", "--yes", "asar", "pack", "--unpack-dir", "**/*.node", workdir, APP_ASAR)
         unless $?.success?
@@ -175,7 +166,7 @@ module LLMProxy
           return false
         end
 
-        puts "Patched Codex model picker allowlist filter."
+        puts "Patched Codex app.asar (#{File.size(APP_ASAR)} bytes)."
 
         fix_asar_integrity
         resign(skip_deep:)
@@ -401,6 +392,79 @@ module LLMProxy
         rescue
           false
         end
+      end
+
+      def patch_model_queries(bundle)
+        needle = "let u=c.useHiddenModels&&o!==`amazonBedrock`,d;"
+        replacement = "let u=!1,d;"
+        text = File.read(bundle)
+
+        if text.include?(replacement)
+          puts "  Model picker patch already applied."
+          return true
+        end
+
+        unless text.include?(needle)
+          puts "  Could not find model picker pattern in #{File.basename(bundle)}"
+          return false
+        end
+
+        File.write(bundle, text.sub(needle, replacement))
+        puts "  ✅ Model picker allowlist filter patched."
+        true
+      end
+
+      def find_goal_handler_bundle(workdir)
+        assets = File.join(workdir, "webview", "assets")
+        return nil unless Dir.exist?(assets)
+
+        candidates = Dir.glob(File.join(assets, "*.js")).sort
+
+        candidates.find do |path|
+          text = File.read(path, encoding: "UTF-8", invalid: :replace)
+          text.include?('"set-thread-goal":NN(async(e,{appendTranscriptItem:')
+        rescue
+          false
+        end
+      end
+
+      GOAL_PATCHES = [
+        {
+          name: "set-thread-goal",
+          needle: 'NN(async(e,{appendTranscriptItem:t,conversationId:n,objective:r})=>{let{goal:i}=await e.sendRequest(`thread/goal/set`,{threadId:n,objective:r});return t!==!1&&dt(e,n,i),i.status===`active`&&e.maybeContinueActiveThreadGoal(n),i})',
+          replacement: 'NN(async(e,{appendTranscriptItem:t,conversationId:n,objective:r})=>{let i;try{({goal:i}=await e.sendRequest(`thread/goal/set`,{threadId:n,objective:r}))}catch{let _e=Date.now();i={id:crypto.randomUUID(),objective:r,status:`active`,thread_id:n,created_at:Math.floor(_e/1e3),updated_at:Math.floor(_e/1e3),created_at_ms:_e,updated_at_ms:_e};fetch(`http://127.0.0.1:8765/api/goals`,{method:`POST`,headers:{"Content-Type":`application/json`},body:JSON.stringify({operation:`set`,threadId:n,objective:r,status:`active`})}).catch(()=>{})}try{return t!==!1&&dt(e,n,i),i.status===`active`&&e.maybeContinueActiveThreadGoal(n),i}catch{return i}})',
+        },
+        {
+          name: "set-thread-goal-status",
+          needle: 'NN(async(e,{conversationId:t,status:n})=>{let{goal:r}=await e.sendRequest(`thread/goal/set`,{threadId:t,status:n});return e.updateConversationState(t,e=>{e.threadGoalResumeConfirmation=null}),n===`active`&&e.maybeContinueActiveThreadGoal(t),r})',
+          replacement: 'NN(async(e,{conversationId:t,status:n})=>{let r;try{({goal:r}=await e.sendRequest(`thread/goal/set`,{threadId:t,status:n}))}catch{r={status:n,updated_at_ms:Date.now()};fetch(`http://127.0.0.1:8765/api/goals`,{method:`POST`,headers:{"Content-Type":`application/json`},body:JSON.stringify({operation:`set_status`,threadId:t,status:n})}).catch(()=>{})}return e.updateConversationState(t,e=>{e.threadGoalResumeConfirmation=null}),n===`active`&&e.maybeContinueActiveThreadGoal(t),r})',
+        },
+        {
+          name: "clear-thread-goal",
+          needle: 'NN(async(e,{conversationId:t})=>e.sendRequest(`thread/goal/clear`,{threadId:t}))',
+          replacement: 'NN(async(e,{conversationId:t})=>{try{return await e.sendRequest(`thread/goal/clear`,{threadId:t})}catch{fetch(`http://127.0.0.1:8765/api/goals`,{method:`POST`,headers:{"Content-Type":`application/json`},body:JSON.stringify({operation:`clear`,threadId:t})}).catch(()=>{});return null}})',
+        },
+      ].freeze
+
+      def patch_goal_handlers(bundle)
+        text = File.read(bundle, encoding: "UTF-8", invalid: :replace)
+        patched = false
+
+        GOAL_PATCHES.each do |p|
+          if text.include?(p[:replacement])
+            puts "  #{p[:name]} already patched."
+            patched = true
+          elsif text.include?(p[:needle])
+            text = text.sub(p[:needle], p[:replacement])
+            puts "  ✅ #{p[:name]} handler patched."
+            patched = true
+          else
+            puts "  ! Could not find #{p[:name]} handler pattern."
+          end
+        end
+
+        File.write(bundle, text) if patched
+        patched
       end
 
       def fix_asar_integrity

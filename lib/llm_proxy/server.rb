@@ -52,6 +52,45 @@ module LLMProxy
       { status: "ok", models: LLMProxy.catalog.all.size }.to_json
     end
 
+    post "/api/goals" do
+      content_type :json
+      headers "Access-Control-Allow-Origin" => "*"
+      headers "Access-Control-Allow-Methods" => "POST, GET, OPTIONS"
+      headers "Access-Control-Allow-Headers" => "Content-Type"
+
+      body = JSON.parse(@request_body)
+      operation = body["operation"]
+
+      case operation
+      when "set"
+        goal = LLMProxy::Goals.set(
+          thread_id: body["threadId"] || body["thread_id"],
+          objective: body["objective"],
+          status: body["status"]
+        )
+        { goal: goal }.to_json
+      when "set_status"
+        goal = LLMProxy::Goals.set_status(
+          thread_id: body["threadId"] || body["thread_id"],
+          status: body["status"]
+        )
+        { goal: goal }.to_json
+      when "clear"
+        LLMProxy::Goals.clear(body["threadId"] || body["thread_id"])
+        { success: true }.to_json
+      else
+        status 400
+        { error: "Unknown operation: #{operation}" }.to_json
+      end
+    end
+
+    options "/api/goals" do
+      headers "Access-Control-Allow-Origin" => "*"
+      headers "Access-Control-Allow-Methods" => "POST, GET, OPTIONS"
+      headers "Access-Control-Allow-Headers" => "Content-Type"
+      200
+    end
+
     get "/v1/models" do
       content_type :json
       { object: "list", data: LLMProxy.catalog.to_openai_list }.to_json
@@ -214,18 +253,8 @@ module LLMProxy
           args = parse_tool_args(fn[:arguments] || tc[:arguments])
           [call_id, RubyLLM::ToolCall.new(id: call_id, name: name, arguments: args)]
         end
-        if buffer[:thinking]
-          chat.add_message(role: :assistant, content: nil, tool_calls: tc_hash,
-                            thinking: RubyLLM::Thinking.new(text: buffer[:thinking]))
-        else
-          calls_text = buffer[:calls].map do |tc|
-            fn = tc[:function] || tc
-            args = fn[:arguments] || tc[:arguments] || ""
-            args_str = args.is_a?(String) ? args : args.to_json
-            "> Tool: #{fn[:name] || tc[:name]}\n> Args: #{args_str}"
-          end.join("\n")
-          chat.add_message(role: :assistant, content: calls_text)
-        end
+        chat.add_message(role: :assistant, content: nil, tool_calls: tc_hash,
+                          thinking: RubyLLM::Thinking.new(text: buffer[:thinking] || ""))
         buffer = nil
       end
 

@@ -23,6 +23,10 @@ module LLMProxy
         Codex.generate_catalog(LLMProxy.catalog.all, port: config.server[:port] || 8765)
       when "patch"
         Codex.patch_asar
+      when "re-patch"
+        puts "Restoring original ASAR and re-patching..."
+        Codex.restore_asar
+        Codex.patch_asar
       when "restore"
         Codex.restore_asar
       when "login"
@@ -144,10 +148,14 @@ module LLMProxy
         Codex.generate_catalog(LLMProxy.catalog.all, port: config.server[:port] || 8765)
       when "patch"
         Codex.patch_asar
+      when "re-patch"
+        puts "Restoring original ASAR and re-patching..."
+        Codex.restore_asar
+        Codex.patch_asar
       when "restore"
         Codex.restore_asar
       when "-h", "--help"
-        puts "Usage: llm-proxy codex [launch|catalog|patch|restore] [model-slug]"
+        puts "Usage: llm-proxy codex [launch|catalog|patch|re-patch|restore] [model-slug]"
       else
         puts "Unknown codex subcommand: #{sub}"
       end
@@ -160,10 +168,12 @@ module LLMProxy
       puts "  server              Start the proxy server (default)"
       puts "  codex [launch]      Launch Codex Desktop with proxy models"
       puts "  codex catalog       Generate Codex model catalog"
-      puts "  codex patch         Patch Codex ASAR for custom model picker"
+      puts "  codex patch         Patch Codex ASAR (model picker + /goal)"
+      puts "  codex re-patch      Restore ASAR then re-patch (after updates)"
       puts "  codex restore       Restore original Codex ASAR"
       puts "  catalog             Generate Codex model catalog only"
-      puts "  patch               Patch Codex ASAR only"
+      puts "  patch               Patch Codex ASAR (model picker + /goal)"
+      puts "  re-patch            Restore ASAR then re-patch (after updates)"
       puts "  restore             Restore Codex ASAR only"
       puts "  -h, --help          Show this help"
       puts "  -v, --version       Show version"
