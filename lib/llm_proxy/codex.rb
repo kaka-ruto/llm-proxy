@@ -85,6 +85,7 @@ module LLMProxy
         end.sort_by { |b| b[:build].to_i }
       end
 
+
       def codex_version
         plist = "/Applications/Codex.app/Contents/Info.plist"
         short = `/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "#{plist}" 2>/dev/null`.strip
@@ -121,18 +122,22 @@ module LLMProxy
           return false
         end
 
+        # Save a backup of the current ASAR into backups/<build>/ before modifying it.
+        # This gives re-patch a restore point to fall back to.
+        backup
+
         backup_path = File.join(RUNTIME_DIR, "app.asar.before-llm-proxy-patch")
         Dir.mkdir(RUNTIME_DIR) unless Dir.exist?(RUNTIME_DIR)
 
         unless File.exist?(backup_path)
           FileUtils.cp(APP_ASAR, backup_path)
-          puts "Backed up original app.asar to #{backup_path}"
+          puts "  Also saved first-time original to " + File.basename(backup_path)
         end
 
         versioned = File.join(RUNTIME_DIR, "app.asar.before-patch.#{asar_hash(APP_ASAR)[..11]}")
         unless File.exist?(versioned)
           FileUtils.cp(APP_ASAR, versioned)
-          puts "Backed up to #{versioned}"
+          puts "  Also saved hash-versioned snapshot (" + File.basename(versioned) + ")"
         end
 
         quit
@@ -182,6 +187,7 @@ module LLMProxy
 
         quit
         FileUtils.cp(backup_path, APP_ASAR)
+        fix_asar_integrity
         resign(skip_deep: true)
         puts "Restored original app.asar."
         true

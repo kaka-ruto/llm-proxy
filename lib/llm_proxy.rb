@@ -18,6 +18,7 @@ end
 
 require_relative "llm_proxy/providers/opencode"
 require_relative "llm_proxy/providers/opencode_go"
+require_relative "llm_proxy/providers/mimo"
 require_relative "llm_proxy/auth"
 require_relative "llm_proxy/config"
 require_relative "llm_proxy/model_catalog"

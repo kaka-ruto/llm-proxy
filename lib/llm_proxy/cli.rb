@@ -24,11 +24,17 @@ module LLMProxy
       when "patch"
         Codex.patch_asar
       when "re-patch"
-        puts "Restoring original ASAR and re-patching..."
-        Codex.restore_asar
+        puts "Restoring latest backup and re-patching..."
+        Codex.restore
         Codex.patch_asar
       when "restore"
-        Codex.restore_asar
+        if rest.empty? || rest.first == "latest"
+          Codex.restore
+        elsif rest.first == "oldest"
+          Codex.restore_asar
+        else
+          Codex.restore(build: rest.first)
+        end
       when "login"
         puts "Opening browser for ChatGPT login..."
         url = LLMProxy::OAuth.login_url
@@ -50,8 +56,6 @@ module LLMProxy
         puts "Quit and reopen Codex to see the change."
       when "backup"
         Codex.backup
-      when "restore"
-        Codex.restore(build: rest.first)
       when "backups"
         list = Codex.list_backups
         if list.empty?
@@ -112,6 +116,8 @@ module LLMProxy
         c.gemini_api_key = ENV["GEMINI_API_KEY"] if ENV["GEMINI_API_KEY"]
         c.deepseek_api_key = ENV["DEEPSEEK_API_KEY"] if ENV["DEEPSEEK_API_KEY"]
         c.xai_api_key = ENV["XAI_API_KEY"] if ENV["XAI_API_KEY"]
+        c.mimo_api_key = ENV["MIMO_API_KEY"] if ENV["MIMO_API_KEY"]
+        c.mimo_api_base = ENV["MIMO_API_BASE"] if ENV["MIMO_API_BASE"]
       end
     end
 
@@ -149,11 +155,17 @@ module LLMProxy
       when "patch"
         Codex.patch_asar
       when "re-patch"
-        puts "Restoring original ASAR and re-patching..."
-        Codex.restore_asar
+        puts "Restoring latest backup and re-patching..."
+        Codex.restore
         Codex.patch_asar
       when "restore"
-        Codex.restore_asar
+        if rest.empty? || rest.first == "latest"
+          Codex.restore
+        elsif rest.first == "oldest"
+          Codex.restore_asar
+        else
+          Codex.restore(build: rest.first)
+        end
       when "-h", "--help"
         puts "Usage: llm-proxy codex [launch|catalog|patch|re-patch|restore] [model-slug]"
       else
@@ -169,12 +181,16 @@ module LLMProxy
       puts "  codex [launch]      Launch Codex Desktop with proxy models"
       puts "  codex catalog       Generate Codex model catalog"
       puts "  codex patch         Patch Codex ASAR (model picker + /goal)"
-      puts "  codex re-patch      Restore ASAR then re-patch (after updates)"
-      puts "  codex restore       Restore original Codex ASAR"
+      puts "  re-patch            Restore latest backup then re-patch (after Codex update)"
+      puts "  codex restore       Restore latest backup (default)"
+      puts "  codex restore oldest  Factory reset - restore first original"
+      puts "  codex restore <build> Restore specific backup by build"
       puts "  catalog             Generate Codex model catalog only"
       puts "  patch               Patch Codex ASAR (model picker + /goal)"
-      puts "  re-patch            Restore ASAR then re-patch (after updates)"
-      puts "  restore             Restore Codex ASAR only"
+      puts "  re-patch            Restore latest backup then re-patch (after Codex update)"
+      puts "  restore             Restore latest backup (default)"
+      puts "  restore oldest      Factory reset - restore first original"
+      puts "  restore <build>     Restore specific backup by build"
       puts "  -h, --help          Show this help"
       puts "  -v, --version       Show version"
       puts ""
