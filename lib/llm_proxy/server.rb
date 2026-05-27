@@ -119,7 +119,17 @@ module LLMProxy
         headers "X-Accel-Buffering" => "no"
 
         stream(:keep_open) do |out|
-          handle_stream(out, protocol_class.new)
+          # Safety net: prevent any unhandled exception from escaping the
+          # stream block and crashing the Puma thread pool. This catches
+          # errors that might slip past handle_stream's own rescue when
+          # writing to an already-closed stream.
+          begin
+            handle_stream(out, protocol_class.new)
+          rescue => e
+            @log.error("Fatal stream error: #{e.class}: #{e.message}")
+            @log.debug("  #{e.backtrace&.first(3)&.join("\n    ")}")
+            safe_send(out, "data: [DONE]\n\n")
+          end
         end
       end
     end
@@ -152,10 +162,10 @@ module LLMProxy
           model_id = fallback.id
           model_info = fallback
         else
-          out << SSE.format({ type: "error", error: { message: "Unknown model: #{model_id}" } })
-          out << SSE.format({ type: "response.completed", response: { id: "resp_0", status: "completed", model: "unknown", output: [] } })
-          out << "data: [DONE]\n\n"
-          out.close
+          safe_send(out, SSE.format({ type: "error", error: { message: "Unknown model: #{model_id}" } }))
+          safe_send(out, SSE.format({ type: "response.completed", response: { id: "resp_0", status: "completed", model: "unknown", output: [] } }))
+          safe_send(out, "data: [DONE]\n\n")
+          safe_close(out)
           return
         end
       end
@@ -170,19 +180,25 @@ module LLMProxy
       is_streaming = normalized[:stream] != false
 
       unless is_streaming
-        chat = build_chat(model_info, normalized)
-        chat.before_tool_call { raise ToolCallStop }
         begin
-          chat.complete
-        rescue ToolCallStop
-          # Tool call was made in non-streaming — return it as response.completed
+          chat = build_chat(model_info, normalized)
+          chat.before_tool_call { raise ToolCallStop }
+          begin
+            chat.complete
+          rescue ToolCallStop
+            # Tool call was made in non-streaming — return it as response.completed
+          end
+          final_msg = chat.messages.last
+          usage = token_usage(final_msg)
+          @log.info("  Usage: #{usage.inspect}")
+          payload = protocol.complete_events(model: model_info.id, usage: usage)
+          completed = payload.find { |e| e.is_a?(Hash) && e[:type] == "response.completed" }
+          safe_send(out, (completed || { type: "response.completed", response: { id: "resp_0", status: "completed", model: model_info.id, output: [] } }).to_json)
+        rescue => e
+          @log.error("Non-streaming error: #{e.class}: #{e.message}")
+          @log.debug("  #{e.backtrace&.first(5)&.join("\n    ")}")
+          safe_send(out, { error: { message: e.message, type: "connection_error" } }.to_json)
         end
-        final_msg = chat.messages.last
-        usage = token_usage(final_msg)
-        @log.info("  Usage: #{usage.inspect}")
-        payload = protocol.complete_events(model: model_info.id, usage: usage)
-        completed = payload.find { |e| e.is_a?(Hash) && e[:type] == "response.completed" }
-        out << (completed || { type: "response.completed", response: { id: "resp_0", status: "completed", model: model_info.id, output: [] } }).to_json
         return
       end
 
@@ -191,13 +207,13 @@ module LLMProxy
         chat.before_tool_call { raise ToolCallStop }
 
         @log.debug("  Starting stream...")
-        out << SSE.format(protocol.start_events(model: model_info.id))
+        safe_send(out, SSE.format(protocol.start_events(model: model_info.id)))
         event_count = 1
 
         chat.complete do |chunk|
           events = protocol.chunk_events(chunk, model: model_info.id)
           unless events.empty?
-            out << SSE.format(events)
+            safe_send(out, SSE.format(events))
             event_count += events.length
             if event_count % 50 == 0 && event_count > 0
               @log.debug("  Streamed #{event_count} events...")
@@ -214,7 +230,7 @@ module LLMProxy
         completed = complete_events.find { |e| e.is_a?(Hash) && e[:type] == "response.completed" }
         @log.debug("  complete_events count=#{complete_events.length}")
         @log.debug("  response.completed output items=#{completed&.dig(:response, :output)&.length || 0}") if completed
-        out << SSE.format(complete_events)
+        safe_send(out, SSE.format(complete_events))
 
       rescue ToolCallStop
         final_msg = chat&.messages&.last rescue nil
@@ -222,17 +238,17 @@ module LLMProxy
         @log.info("  Tool call stop: #{tool_calls_info}")
         usage = token_usage(final_msg)
         @log.info("  Usage: #{usage.inspect}") if usage
-        out << SSE.format(protocol.complete_events(model: model_info.id, usage: usage))
+        safe_send(out, SSE.format(protocol.complete_events(model: model_info.id, usage: usage)))
       rescue => e
-        @log.error("Error: #{e.class}: #{e.message}")
+        @log.error("Streaming error: #{e.class}: #{e.message}")
         @log.debug("  #{e.backtrace&.first(5)&.join("\n    ")}")
-        out << SSE.format(protocol.error_events(e.message))
-        out << SSE.format(protocol.complete_events(model: model_info.id))
+        safe_send(out, SSE.format(protocol.error_events(e.message)))
+        safe_send(out, SSE.format(protocol.complete_events(model: model_info.id)))
       ensure
-        out << "data: [DONE]\n\n"
+        safe_send(out, "data: [DONE]\n\n")
         duration = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - @_start_time) * 1000).round(1)
         @log.info("  => 200 (#{duration}ms)")
-        out.close
+        safe_close(out)
       end
     end
 
@@ -322,6 +338,22 @@ module LLMProxy
       sd = RubyLLM::Tool::SchemaDefinition.new(schema: schema)
       klass.instance_variable_set(:@params_schema_definition, sd)
       klass
+    end
+
+    # Safely write to the stream, swallowing errors if the client already
+    # disconnected or the stream is closed. Prevents unhandled exceptions
+    # from propagating out of handle_stream and crashing the Puma thread.
+    def safe_send(out, data)
+      out << data
+    rescue => e
+      @log.warn("Stream write failed (client disconnected?): #{e.class}: #{e.message}")
+    end
+
+    # Safely close the stream, swallowing errors if already closed.
+    def safe_close(out)
+      out.close
+    rescue => e
+      @log.warn("Stream close failed: #{e.class}: #{e.message}")
     end
   end
 
