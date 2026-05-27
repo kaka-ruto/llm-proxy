@@ -21,6 +21,9 @@ module LLMProxy
       set :server, :puma
       set :show_exceptions, false
       set :raise_errors, false
+
+      # Delete rotated logs left from previous sessions
+      Dir[File.join(LOG_DIR, "development.log.*")].each { |f| File.delete(f) }
     end
 
     before do
@@ -38,6 +41,10 @@ module LLMProxy
       @request_body = body_str
       @_streaming = false
       @_start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+
+      # Delete rotated logs (handles cross-midnight — @log.info above may have
+      # triggered daily rotation, leaving a stale development.log.YYYYMMDD)
+      Dir[File.join(LOG_DIR, "development.log.*")].each { |f| File.delete(f) }
     end
 
     after do
