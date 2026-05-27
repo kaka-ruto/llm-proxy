@@ -210,7 +210,7 @@ module LLMProxy
 
       def enable(port: 8765)
         generate_catalog(LLMProxy.catalog.all, port:)
-        slug = LLMProxy.catalog.all.first&.id&.gsub(/[^a-zA-Z0-9]+/, "-")&.downcase || "model"
+        slug = LLMProxy.default_model || LLMProxy.catalog.all.first&.id&.gsub(/[^a-zA-Z0-9]+/, "-")&.downcase || "model"
 
         Dir.mkdir(File.dirname(CODEX_CONFIG)) unless Dir.exist?(File.dirname(CODEX_CONFIG))
         Dir.mkdir(RUNTIME_DIR) unless Dir.exist?(RUNTIME_DIR)
