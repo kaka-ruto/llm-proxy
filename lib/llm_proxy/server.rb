@@ -125,7 +125,7 @@ module LLMProxy
           # writing to an already-closed stream.
           begin
             handle_stream(out, protocol_class.new)
-          rescue => e
+          rescue Exception => e
             @log.error("Fatal stream error: #{e.class}: #{e.message}")
             @log.debug("  #{e.backtrace&.first(3)&.join("\n    ")}")
             safe_send(out, "data: [DONE]\n\n")
@@ -194,7 +194,7 @@ module LLMProxy
           payload = protocol.complete_events(model: model_info.id, usage: usage)
           completed = payload.find { |e| e.is_a?(Hash) && e[:type] == "response.completed" }
           safe_send(out, (completed || { type: "response.completed", response: { id: "resp_0", status: "completed", model: model_info.id, output: [] } }).to_json)
-        rescue => e
+        rescue Exception => e
           @log.error("Non-streaming error: #{e.class}: #{e.message}")
           @log.debug("  #{e.backtrace&.first(5)&.join("\n    ")}")
           safe_send(out, { error: { message: e.message, type: "connection_error" } }.to_json)
@@ -239,7 +239,7 @@ module LLMProxy
         usage = token_usage(final_msg)
         @log.info("  Usage: #{usage.inspect}") if usage
         safe_send(out, SSE.format(protocol.complete_events(model: model_info.id, usage: usage)))
-      rescue => e
+      rescue Exception => e
         @log.error("Streaming error: #{e.class}: #{e.message}")
         @log.debug("  #{e.backtrace&.first(5)&.join("\n    ")}")
         safe_send(out, SSE.format(protocol.error_events(e.message)))
@@ -345,14 +345,14 @@ module LLMProxy
     # from propagating out of handle_stream and crashing the Puma thread.
     def safe_send(out, data)
       out << data
-    rescue => e
+    rescue Exception => e
       @log.warn("Stream write failed (client disconnected?): #{e.class}: #{e.message}")
     end
 
     # Safely close the stream, swallowing errors if already closed.
     def safe_close(out)
       out.close
-    rescue => e
+    rescue Exception => e
       @log.warn("Stream close failed: #{e.class}: #{e.message}")
     end
   end
