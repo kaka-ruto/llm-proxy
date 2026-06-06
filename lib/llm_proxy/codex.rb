@@ -386,26 +386,26 @@ module LLMProxy
         assets = File.join(workdir, "webview", "assets")
         return nil unless Dir.exist?(assets)
 
-        candidates = Dir.glob(File.join(assets, "model-queries-*.js")).sort
+        candidates = Dir.glob(File.join(assets, "models-and-reasoning-efforts-*.js")).sort
+        candidates.concat(Dir.glob(File.join(assets, "model-queries-*.js")).sort)
         candidates.concat(Dir.glob(File.join(assets, "*.js")).sort - candidates)
 
-        needle = "let u=c.useHiddenModels&&o!==`amazonBedrock`,d;"
-        replacement = "let u=!1,d;"
+        needle = "s=i&&e!==`amazonBedrock`"
 
         candidates.find do |path|
           text = File.read(path, encoding: "UTF-8", invalid: :replace)
-          text.include?(needle) || text.include?(replacement)
+          text.include?(needle)
         rescue
           false
         end
       end
 
       def patch_model_queries(bundle)
-        needle = "let u=c.useHiddenModels&&o!==`amazonBedrock`,d;"
-        replacement = "let u=!1,d;"
+        needle = "s=i&&e!==`amazonBedrock`"
+        replacement = "s=!1"
         text = File.read(bundle)
 
-        if text.include?(replacement)
+        if text.include?(replacement) && !text.include?(needle)
           puts "  Model picker patch already applied."
           return true
         end
@@ -428,7 +428,7 @@ module LLMProxy
 
         candidates.find do |path|
           text = File.read(path, encoding: "UTF-8", invalid: :replace)
-          text.include?('"set-thread-goal":NN(async(e,{appendTranscriptItem:')
+          text.include?('"set-thread-goal":ZR(async(e,{appendTranscriptItem:')
         rescue
           false
         end
@@ -437,18 +437,18 @@ module LLMProxy
       GOAL_PATCHES = [
         {
           name: "set-thread-goal",
-          needle: 'NN(async(e,{appendTranscriptItem:t,conversationId:n,objective:r})=>{let{goal:i}=await e.sendRequest(`thread/goal/set`,{threadId:n,objective:r});return t!==!1&&dt(e,n,i),i.status===`active`&&e.maybeContinueActiveThreadGoal(n),i})',
-          replacement: 'NN(async(e,{appendTranscriptItem:t,conversationId:n,objective:r})=>{let i;try{({goal:i}=await e.sendRequest(`thread/goal/set`,{threadId:n,objective:r}))}catch{let _e=Date.now();i={id:crypto.randomUUID(),objective:r,status:`active`,thread_id:n,created_at:Math.floor(_e/1e3),updated_at:Math.floor(_e/1e3),created_at_ms:_e,updated_at_ms:_e};fetch(`http://127.0.0.1:8765/api/goals`,{method:`POST`,headers:{"Content-Type":`application/json`},body:JSON.stringify({operation:`set`,threadId:n,objective:r,status:`active`})}).catch(()=>{})}try{return t!==!1&&dt(e,n,i),i.status===`active`&&e.maybeContinueActiveThreadGoal(n),i}catch{return i}})',
+          needle: 'ZR(async(e,{appendTranscriptItem:t,conversationId:n,objective:r})=>{let{goal:i}=await e.sendRequest(`thread/goal/set`,{threadId:n,objective:r});return t!==!1&&at(e,n,i),i.status===`active`&&e.maybeContinueActiveThreadGoal(n),i})',
+          replacement: 'ZR(async(e,{appendTranscriptItem:t,conversationId:n,objective:r})=>{let i;try{({goal:i}=await e.sendRequest(`thread/goal/set`,{threadId:n,objective:r}))}catch{let _e=Date.now();i={id:crypto.randomUUID(),objective:r,status:`active`,thread_id:n,created_at:Math.floor(_e/1e3),updated_at:Math.floor(_e/1e3),created_at_ms:_e,updated_at_ms:_e};fetch(`http://127.0.0.1:8765/api/goals`,{method:`POST`,headers:{"Content-Type":`application/json`},body:JSON.stringify({operation:`set`,threadId:n,objective:r,status:`active`})}).catch(()=>{})}try{return t!==!1&&at(e,n,i),i.status===`active`&&e.maybeContinueActiveThreadGoal(n),i}catch{return i}})',
         },
         {
           name: "set-thread-goal-status",
-          needle: 'NN(async(e,{conversationId:t,status:n})=>{let{goal:r}=await e.sendRequest(`thread/goal/set`,{threadId:t,status:n});return e.updateConversationState(t,e=>{e.threadGoalResumeConfirmation=null}),n===`active`&&e.maybeContinueActiveThreadGoal(t),r})',
-          replacement: 'NN(async(e,{conversationId:t,status:n})=>{let r;try{({goal:r}=await e.sendRequest(`thread/goal/set`,{threadId:t,status:n}))}catch{r={status:n,updated_at_ms:Date.now()};fetch(`http://127.0.0.1:8765/api/goals`,{method:`POST`,headers:{"Content-Type":`application/json`},body:JSON.stringify({operation:`set_status`,threadId:t,status:n})}).catch(()=>{})}return e.updateConversationState(t,e=>{e.threadGoalResumeConfirmation=null}),n===`active`&&e.maybeContinueActiveThreadGoal(t),r})',
+          needle: 'ZR(async(e,{conversationId:t,status:n})=>{let{goal:r}=await e.sendRequest(`thread/goal/set`,{threadId:t,status:n});return e.updateConversationState(t,e=>{e.threadGoalResumeConfirmation=null}),n===`active`&&e.maybeContinueActiveThreadGoal(t),r})',
+          replacement: 'ZR(async(e,{conversationId:t,status:n})=>{let r;try{({goal:r}=await e.sendRequest(`thread/goal/set`,{threadId:t,status:n}))}catch{r={status:n,updated_at_ms:Date.now()};fetch(`http://127.0.0.1:8765/api/goals`,{method:`POST`,headers:{"Content-Type":`application/json`},body:JSON.stringify({operation:`set_status`,threadId:t,status:n})}).catch(()=>{})}return e.updateConversationState(t,e=>{e.threadGoalResumeConfirmation=null}),n===`active`&&e.maybeContinueActiveThreadGoal(t),r})',
         },
         {
           name: "clear-thread-goal",
-          needle: 'NN(async(e,{conversationId:t})=>e.sendRequest(`thread/goal/clear`,{threadId:t}))',
-          replacement: 'NN(async(e,{conversationId:t})=>{try{return await e.sendRequest(`thread/goal/clear`,{threadId:t})}catch{fetch(`http://127.0.0.1:8765/api/goals`,{method:`POST`,headers:{"Content-Type":`application/json`},body:JSON.stringify({operation:`clear`,threadId:t})}).catch(()=>{});return null}})',
+          needle: 'ZR(async(e,{conversationId:t})=>e.sendRequest(`thread/goal/clear`,{threadId:t}))',
+          replacement: 'ZR(async(e,{conversationId:t})=>{try{return await e.sendRequest(`thread/goal/clear`,{threadId:t})}catch{fetch(`http://127.0.0.1:8765/api/goals`,{method:`POST`,headers:{"Content-Type":`application/json`},body:JSON.stringify({operation:`clear`,threadId:t})}).catch(()=>{});return null}})',
         },
       ].freeze
 
