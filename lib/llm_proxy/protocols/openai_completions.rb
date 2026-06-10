@@ -43,7 +43,7 @@ module LLMProxy
           events << { choices: [choice] }
         end
 
-        if chunk.thinking&.text&.length&.> 0
+        if chunk.thinking.to_s.length > 0
           choice[:delta] = { reasoning_content: chunk.thinking.text }
           events << { choices: [choice] }
         end

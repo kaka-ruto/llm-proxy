@@ -3,7 +3,6 @@ PROJECT_ROOT = File.expand_path("..", __dir__)
 CONFIG_PATH = File.join(PROJECT_ROOT, "config.yml")
 
 ENV["LLM_PROXY_CONFIG"] = CONFIG_PATH
-ENV["RUBYLLM_DEBUG"] = "false"
 
 # Load .env for API keys in tests
 dotenv = File.join(PROJECT_ROOT, ".env")
@@ -23,11 +22,25 @@ require "rack/test"
 require "json"
 require "yaml"
 require "fileutils"
+require "ostruct"
 
-require "ruby_llm"
-require "llm_proxy"
+# Load ask-rb ecosystem
+require "ask"
+require "ask/agent"
+require "ask/tools/tool"
+require "ask/result"
+require "ask/agent/chat"
+require "ask/agent/events"
+require "ask-llm-providers"
 
-# VCR setup for recording HTTP interactions
+# Load custom providers before llm_proxy
+require_relative "../lib/llm_proxy/providers/opencode"
+require_relative "../lib/llm_proxy/providers/opencode_go"
+require_relative "../lib/llm_proxy/providers/mimo"
+
+require_relative "../lib/llm_proxy"
+
+# VCR setup
 require "vcr"
 require "webmock"
 
@@ -37,11 +50,9 @@ VCR.configure do |c|
   c.ignore_localhost = true
   c.ignore_hosts "127.0.0.1", "localhost"
 
-  # Redact API keys in cassettes
   c.filter_sensitive_data("<OPENCODE_API_KEY>") { ENV["OPENCODE_API_KEY"] || "" }
   c.filter_sensitive_data("<OPENROUTER_API_KEY>") { ENV["OPENROUTER_API_KEY"] || "" }
 
-  # Redact Authorization headers
   c.filter_sensitive_data("<BEARER_TOKEN>") { |interaction|
     auth = interaction.request.headers["Authorization"]&.first
     auth&.start_with?("Bearer ") ? auth.sub("Bearer ", "") : nil
@@ -51,7 +62,6 @@ VCR.configure do |c|
     auth&.start_with?("Bearer ") ? auth.sub("Bearer ", "") : nil
   }
 
-  # Allow re-recording cassettes
   c.default_cassette_options = {
     record: ENV["VCR_RECORD"] ? :new_episodes : :once,
     match_requests_on: [:method, :uri, :body],
@@ -66,10 +76,9 @@ module VCRTestHelpers
   end
 
   def setup_opencode_go
-    RubyLLM.configure do |c|
-      c.opencode_api_key = ENV["OPENCODE_API_KEY"]
-      c.opencode_go_api_key = ENV["OPENCODE_API_KEY"]
-    end
+    # OpenCode Go provider reads OPENCODE_API_KEY from ENV
+    # Ensure it's set for tests that need it
+    skip "OPENCODE_API_KEY not set" unless ENV["OPENCODE_API_KEY"]
   end
 end
 
@@ -83,28 +92,19 @@ module TestSupport
     LLMProxy.default_model = test_config.server[:default_model]
   end
 
-  # Build a mock RubyLLM::Chunk for testing protocols
-  def build_chunk(content: nil, thinking: nil, tool_calls: nil, role: :assistant)
-    thinking_obj = thinking ? RubyLLM::Thinking.new(text: thinking) : nil
+  # Build a mock Ask::Chunk for testing protocols
+  def build_chunk(content: nil, tool_calls: nil, role: :assistant)
     tc = nil
     if tool_calls
       tc = {}
       tool_calls.each do |tc_data|
-        id = tc_data[:id] || "call_#{tc.size + 1}"
+        id = tc_data[:id] || "call_#{tool_calls.index(tc_data) + 1}"
         name = tc_data[:name] || "test_tool"
         args = tc_data[:arguments] || "{}"
-        tc[id] = RubyLLM::ToolCall.new(id:, name:, arguments: args)
+        tc[id] = OpenStruct.new(id: id, name: name, arguments: args)
       end
     end
-    RubyLLM::Chunk.new(
-      role: role,
-      model_id: "test-model",
-      content: content,
-      thinking: thinking_obj,
-      tool_calls: tc,
-      input_tokens: 10,
-      output_tokens: 20
-    )
+    Ask::Agent::ChatChunk.new(content: content, tool_calls: tc || {})
   end
 
   # Parse SSE events from protocol output

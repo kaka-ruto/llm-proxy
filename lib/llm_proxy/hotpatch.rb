@@ -13,13 +13,7 @@ module LLMProxy
     module_function
 
     def apply!
-      # 1. Suppress RubyLLM noisy DEBUG logging (Faraday connection errors logged internally)
-      if defined?(RubyLLM) && RubyLLM.logger
-        RubyLLM.logger.level = Logger::WARN
-        puts "[hotpatch] RubyLLM.logger.level -> WARN"
-      end
-
-      # 2. Redefine safe_send and safe_close with Exception-level rescue
+      # 1. Redefine safe_send and safe_close with Exception-level rescue
       LLMProxy::Server.define_method(:safe_send) do |out, data|
         out << data
       rescue Exception => e
