@@ -4,7 +4,7 @@ ruby ">= 3.2"
 
 # ask-rb ecosystem (replaces ruby_llm)
 gem "ask-core", path: "../ask-core"
-gem "ask-llm-providers", path: "../ask-llm-providers"
+gem "ask-llm-providers", "~> 0.1.3"
 gem "ask-agent", path: "../ask-agent"
 gem "ask-tools", path: "../ask-tools"
 gem "ask-schema", path: "../ask-schema"

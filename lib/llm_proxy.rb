@@ -3,10 +3,6 @@ require "json"
 require "sinatra/base"
 
 # Load all ask-rb providers (opencode, opencode_go, mimo) before Ask::Provider
-require "ask-llm-providers"
-require_relative "llm_proxy/providers/opencode"
-require_relative "llm_proxy/providers/opencode_go"
-require_relative "llm_proxy/providers/mimo"
 
 require "ask"
 require "ask/agent"

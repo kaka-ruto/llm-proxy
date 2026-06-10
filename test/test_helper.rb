@@ -34,9 +34,6 @@ require "ask/agent/events"
 require "ask-llm-providers"
 
 # Load custom providers before llm_proxy
-require_relative "../lib/llm_proxy/providers/opencode"
-require_relative "../lib/llm_proxy/providers/opencode_go"
-require_relative "../lib/llm_proxy/providers/mimo"
 
 require_relative "../lib/llm_proxy"
 
