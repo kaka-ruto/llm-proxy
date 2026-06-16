@@ -2,12 +2,7 @@ require "yaml"
 require "json"
 require "sinatra/base"
 
-require "ask"
-require "ask-llm-providers"
 require "ask/agent"
-require "ask/tools/tool"
-require "ask/result"
-require "ask/agent/chat"
 
 module LLMProxy
   class Error < StandardError; end
