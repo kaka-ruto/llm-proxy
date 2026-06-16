@@ -2,9 +2,8 @@ require "yaml"
 require "json"
 require "sinatra/base"
 
-# Load all ask-rb providers (opencode, opencode_go, mimo) before Ask::Provider
-
 require "ask"
+require "ask-llm-providers"
 require "ask/agent"
 require "ask/tools/tool"
 require "ask/result"
@@ -32,4 +31,6 @@ require_relative "llm_proxy/protocols/openai_responses"
 require_relative "llm_proxy/protocols/anthropic_messages"
 require_relative "llm_proxy/protocols/models_endpoint"
 require_relative "llm_proxy/goals"
+require_relative "llm_proxy/codex"
+require_relative "llm_proxy/cli"
 require_relative "llm_proxy/server"

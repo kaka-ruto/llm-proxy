@@ -9,7 +9,6 @@ module LLMProxy
       config = LLMProxy::Config.load(config_path)
       LLMProxy.catalog = LLMProxy::ModelCatalog.new(config)
       LLMProxy.default_model = config.server[:default_model]
-      configure_ask
 
       command = args.first
       rest = args.drop(1)
@@ -34,7 +33,7 @@ module LLMProxy
           Codex.restore_asar
         else
           Codex.restore(build: rest.first)
-  # Providers register themselves when loaded via Ask::Provider.register
+        end
       when "login"
         puts "Opening browser for ChatGPT login..."
         url = LLMProxy::OAuth.login_url
@@ -52,8 +51,8 @@ module LLMProxy
           Codex.disable
         else
           Codex.enable(port: config.server[:port] || 8765)
-  # Providers register themselves when loaded via Ask::Provider.register
-        puts "Quit and reopen Codex to see the change."
+          puts "Quit and reopen Codex to see the change."
+        end
       when "backup"
         Codex.backup
       when "backups"
@@ -63,7 +62,7 @@ module LLMProxy
         else
           puts "Available Codex backups (#{File.expand_path("../../.codex-shim/backups", __dir__)}):"
           list.each { |b| puts "  #{b[:short]} (build #{b[:build]})" }
-  # Providers register themselves when loaded via Ask::Provider.register
+        end
       when "delete-backup"
         if rest.first == "--all"
           FileUtils.rm_rf(Codex::BACKUP_DIR)
@@ -73,12 +72,12 @@ module LLMProxy
             if b[:build] == rest.first
               FileUtils.rm_rf(b[:path])
               puts "Deleted backup build #{rest.first}."
-      # Providers register themselves when loaded via Ask::Provider.register
-    # Providers register themselves when loaded via Ask::Provider.register
+            end
+          end
         else
           puts "Usage: llm-proxy delete-backup <build> or --all"
           Codex.list_backups.each { |b| puts "  #{b[:build]}  #{b[:short]}" }
-  # Providers register themselves when loaded via Ask::Provider.register
+        end
       when "-h", "--help"
         print_help
       when "-v", "--version"
@@ -87,7 +86,7 @@ module LLMProxy
         puts "Unknown command: #{command}"
         print_help
         exit 1
-# Providers register themselves when loaded via Ask::Provider.register
+      end
     end
 
     private
@@ -103,15 +102,124 @@ module LLMProxy
         key, value = line.strip.split("=", 2)
         value = value&.strip&.tr("'\"", "")
         ENV[key] = value if key && value && !value.empty?
-# Providers register themselves when loaded via Ask::Provider.register
+      end
     end
 
-    def self.configure_ask
-      # Ask-rb providers read their config from environment variables directly.
-      # No explicit configure call needed — Ask::Agent::Chat resolves the provider
-      # from the model catalog and builds the config from ENV vars.
-      # Ensure required API keys are set:
-      #   OPENCODE_API_KEY  — for opencode and opencode_go providers
-      #   OPENROUTER_API_KEY — for openrouter provider
-      #   MIMO_API_KEY / MIMO_API_BASE — for mimo provider
+    def self.start_server(config)
+      host = config.server[:host] || "127.0.0.1"
+      port = config.server[:port] || 8765
+      env = (config.server[:environment] || "production").to_sym
+
+      puts "LLM Proxy v0.1.0 — http://#{host}:#{port}"
+      puts "  Config: #{ENV.fetch("LLM_PROXY_CONFIG", "config.yml")}"
+      puts "  Models: #{LLMProxy.catalog.all.size}"
+      puts ""
+      puts "  POST /v1/chat/completions   — OpenAI Chat (Cursor, Aider)"
+      puts "  POST /v1/responses           — OpenAI Responses (Codex Desktop)"
+      puts "  POST /v1/messages            — Anthropic Messages (Claude Code)"
+      puts "  GET  /v1/models              — List models"
+      puts "  GET  /health                 — Health check"
+
+      LLMProxy::Server.set :port, port
+      LLMProxy::Server.set :bind, host
+      LLMProxy::Server.set :environment, env.to_s
+      LLMProxy::Server.run!
     end
+
+    def self.handle_codex(args, config)
+      sub = args.first
+      rest = args.drop(1)
+
+      case sub
+      when nil, "launch"
+        slug = rest.first
+        Codex.launch_app(port: config.server[:port] || 8765, model_slug: slug)
+      when "catalog"
+        Codex.generate_catalog(LLMProxy.catalog.all, port: config.server[:port] || 8765)
+      when "patch"
+        Codex.patch_asar
+      when "re-patch"
+        puts "Restoring ASAR and re-patching..."
+        Codex.restore_asar
+        Codex.patch_asar
+      when "restore"
+        Codex.restore_asar
+      when "-h", "--help"
+        puts "Usage: llm-proxy codex [launch|catalog|patch|re-patch|restore] [model-slug]"
+      else
+        puts "Unknown codex subcommand: #{sub}"
+      end
+    end
+
+    def self.print_help
+      puts "Usage: llm-proxy [command]"
+      puts ""
+      puts "Commands:"
+      puts "  server              Start the proxy server (default)"
+      puts "  codex [launch]      Launch Codex Desktop with proxy models"
+      puts "  codex catalog       Generate Codex model catalog"
+      puts "  codex patch         Patch Codex ASAR (model picker + /goal)"
+      puts "  codex re-patch      Restore ASAR then re-patch (after updates)"
+      puts "  codex restore       Restore original Codex ASAR"
+      puts "  catalog             Generate Codex model catalog only"
+      puts "  patch               Patch Codex ASAR (model picker + /goal)"
+      puts "  re-patch            Restore ASAR then re-patch (after updates)"
+      puts "  restore             Restore Codex ASAR only"
+      puts "  backups             List available Codex backups"
+      puts "  delete-backup       Delete a backup (use --all to clear all)"
+      puts "  login               Log in to ChatGPT OAuth"
+      puts "  enable              Enable proxy mode in Codex config"
+      puts "  disable             Disable proxy mode in Codex config"
+      puts "  toggle              Toggle proxy mode"
+      puts "  -h, --help          Show this help"
+      puts "  -v, --version       Show version"
+      puts ""
+      puts "Env:"
+      puts "  LLM_PROXY_CONFIG    Path to config.yml (default: config.yml)"
+      puts "  OPENCODE_API_KEY    Your OpenCode API key"
+      puts "  OPENROUTER_API_KEY  Your OpenRouter API key"
+    end
+
+    def self.start_callback_server
+      require "socket"
+
+      server = TCPServer.new("127.0.0.1", 1455)
+      puts "  Listening on http://127.0.0.1:1455/auth/callback"
+
+      client = server.accept
+      request = client.gets
+      path = request&.split(" ")&.[](1) || ""
+
+      result = nil
+
+      if path.start_with?("/auth/callback")
+        query = URI.decode_www_form(path.split("?").last || "").to_h rescue {}
+        result = LLMProxy::OAuth.handle_callback(code: query["code"], state: query["state"])
+
+        if result[:success]
+          body = "<html><body><h1>✅ Signed in to ChatGPT</h1><p>Account: #{result[:account_id]}</p><p>You can close this window.</p></body></html>"
+        else
+          body = "<html><body><h1>❌ Login failed</h1><p>#{result[:error]}</p></body></html>"
+        end
+
+        client.puts "HTTP/1.1 200 OK"
+        client.puts "Content-Type: text/html"
+        client.puts "Content-Length: #{body.bytesize}"
+        client.puts "Connection: close"
+        client.puts
+        client.puts body
+      end
+
+      client.close
+      server.close
+
+      if result && result[:success]
+        puts "  ✅ Signed in to ChatGPT (account: #{result[:account_id]})"
+      else
+        puts "  ❌ Login failed: #{result&.dig(:error) || 'Unknown error'}"
+      end
+    rescue => e
+      puts "  ❌ OAuth error: #{e.message}"
+    end
+  end
+end
