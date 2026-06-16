@@ -36,7 +36,7 @@ module LLMProxy
           events.concat(text_delta_events(chunk.content, model:))
         end
         if chunk.thinking.to_s.length > 0
-          events.concat(thinking_delta_events(chunk.thinking.text, model:))
+          events.concat(thinking_delta_events(chunk.thinking.to_s, model:))
         end
         if chunk.tool_calls&.any?
           events.concat(tool_call_events(chunk.tool_calls, model:))

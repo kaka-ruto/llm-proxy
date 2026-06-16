@@ -58,7 +58,7 @@ module LLMProxy
         events = []
 
         if chunk.thinking.to_s.length > 0
-          events.concat(thinking_events(chunk.thinking.text, model:))
+          events.concat(thinking_events(chunk.thinking.to_s, model:))
         end
 
         if chunk.content&.length&.> 0
