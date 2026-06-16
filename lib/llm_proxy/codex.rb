@@ -209,6 +209,7 @@ module LLMProxy
       end
 
       def enable(port: 8765)
+        quit
         generate_catalog(LLMProxy.catalog.all, port:)
         slug = LLMProxy.default_model || LLMProxy.catalog.all.first&.id&.gsub(/[^a-zA-Z0-9]+/, "-")&.downcase || "model"
 
