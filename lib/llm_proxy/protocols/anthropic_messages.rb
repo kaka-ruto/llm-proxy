@@ -34,10 +34,12 @@ module LLMProxy
       end
 
       def start_events(model:)
-        @block_index = 0
+        @next_block_index = 0
         @text_buffer = ""
         @text_block_opened = false
+        @text_block_index = nil
         @tool_calls_buffer = []
+        @tool_call_indices = []
 
         [{
           type: "message_start",
@@ -76,11 +78,11 @@ module LLMProxy
         events = []
 
         if @text_block_opened
-          events << { type: "content_block_stop", index: current_block_index }
+          events << { type: "content_block_stop", index: @text_block_index }
         end
 
-        @tool_calls_buffer.each_with_index do |tc, idx|
-          events << { type: "content_block_stop", index: current_block_index - @tool_calls_buffer.length + idx + 1 }
+        @tool_call_indices.each do |idx|
+          events << { type: "content_block_stop", index: idx }
         end
 
         usage_out = {}
@@ -116,10 +118,11 @@ module LLMProxy
         unless @text_block_opened
           @text_block_opened = true
           @text_buffer = text
+          @text_block_index = next_block_index
           return [
             {
               type: "content_block_start",
-              index: current_block_index,
+              index: @text_block_index,
               content_block: { type: "text", text: text }
             }
           ]
@@ -128,15 +131,20 @@ module LLMProxy
         @text_buffer += text
         [{
           type: "content_block_delta",
-          index: current_block_index,
+          index: @text_block_index,
           delta: { type: "text_delta", text: text }
         }]
       end
 
       def thinking_events(text, model:)
+        idx = next_block_index
         [{
+          type: "content_block_start",
+          index: idx,
+          content_block: { type: "thinking", thinking: text }
+        }, {
           type: "content_block_delta",
-          index: current_block_index,
+          index: idx,
           delta: { type: "thinking_delta", thinking: text }
         }]
       end
@@ -145,12 +153,14 @@ module LLMProxy
         events = []
         tool_calls.each do |id, tc|
           @tool_calls_buffer << tc
+          idx = next_block_index
+          @tool_call_indices << idx
 
           arg_text = tc.arguments.is_a?(String) ? tc.arguments : JSON.generate(tc.arguments)
 
           events << {
             type: "content_block_start",
-            index: current_block_index,
+            index: idx,
             content_block: {
               type: "tool_use",
               id: id,
@@ -161,15 +171,17 @@ module LLMProxy
 
           events << {
             type: "content_block_delta",
-            index: current_block_index,
+            index: idx,
             delta: { type: "input_json_delta", partial_json: arg_text }
           }
         end
         events
       end
 
-      def current_block_index
-        @block_index
+      def next_block_index
+        idx = @next_block_index
+        @next_block_index += 1
+        idx
       end
 
       def chunk_tool_calls?

@@ -24,7 +24,6 @@ module LLMProxy
       set :server, :puma
       set :show_exceptions, false
       set :raise_errors, false
-      Dir[File.join(LOG_DIR, "development.log.*")].each { |f| File.delete(f) }
     end
 
     before do

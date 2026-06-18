@@ -85,10 +85,13 @@ module LLMProxy
       puts "  -h, --help          Show this help"
       puts "  -v, --version       Show version"
       puts ""
+      puts "Endpoints:"
+      puts "  POST /api/goals          Goal management (Codex /goal support)"
+      puts ""
       puts "Env:"
       puts "  LLM_PROXY_CONFIG    Path to config.yml (default: config.yml)"
-      puts "  OPENCODE_API_KEY    Your OpenCode API key"
-      puts "  OPENROUTER_API_KEY  Your OpenRouter API key"
+      puts "  OPENCODE_API_KEY    OpenCode API key"
+      puts "  OPENROUTER_API_KEY  OpenRouter API key"
     end
 
     def self.start_callback_server
