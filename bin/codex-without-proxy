@@ -3,8 +3,6 @@
 
 # Stop proxy services and launch Codex normally.
 
-PROXY_DIR = File.expand_path("../..", __dir__)
-
 def kill_by_port(port)
   pid = `lsof -ti :#{port} 2>/dev/null`.strip
   return unless pid.length > 0

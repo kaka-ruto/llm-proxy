@@ -50,6 +50,7 @@ module LLMProxy
 
         File.write(CODEX_CONFIG, top + "\n" + cleaned.lstrip + "\n" + prov)
         puts "✅ Proxy mode enabled — Codex will use #{model_slug} via llm-proxy"
+        puts "   Restart Codex for changes to take effect."
       end
 
       def disable

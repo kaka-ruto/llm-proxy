@@ -25,6 +25,14 @@ ruby bin/llm-proxy server
 
 The server starts on `http://127.0.0.1:8765` with models ready to use.
 
+Test it:
+
+```bash
+curl http://127.0.0.1:8765/v1/chat/completions \
+  -H 'Content-Type: application/json' \
+  -d '{"model":"deepseek-v4-flash","messages":[{"role":"user","content":"Say hello"}]}'
+```
+
 ## CLI commands
 
 ```bash

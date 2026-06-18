@@ -58,15 +58,20 @@ module LLMProxy
       port = config.server[:port] || 8765
       env = (config.server[:environment] || "production").to_sym
 
+      default_model = LLMProxy.default_model || "not set"
       puts "LLM Proxy v0.1.0 — http://#{host}:#{port}"
       puts "  Config: #{ENV.fetch("LLM_PROXY_CONFIG", "config.yml")}"
-      puts "  Models: #{LLMProxy.catalog.all.size}"
+      puts "  Models: #{LLMProxy.catalog.all.size} (default: #{default_model})"
       puts ""
       puts "  POST /v1/chat/completions   — OpenAI Chat (Cursor, Aider)"
       puts "  POST /v1/responses           — OpenAI Responses (Codex Desktop)"
       puts "  POST /v1/messages            — Anthropic Messages (Claude Code)"
       puts "  GET  /v1/models              — List models"
       puts "  GET  /health                 — Health check"
+      puts ""
+      puts "  Test: curl http://#{host}:#{port}/v1/chat/completions \\"
+      puts "    -H 'Content-Type: application/json' \\"
+      puts "    -d '{\"model\":\"#{default_model}\",\"messages\":[{\"role\":\"user\",\"content\":\"hi\"}]}'"
 
       LLMProxy::Server.set :port, port
       LLMProxy::Server.set :bind, host
