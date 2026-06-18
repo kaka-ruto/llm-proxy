@@ -3,9 +3,15 @@
 
 # Launch Codex Desktop with mitmproxy interception.
 # Routes model API calls through llm-proxy, passes everything else through.
+require "fileutils"
+require "open3"
 
-PROXY_DIR = File.expand_path("../..", __dir__)
+PROXY_DIR = File.expand_path("..", __dir__)
+LOGS_DIR = File.join(PROXY_DIR, "logs")
+FileUtils.mkdir_p(LOGS_DIR)
+
 MITM_ADDON = File.join(PROXY_DIR, "mitm_addon.py")
+CODEX_BIN = "/Applications/Codex.app/Contents/MacOS/Codex"
 LLM_PROXY_PORT = 8765
 MITM_PORT = 8080
 
@@ -16,20 +22,16 @@ end
 def kill_by_port(port)
   pid = `lsof -ti :#{port} 2>/dev/null`.strip
   return unless pid.length > 0
-  system("kill", "-9", pid) rescue nil
+  system("kill", pid) rescue nil
   sleep 0.3
 end
 
 def kill_all_codex
-  # Kill all codex app-server processes (they pile up as daemons)
   `ps aux 2>/dev/null`.lines.each do |line|
-    if line.include?("codex app-server") || line.include?("codex app-server")
+    if line.include?("codex app-server")
       pid = line.split[1].to_i
       next if pid == 0
-      begin
-        Process.kill("TERM", pid)
-      rescue Errno::ESRCH
-      end
+      Process.kill("TERM", pid) rescue nil
     end
   end
   sleep 1
@@ -50,6 +52,24 @@ def wait_for_port(port, label, timeout: 10)
   end
 end
 
+def start_service(cmd, log_path, port, label)
+  log_path = File.expand_path(log_path)
+  FileUtils.mkdir_p(File.dirname(log_path))
+
+  pid = spawn(*cmd, out: log_path, err: [:child, :out])
+  Process.detach(pid)
+
+  unless wait_for_port(port, label)
+    # Show last 20 lines of the log to help diagnose
+    if File.exist?(log_path)
+      lines = File.read(log_path).lines.last(20)
+      puts "  Last #{lines.size} lines of #{log_path}:"
+      lines.each { |l| puts "    #{l.chomp}" }
+    end
+    exit 1
+  end
+end
+
 # Kill old processes
 puts "→ Cleaning up..."
 kill_by_port(LLM_PROXY_PORT)
@@ -59,31 +79,25 @@ sleep 1
 
 # Start llm-proxy
 puts "→ Starting llm-proxy..."
-llm_pid = spawn(
-  "ruby", File.join(PROXY_DIR, "bin", "llm-proxy"),
-  chdir: PROXY_DIR,
-  out: File.join(PROXY_DIR, "logs", "proxy.log"),
-  err: [:child, :out]
+start_service(
+  ["ruby", File.join(PROXY_DIR, "bin", "llm-proxy")],
+  File.join(LOGS_DIR, "proxy.log"),
+  LLM_PROXY_PORT, "llm-proxy"
 )
-Process.detach(llm_pid)
-wait_for_port(LLM_PROXY_PORT, "llm-proxy") or exit(1)
 
 # Start mitmproxy
 puts "→ Starting mitmproxy..."
-mitm_pid = spawn(
-  "mitmdump", "-q", "-s", MITM_ADDON,
-  out: File.join(PROXY_DIR, "logs", "mitm.log"),
-  err: [:child, :out]
+start_service(
+  ["mitmdump", "-q", "-s", MITM_ADDON],
+  File.join(LOGS_DIR, "mitm.log"),
+  MITM_PORT, "mitmproxy"
 )
-Process.detach(mitm_pid)
-wait_for_port(MITM_PORT, "mitmproxy") or exit(1)
 
-# Launch Codex binary directly (not via `open`) so HTTPS_PROXY is inherited
-codex_bin = "/Applications/Codex.app/Contents/MacOS/Codex"
+# Launch Codex binary directly so HTTPS_PROXY is inherited
 puts "→ Launching Codex..."
 exec(
   { "HTTPS_PROXY" => "http://127.0.0.1:#{MITM_PORT}",
     "HTTP_PROXY" => "http://127.0.0.1:#{MITM_PORT}",
     "NO_PROXY" => "127.0.0.1,localhost,::1,*.local" },
-  codex_bin
+  CODEX_BIN
 )
