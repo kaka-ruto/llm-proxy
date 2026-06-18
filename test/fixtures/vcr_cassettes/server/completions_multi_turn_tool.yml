@@ -1,0 +1,178 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://api.deepseek.com/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"model":"deepseek-v4-flash","messages":[{"role":"user","content":"What
+        is 2+3? Use the calculator tool."}],"stream":false,"tools":[{"type":"function","function":{"name":"calculator","description":"Add
+        numbers","parameters":{"type":"object","properties":{"a":{"type":"number"},"b":{"type":"number"}},"required":["a","b"],"additionalProperties":false}}}]}'
+    headers:
+      Content-Type:
+      - application/json
+      Authorization:
+      - Bearer <BEARER_TOKEN>
+      User-Agent:
+      - Faraday v2.14.2
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Date:
+      - Thu, 18 Jun 2026 03:49:20 GMT
+      Server:
+      - elb
+      Vary:
+      - origin, access-control-request-method, access-control-request-headers
+      Access-Control-Allow-Credentials:
+      - 'true'
+      X-Ds-Trace-Id:
+      - c2c30be4f41736d3190e77c20ca65727
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains; preload
+      X-Content-Type-Options:
+      - nosniff
+      X-Cache:
+      - Miss from cloudfront
+      Via:
+      - 1.1 3439487755047758308c2b5cc2f68a2a.cloudfront.net (CloudFront)
+      X-Amz-Cf-Pop:
+      - NBO50-P2
+      X-Amz-Cf-Id:
+      - YhLR6gFTMLGmXMnxzbLyISP8jJXH_PcsQymiwcLvU78SCi8d7ZbSqw==
+    body:
+      encoding: ASCII-8BIT
+      string: '{"id":"1199d74a-01fc-47e8-bccc-c0cdec13937c","object":"chat.completion","created":1781754560,"model":"deepseek-v4-flash","choices":[{"index":0,"message":{"role":"assistant","content":"","reasoning_content":"The
+        user wants me to calculate 2+3 using the calculator tool.","tool_calls":[{"index":0,"id":"call_00_T0mQvsgpXV8kXCWD8uNW3835","type":"function","function":{"name":"calculator","arguments":"{\"a\":
+        2, \"b\": 3}"}}]},"logprobs":null,"finish_reason":"tool_calls"}],"usage":{"prompt_tokens":296,"completion_tokens":74,"total_tokens":370,"prompt_tokens_details":{"cached_tokens":256},"completion_tokens_details":{"reasoning_tokens":15},"prompt_cache_hit_tokens":256,"prompt_cache_miss_tokens":40},"system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402"}'
+  recorded_at: Thu, 18 Jun 2026 03:49:21 GMT
+- request:
+    method: post
+    uri: https://api.deepseek.com/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"model":"deepseek-v4-flash","messages":[{"role":"user","content":"What
+        is 2+3? Use the calculator tool."},{"role":"assistant","tool_calls":[{"id":"call_0","type":"function","function":{"name":"","arguments":"{}"}}],"reasoning_content":""},{"role":"user","content":">
+        Output: 5"}],"stream":false,"tools":[{"type":"function","function":{"name":"calculator","description":"Add
+        numbers","parameters":{"type":"object","properties":{"a":{"type":"number"},"b":{"type":"number"}},"required":["a","b"],"additionalProperties":false}}}]}'
+    headers:
+      Content-Type:
+      - application/json
+      Authorization:
+      - Bearer <BEARER_TOKEN>
+      User-Agent:
+      - Faraday v2.14.2
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+  response:
+    status:
+      code: 400
+      message: Bad Request
+    headers:
+      Content-Type:
+      - application/octet-stream
+      Content-Length:
+      - '264'
+      Connection:
+      - keep-alive
+      Date:
+      - Thu, 18 Jun 2026 03:49:22 GMT
+      Server:
+      - elb
+      Vary:
+      - origin, access-control-request-method, access-control-request-headers
+      Access-Control-Allow-Credentials:
+      - 'true'
+      X-Ds-Trace-Id:
+      - 58c90ee5d15ebee9bd3a5c8a52c5382e
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains; preload
+      X-Content-Type-Options:
+      - nosniff
+      X-Cache:
+      - Error from cloudfront
+      Via:
+      - 1.1 584afd1bb78b298ef177df5c5ec61d82.cloudfront.net (CloudFront)
+      X-Amz-Cf-Pop:
+      - NBO50-P2
+      X-Amz-Cf-Id:
+      - PFl_AjvS00wEiWFVHJztXNfIr9pn33QbxBjxDNBYkH7L-u0Mog5MWg==
+    body:
+      encoding: UTF-8
+      string: '{"error":{"message":"An assistant message with ''tool_calls'' must
+        be followed by tool messages responding to each ''tool_call_id''. (insufficient
+        tool messages following tool_calls message)","type":"invalid_request_error","param":null,"code":"invalid_request_error"}}'
+  recorded_at: Thu, 18 Jun 2026 03:49:21 GMT
+- request:
+    method: post
+    uri: https://api.deepseek.com/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"model":"deepseek-v4-flash","messages":[{"role":"user","content":"What
+        is 2+3? Use the calculator tool."},{"role":"assistant","tool_calls":[{"id":"call_00_T0mQvsgpXV8kXCWD8uNW3835","type":"function","function":{"name":"calculator","arguments":"{\"a\":2,\"b\":3}"}}],"reasoning_content":""},{"role":"tool","content":"5","tool_call_id":"call_00_T0mQvsgpXV8kXCWD8uNW3835"}],"stream":false,"tools":[{"type":"function","function":{"name":"calculator","description":"Add
+        numbers","parameters":{"type":"object","properties":{"a":{"type":"number"},"b":{"type":"number"}},"required":["a","b"],"additionalProperties":false}}}]}'
+    headers:
+      Content-Type:
+      - application/json
+      Authorization:
+      - Bearer <BEARER_TOKEN>
+      User-Agent:
+      - Faraday v2.14.2
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Date:
+      - Thu, 18 Jun 2026 03:53:38 GMT
+      Server:
+      - elb
+      Vary:
+      - origin, access-control-request-method, access-control-request-headers
+      Access-Control-Allow-Credentials:
+      - 'true'
+      X-Ds-Trace-Id:
+      - c4c8a3d0a99d9678c85091f84acaab49
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains; preload
+      X-Content-Type-Options:
+      - nosniff
+      X-Cache:
+      - Miss from cloudfront
+      Via:
+      - 1.1 ab4bd2e65bc34e284b162714fbd51c64.cloudfront.net (CloudFront)
+      X-Amz-Cf-Pop:
+      - NBO50-P1
+      X-Amz-Cf-Id:
+      - OLLLgrJU8m7p4CIG2eLxiDHZu8FDA-_106Cef6P6FHyZC4YoduT7Mg==
+    body:
+      encoding: ASCII-8BIT
+      string: '{"id":"0d8d5d5b-50b8-4a8b-9a02-027b01b1dd0a","object":"chat.completion","created":1781754818,"model":"deepseek-v4-flash","choices":[{"index":0,"message":{"role":"assistant","content":"2
+        + 3 = **5**","reasoning_content":"The calculator returned 5. So 2+3 equals
+        5."},"logprobs":null,"finish_reason":"stop"}],"usage":{"prompt_tokens":368,"completion_tokens":24,"total_tokens":392,"prompt_tokens_details":{"cached_tokens":256},"completion_tokens_details":{"reasoning_tokens":15},"prompt_cache_hit_tokens":256,"prompt_cache_miss_tokens":112},"system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402"}'
+  recorded_at: Thu, 18 Jun 2026 03:53:38 GMT
+recorded_with: VCR 6.4.0

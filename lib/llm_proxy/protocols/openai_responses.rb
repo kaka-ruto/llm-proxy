@@ -291,9 +291,6 @@ module LLMProxy
       def tool_call_events(tool_calls)
         events = []
         tool_calls.each do |id, tc|
-          # Streaming deltas may arrive with nil id — find the matching open
-          # tool call by position. Use the LAST open tool call so parallel
-          # calls don't all clobber the first one.
           key = id || @tool_calls.keys.reverse.find { |k| k != nil && !@tool_calls[k][:closed] }
           state = key ? @tool_calls[key] : nil
 
@@ -303,32 +300,33 @@ module LLMProxy
             events.concat(close_message) if @message_opened && !@message_closed
             idx = next_index
             call_id = id || tc.name || "call_#{idx}"
-            state = { id: call_id, index: idx, name: tc.name || call_id, arguments: arg_text, closed: false }
+            state = { id: call_id, index: idx, name: tc.name || call_id, arguments: "", closed: false }
             @tool_calls[call_id] = state
 
+            events << {
+              type: "response.output_item.added",
+              output_index: idx,
+              item: { id: call_id, type: "function_call", status: "in_progress",
+                      call_id: call_id, name: state[:name], arguments: "" }
+            }
+
             if arg_text.length > 0
-              events << {
-                type: "response.output_item.added",
-                output_index: idx,
-                item: { id: call_id, type: "function_call", status: "in_progress",
-                        call_id: call_id, name: state[:name], arguments: arg_text }
-              }
-            else
-              events << {
-                type: "response.output_item.added",
-                output_index: idx,
-                item: { id: call_id, type: "function_call", status: "in_progress",
-                        call_id: call_id, name: state[:name], arguments: "" }
-              }
-            end
-          else
-            # RubyLLM streams each delta character individually, not accumulated.
-            # We must append directly rather than computing diffs.
-            if arg_text.length > 0
-              state[:arguments] += arg_text
+              state[:arguments] = arg_text
               events << {
                 type: "response.function_call_arguments.delta",
                 item_id: state[:id], output_index: state[:index], delta: arg_text
+              }
+            end
+          else
+            # ChatChunk from ask-agent yields CUMULATIVE arguments (full text so far),
+            # not individual deltas. Determine the delta by comparing with what we have.
+            prev = state[:arguments]
+            if arg_text.length > prev.length
+              delta = arg_text[prev.length..]
+              state[:arguments] = arg_text
+              events << {
+                type: "response.function_call_arguments.delta",
+                item_id: state[:id], output_index: state[:index], delta: delta
               }
             end
           end

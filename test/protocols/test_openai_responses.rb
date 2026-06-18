@@ -134,10 +134,16 @@ describe LLMProxy::Protocols::OpenAIResponses do
       chunk = build_chunk(tool_calls: [{ id: "call_1", name: "exec_command", arguments: '{"cmd":"ls"}' }])
       events = @protocol.chunk_events(chunk, model: "test")
       _(events).wont_be :empty?
+      # Arguments can be in output_item.added OR in a function_call_arguments.delta
       added = events.find { |e| e[:type] == "response.output_item.added" }
-      _(added).wont_be_nil
-      # When arguments arrive in one chunk, they go in output_item.added
-      _(added.dig(:item, :arguments)).must_include "ls"
+      delta = events.find { |e| e[:type] == "response.function_call_arguments.delta" }
+      _(added || delta).wont_be_nil
+      if added&.dig(:item, :arguments)&.length&.>(0)
+        _(added.dig(:item, :arguments)).must_include "ls"
+      else
+        _(delta).wont_be_nil
+        _(delta[:delta]).must_include "ls"
+      end
     end
 
     it "handles tool calls with empty initial arguments" do

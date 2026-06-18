@@ -1,0 +1,61 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://api.deepseek.com/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"model":"deepseek-v4-flash","messages":[{"role":"user","content":"What
+        is 2+3? Use the calculator tool."}],"stream":false,"tools":[{"type":"function","function":{"name":"calculator","description":"Add
+        numbers","parameters":{"type":"object","properties":{"a":{"type":"number"},"b":{"type":"number"}},"required":["a","b"],"additionalProperties":false}}}]}'
+    headers:
+      Content-Type:
+      - application/json
+      Authorization:
+      - Bearer <BEARER_TOKEN>
+      User-Agent:
+      - Faraday v2.14.2
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Date:
+      - Thu, 18 Jun 2026 03:49:19 GMT
+      Server:
+      - elb
+      Vary:
+      - origin, access-control-request-method, access-control-request-headers
+      Access-Control-Allow-Credentials:
+      - 'true'
+      X-Ds-Trace-Id:
+      - d9ccb0d5464f55bcff7a2bde4b8f7ad6
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains; preload
+      X-Content-Type-Options:
+      - nosniff
+      X-Cache:
+      - Miss from cloudfront
+      Via:
+      - 1.1 869ab812471a7d999085f4d91d4fbb62.cloudfront.net (CloudFront)
+      X-Amz-Cf-Pop:
+      - NBO50-P1
+      X-Amz-Cf-Id:
+      - VWLsGqMeT48tOj40n3Fnyh8SY__UZXB9QZEo-kgwqBs6v-HitVuDVA==
+    body:
+      encoding: ASCII-8BIT
+      string: '{"id":"1119d8c6-5551-47e3-b5e0-b0e6e2980aee","object":"chat.completion","created":1781754558,"model":"deepseek-v4-flash","choices":[{"index":0,"message":{"role":"assistant","content":"","reasoning_content":"The
+        user wants me to calculate 2+3 using the calculator tool. Let me do that.","tool_calls":[{"index":0,"id":"call_00_ZRoq3cRgVlfSqA4wBuiE5820","type":"function","function":{"name":"calculator","arguments":"{\"a\":
+        2, \"b\": 3}"}}]},"logprobs":null,"finish_reason":"tool_calls"}],"usage":{"prompt_tokens":296,"completion_tokens":79,"total_tokens":375,"prompt_tokens_details":{"cached_tokens":128},"completion_tokens_details":{"reasoning_tokens":20},"prompt_cache_hit_tokens":128,"prompt_cache_miss_tokens":168},"system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402"}'
+  recorded_at: Thu, 18 Jun 2026 03:49:19 GMT
+recorded_with: VCR 6.4.0

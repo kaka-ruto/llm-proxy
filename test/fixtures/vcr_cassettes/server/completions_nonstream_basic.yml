@@ -1,0 +1,61 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://api.deepseek.com/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"model":"deepseek-v4-flash","messages":[{"role":"user","content":"Say
+        hello in one word"}],"stream":false}'
+    headers:
+      Content-Type:
+      - application/json
+      Authorization:
+      - Bearer <BEARER_TOKEN>
+      User-Agent:
+      - Faraday v2.14.2
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Date:
+      - Thu, 18 Jun 2026 03:49:22 GMT
+      Server:
+      - elb
+      Vary:
+      - origin, access-control-request-method, access-control-request-headers
+      Access-Control-Allow-Credentials:
+      - 'true'
+      X-Ds-Trace-Id:
+      - 71108164f8d73c3fd9cfef73c0768473
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains; preload
+      X-Content-Type-Options:
+      - nosniff
+      X-Cache:
+      - Miss from cloudfront
+      Via:
+      - 1.1 6407f446730d4a015477359b48f9a2a4.cloudfront.net (CloudFront)
+      X-Amz-Cf-Pop:
+      - NBO50-P1
+      X-Amz-Cf-Id:
+      - rFvMvpZi73pTKLJNsqE9V2rR1HmvZ5mjpWzS4cQMUubJESNS5MYblg==
+    body:
+      encoding: ASCII-8BIT
+      string: '{"id":"30afc3e5-bbd0-4b69-892c-8c366561d05d","object":"chat.completion","created":1781754562,"model":"deepseek-v4-flash","choices":[{"index":0,"message":{"role":"assistant","content":"Hello","reasoning_content":"We
+        are asked: \"Say hello in one word\". So response should be a single word
+        greeting. Commonly \"Hello\" or \"Hi\". But since it says \"in one word\",
+        just \"Hello.\""},"logprobs":null,"finish_reason":"stop"}],"usage":{"prompt_tokens":9,"completion_tokens":43,"total_tokens":52,"prompt_tokens_details":{"cached_tokens":0},"completion_tokens_details":{"reasoning_tokens":41},"prompt_cache_hit_tokens":0,"prompt_cache_miss_tokens":9},"system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402"}'
+  recorded_at: Thu, 18 Jun 2026 03:49:23 GMT
+recorded_with: VCR 6.4.0

@@ -49,20 +49,37 @@ module LLMProxy
         end
 
         if chunk.tool_calls&.any?
+          @_tc_seen ||= {}
+          @_tc_args ||= {}
           chunk.tool_calls.each_with_index do |(id, tc), idx|
-            events << {
-              choices: [{
-                index: 0,
-                delta: {
-                  tool_calls: [{
-                    index: idx,
-                    id: id,
-                    type: "function",
-                    function: { name: tc.name, arguments: (tc.arguments.is_a?(String) ? tc.arguments : JSON.generate(tc.arguments)) }
+            full_args = tc.arguments.is_a?(String) ? tc.arguments : JSON.generate(tc.arguments)
+            prev_args = @_tc_args[id] || ""
+            if @_tc_seen[id]
+              # Ongoing tool call — send only the arguments delta
+              if full_args.length > prev_args.length
+                delta = full_args[prev_args.length..]
+                @_tc_args[id] = full_args
+                events << {
+                  choices: [{
+                    index: 0, delta: {
+                      tool_calls: [{ index: idx, function: { arguments: delta } }]
+                    }
                   }]
                 }
-              }]
-            }
+              end
+            else
+              # New tool call — send id, name, and arguments
+              @_tc_seen[id] = true
+              @_tc_args[id] = full_args
+              events << {
+                choices: [{
+                  index: 0, delta: {
+                    tool_calls: [{ index: idx, id: id, type: "function",
+                      function: { name: tc.name, arguments: full_args } }]
+                  }
+                }]
+              }
+            end
           end
         end
 

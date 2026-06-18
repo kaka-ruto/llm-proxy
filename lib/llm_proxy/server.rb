@@ -9,6 +9,8 @@ module LLMProxy
     LOG_DIR = File.expand_path("../../logs", __dir__)
     LOG_FILE = File.join(LOG_DIR, "development.log")
 
+    set :protection, false
+
     configure do
       FileUtils.mkdir_p(LOG_DIR)
       File.chmod(0700, LOG_DIR)
@@ -22,7 +24,6 @@ module LLMProxy
       set :server, :puma
       set :show_exceptions, false
       set :raise_errors, false
-
       Dir[File.join(LOG_DIR, "development.log.*")].each { |f| File.delete(f) }
     end
 
@@ -109,24 +110,53 @@ module LLMProxy
       endpoint = protocol_class.new.endpoint
 
       post endpoint do
-        @_streaming = true
-        content_type "text/event-stream"
-        headers "Cache-Control" => "no-cache"
-        headers "X-Accel-Buffering" => "no"
+        protocol = protocol_class.new
+        body = JSON.parse(@request_body)
 
-        stream(:keep_open) do |out|
-          begin
-            handle_stream(out, protocol_class.new)
-          rescue Exception => e
-            @log.error("Fatal stream error: #{e.class}: #{e.message}")
-            @log.debug("  #{e.backtrace&.first(3)&.join("\n    ")}")
-            safe_send(out, "data: [DONE]\n\n")
+        body = resolve_model(body, protocol)
+        normalized = protocol.normalize(body)
+        model_id = body["model"] || normalized[:model]
+        model_info = LLMProxy.catalog.lookup(model_id)
+        is_streaming = normalized[:stream] != false
+
+        unless model_info
+          content_type :json
+          status 400
+          next { error: { message: "Unknown model: #{model_id}" } }.to_json
+        end
+
+        msg_count = (normalized[:messages] || []).length
+        tool_count = (normalized[:tools] || []).length
+        @log.info("  model=#{model_id} (#{model_info.provider}) msgs=#{msg_count} tools=#{tool_count}")
+        @log.debug("  system=#{normalized[:system].inspect}")
+        @log.debug("  thinking=#{normalized[:thinking].inspect} stream=#{normalized[:stream]} max_tokens=#{normalized[:max_tokens]} temp=#{normalized[:temperature].inspect}")
+
+        chat = build_chat(model_info, normalized)
+
+        if is_streaming
+          @_streaming = true
+          content_type "text/event-stream"
+          headers "Cache-Control" => "no-cache"
+          headers "X-Accel-Buffering" => "no"
+
+          stream(:keep_open) do |out|
+            begin
+              handle_stream(out, protocol, chat, model_info)
+            rescue Exception => e
+              @log.error("Fatal stream error: #{e.class}: #{e.message}")
+              @log.debug("  #{e.backtrace&.first(3)&.join("\n    ")}")
+              safe_send(out, "data: [DONE]\n\n")
+            end
           end
+        else
+          content_type :json
+          handle_nonstreaming(protocol, chat, model_info)
         end
       end
     end
 
     error JSON::ParserError do
+      status 400
       content_type :json
       { error: { message: "Invalid JSON" } }.to_json
     end
@@ -138,58 +168,68 @@ module LLMProxy
 
     private
 
-    def handle_stream(out, protocol)
-      body = JSON.parse(@request_body)
+    # Resolve model, with fallback logic for unknown models.
+    def resolve_model(body, protocol)
       model_id = protocol.model_from(body)
-
       model_info = LLMProxy.catalog.lookup(model_id)
 
-      unless model_info
+      if model_info
+        body
+      else
         fallback_id = LLMProxy.default_model
         fallback = fallback_id ? LLMProxy.catalog.lookup(fallback_id) : nil
         fallback ||= LLMProxy.catalog.all.first
         if fallback
           @log.warn("  Unknown model: #{model_id}, falling back to #{fallback.id}")
-          body["model"] = fallback.id
-          model_id = fallback.id
-          model_info = fallback
+          body.merge("model" => fallback.id)
         else
-          safe_send(out, SSE.format({ type: "error", error: { message: "Unknown model: #{model_id}" } }))
-          safe_send(out, SSE.format({ type: "response.completed", response: { id: "resp_0", status: "completed", model: "unknown", output: [] } }))
-          safe_send(out, "data: [DONE]\n\n")
-          safe_close(out)
-          return
+          body
         end
       end
+    end
 
-      normalized = protocol.normalize(body)
-      msg_count = (normalized[:messages] || []).length
-      tool_count = (normalized[:tools] || []).length
-      @log.info("  model=#{model_id} (#{model_info.provider}) msgs=#{msg_count} tools=#{tool_count}")
-      @log.debug("  system=#{normalized[:system].inspect}")
-      @log.debug("  thinking=#{normalized[:thinking].inspect} stream=#{normalized[:stream]} max_tokens=#{normalized[:max_tokens]} temp=#{normalized[:temperature].inspect}")
+    def handle_nonstreaming(protocol, chat, model_info)
+      begin
+        response = chat.ask(nil)
+        final_msg = response
+        usage = token_usage(final_msg)
+        @log.info("  Usage: #{usage.inspect}")
 
-      is_streaming = normalized[:stream] != false
-
-      chat = build_chat(model_info, normalized)
-
-      unless is_streaming
-        begin
-          response = chat.ask(nil)
-          final_msg = response
-          usage = token_usage(final_msg)
-          @log.info("  Usage: #{usage.inspect}")
-          payload = protocol.complete_events(model: model_info.id, usage: usage)
-          completed = payload.find { |e| e.is_a?(Hash) && e[:type] == "response.completed" }
-          safe_send(out, (completed || { type: "response.completed", response: { id: "resp_0", status: "completed", model: model_info.id, output: [] } }).to_json)
-        rescue Exception => e
-          @log.error("Non-streaming error: #{e.class}: #{e.message}")
-          @log.debug("  #{e.backtrace&.first(5)&.join("\n    ")}")
-          safe_send(out, { error: { message: e.message, type: "connection_error" } }.to_json)
-        end
-        return
+        format_protocol_response(protocol, model_info, final_msg, usage)
+      rescue Exception => e
+        @log.error("Non-streaming error: #{e.class}: #{e.message}")
+        @log.debug("  #{e.backtrace&.first(5)&.join("\n    ")}")
+        status 500
+        { error: { message: e.message } }.to_json
       end
+    end
 
+    def format_protocol_response(protocol, model_info, msg, usage)
+      case protocol
+      when Protocols::OpenAICompletions
+        content = msg.content.to_s
+        choice = { index: 0, message: { role: "assistant", content: content }, finish_reason: "stop" }
+        if msg.tool_call?
+          calls = msg.tool_calls.values.map { |tc|
+            { id: tc.id, type: "function", function: { name: tc.name, arguments: (tc.arguments.is_a?(String) ? tc.arguments : JSON.generate(tc.arguments)) } }
+          }
+          choice[:message][:tool_calls] = calls
+          choice[:finish_reason] = "tool_calls"
+        end
+        result = { id: "chatcmpl_#{model_info.id}", object: "chat.completion", model: model_info.id, choices: [choice], created: Time.now.to_i }
+        result[:usage] = { prompt_tokens: usage[:input] || 0, completion_tokens: usage[:output] || 0, total_tokens: (usage[:input] || 0) + (usage[:output] || 0) } if usage
+        result.to_json
+      when Protocols::OpenAIResponses
+        {
+          type: "response.completed",
+          response: { id: "resp_0", status: "completed", model: model_info.id, output: [] }
+        }.to_json
+      else
+        {}.to_json
+      end
+    end
+
+    def handle_stream(out, protocol, chat, model_info)
       begin
         @log.debug("  Starting stream...")
         safe_send(out, SSE.format(protocol.start_events(model: model_info.id)))
@@ -257,14 +297,20 @@ module LLMProxy
       pending_thinking = nil
       buffer = nil
 
+      fetch_key = ->(h, *keys) {
+        keys.each { |k| v = h[k]; return v if v }
+        nil
+      }
+
       flush_buffer = lambda do
         return unless buffer
         tc_hash = {}
         buffer[:calls].each_with_index do |tc, i|
-          fn = tc[:function] || tc
-          name = fn[:name] || tc[:name] || ""
-          call_id = tc[:id] || "call_#{i}"
-          args = parse_tool_args(fn[:arguments] || tc[:arguments])
+          fn = fetch_key.call(tc, :function, "function") || tc
+          name = fetch_key.call(fn, :name, "name") || ""
+          call_id = fetch_key.call(tc, :id, "id") || "call_#{i}"
+          raw_args = fetch_key.call(fn, :arguments, "arguments")
+          args = parse_tool_args(raw_args)
           tc_hash[call_id] = OpenStruct.new(id: call_id, name: name, arguments: args)
         end
         chat.add_message(role: :assistant, content: nil, tool_calls: tc_hash)

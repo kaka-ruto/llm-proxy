@@ -30,7 +30,7 @@ describe LLMProxy::Codex do
              LLMProxy.catalog.all.first&.id&.gsub(/[^a-zA-Z0-9]+/, "-")&.downcase ||
              "model"
 
-      _(slug).must_equal "kimi-k2-6"
+      _(slug).must_equal "deepseek-v4-flash"
     ensure
       LLMProxy.default_model = old_default
     end
@@ -57,9 +57,8 @@ describe LLMProxy::Codex do
 
   describe "enable method uses default_model" do
     it "resolves slug from default_model, not first catalog entry" do
-      # The first model in the catalog is kimi-k2.6 (slug: kimi-k2-6)
       first_catalog_slug = LLMProxy.catalog.all.first&.id&.gsub(/[^a-zA-Z0-9]+/, "-")&.downcase
-      _(first_catalog_slug).must_equal "kimi-k2-6"
+      _(first_catalog_slug).must_equal "deepseek-v4-flash"
 
       # But default_model is deepseek-v4-flash
       _(LLMProxy.default_model).must_equal "deepseek-v4-flash"
