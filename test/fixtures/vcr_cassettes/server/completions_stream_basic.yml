@@ -169,5 +169,103 @@ http_interactions:
         data: [DONE]
 
   recorded_at: Thu, 18 Jun 2026 03:55:06 GMT
+- request:
+    method: post
+    uri: https://api.deepseek.com/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"model":"deepseek-v4-flash","messages":[{"role":"system","content":"You
+        are running as model: deepseek-v4-flash (provider: deepseek)."},{"role":"user","content":"Say
+        hello in one word"}],"stream":true}'
+    headers:
+      Content-Type:
+      - application/json
+      Authorization:
+      - Bearer <BEARER_TOKEN>
+      User-Agent:
+      - Faraday v2.14.3
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Content-Type:
+      - text/event-stream; charset=utf-8
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Date:
+      - Thu, 18 Jun 2026 18:12:09 GMT
+      X-Content-Type-Options:
+      - nosniff
+      Server:
+      - elb
+      Cache-Control:
+      - no-cache
+      Vary:
+      - origin, access-control-request-method, access-control-request-headers
+      Access-Control-Allow-Credentials:
+      - 'true'
+      X-Ds-Trace-Id:
+      - 903cb2d3abb5dc49c428261df7854a50
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains; preload
+      X-Cache:
+      - Miss from cloudfront
+      Via:
+      - 1.1 da02ee70cebbd84ecd3a1311a11b66ae.cloudfront.net (CloudFront)
+      X-Amz-Cf-Pop:
+      - NBO50-P2
+      X-Amz-Cf-Id:
+      - JzUXn3ULv09Z74pIwQTa69A0wH0pQrYzEveqKqGLHB_LJe1N588rxA==
+    body:
+      encoding: UTF-8
+      string: |+
+        data: {"id":"5c026b2b-a94a-4409-9747-e01cf531f4e1","object":"chat.completion.chunk","created":1781806329,"model":"deepseek-v4-flash","system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402","choices":[{"index":0,"delta":{"role":"assistant","content":null,"reasoning_content":""},"logprobs":null,"finish_reason":null}]}
+
+        data: {"id":"5c026b2b-a94a-4409-9747-e01cf531f4e1","object":"chat.completion.chunk","created":1781806329,"model":"deepseek-v4-flash","system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402","choices":[{"index":0,"delta":{"content":null,"reasoning_content":"We"},"logprobs":null,"finish_reason":null}]}
+
+        data: {"id":"5c026b2b-a94a-4409-9747-e01cf531f4e1","object":"chat.completion.chunk","created":1781806329,"model":"deepseek-v4-flash","system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402","choices":[{"index":0,"delta":{"content":null,"reasoning_content":" need"},"logprobs":null,"finish_reason":null}]}
+
+        data: {"id":"5c026b2b-a94a-4409-9747-e01cf531f4e1","object":"chat.completion.chunk","created":1781806329,"model":"deepseek-v4-flash","system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402","choices":[{"index":0,"delta":{"content":null,"reasoning_content":" to"},"logprobs":null,"finish_reason":null}]}
+
+        data: {"id":"5c026b2b-a94a-4409-9747-e01cf531f4e1","object":"chat.completion.chunk","created":1781806329,"model":"deepseek-v4-flash","system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402","choices":[{"index":0,"delta":{"content":null,"reasoning_content":" respond"},"logprobs":null,"finish_reason":null}]}
+
+        data: {"id":"5c026b2b-a94a-4409-9747-e01cf531f4e1","object":"chat.completion.chunk","created":1781806329,"model":"deepseek-v4-flash","system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402","choices":[{"index":0,"delta":{"content":null,"reasoning_content":" with"},"logprobs":null,"finish_reason":null}]}
+
+        data: {"id":"5c026b2b-a94a-4409-9747-e01cf531f4e1","object":"chat.completion.chunk","created":1781806329,"model":"deepseek-v4-flash","system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402","choices":[{"index":0,"delta":{"content":null,"reasoning_content":" a"},"logprobs":null,"finish_reason":null}]}
+
+        data: {"id":"5c026b2b-a94a-4409-9747-e01cf531f4e1","object":"chat.completion.chunk","created":1781806329,"model":"deepseek-v4-flash","system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402","choices":[{"index":0,"delta":{"content":null,"reasoning_content":" single"},"logprobs":null,"finish_reason":null}]}
+
+        data: {"id":"5c026b2b-a94a-4409-9747-e01cf531f4e1","object":"chat.completion.chunk","created":1781806329,"model":"deepseek-v4-flash","system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402","choices":[{"index":0,"delta":{"content":null,"reasoning_content":" word"},"logprobs":null,"finish_reason":null}]}
+
+        data: {"id":"5c026b2b-a94a-4409-9747-e01cf531f4e1","object":"chat.completion.chunk","created":1781806329,"model":"deepseek-v4-flash","system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402","choices":[{"index":0,"delta":{"content":null,"reasoning_content":" greeting"},"logprobs":null,"finish_reason":null}]}
+
+        data: {"id":"5c026b2b-a94a-4409-9747-e01cf531f4e1","object":"chat.completion.chunk","created":1781806329,"model":"deepseek-v4-flash","system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402","choices":[{"index":0,"delta":{"content":null,"reasoning_content":"."},"logprobs":null,"finish_reason":null}]}
+
+        data: {"id":"5c026b2b-a94a-4409-9747-e01cf531f4e1","object":"chat.completion.chunk","created":1781806329,"model":"deepseek-v4-flash","system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402","choices":[{"index":0,"delta":{"content":null,"reasoning_content":" \""},"logprobs":null,"finish_reason":null}]}
+
+        data: {"id":"5c026b2b-a94a-4409-9747-e01cf531f4e1","object":"chat.completion.chunk","created":1781806329,"model":"deepseek-v4-flash","system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402","choices":[{"index":0,"delta":{"content":null,"reasoning_content":"Hello"},"logprobs":null,"finish_reason":null}]}
+
+        data: {"id":"5c026b2b-a94a-4409-9747-e01cf531f4e1","object":"chat.completion.chunk","created":1781806329,"model":"deepseek-v4-flash","system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402","choices":[{"index":0,"delta":{"content":null,"reasoning_content":"\""},"logprobs":null,"finish_reason":null}]}
+
+        data: {"id":"5c026b2b-a94a-4409-9747-e01cf531f4e1","object":"chat.completion.chunk","created":1781806329,"model":"deepseek-v4-flash","system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402","choices":[{"index":0,"delta":{"content":null,"reasoning_content":" is"},"logprobs":null,"finish_reason":null}]}
+
+        data: {"id":"5c026b2b-a94a-4409-9747-e01cf531f4e1","object":"chat.completion.chunk","created":1781806329,"model":"deepseek-v4-flash","system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402","choices":[{"index":0,"delta":{"content":null,"reasoning_content":" simple"},"logprobs":null,"finish_reason":null}]}
+
+        data: {"id":"5c026b2b-a94a-4409-9747-e01cf531f4e1","object":"chat.completion.chunk","created":1781806329,"model":"deepseek-v4-flash","system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402","choices":[{"index":0,"delta":{"content":null,"reasoning_content":"."},"logprobs":null,"finish_reason":null}]}
+
+        data: {"id":"5c026b2b-a94a-4409-9747-e01cf531f4e1","object":"chat.completion.chunk","created":1781806329,"model":"deepseek-v4-flash","system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402","choices":[{"index":0,"delta":{"content":"Hello","reasoning_content":null},"logprobs":null,"finish_reason":null}]}
+
+        data: {"id":"5c026b2b-a94a-4409-9747-e01cf531f4e1","object":"chat.completion.chunk","created":1781806329,"model":"deepseek-v4-flash","system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402","choices":[{"index":0,"delta":{"content":"","reasoning_content":null},"logprobs":null,"finish_reason":"stop"}],"usage":{"prompt_tokens":27,"completion_tokens":18,"total_tokens":45,"prompt_tokens_details":{"cached_tokens":0},"completion_tokens_details":{"reasoning_tokens":16},"prompt_cache_hit_tokens":0,"prompt_cache_miss_tokens":27}}
+
+        data: [DONE]
+
+  recorded_at: Thu, 18 Jun 2026 18:12:10 GMT
 recorded_with: VCR 6.4.0
 ...
