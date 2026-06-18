@@ -1,15 +1,9 @@
-require "open3"
 require "fileutils"
-require "digest"
-require "zlib"
 require "securerandom"
 
 module LLMProxy
   module Codex
     RUNTIME_DIR = File.expand_path("../../.codex-shim", __dir__)
-    APP_ASAR = "/Applications/Codex.app/Contents/Resources/app.asar"
-
-    BACKUP_DIR = File.join(RUNTIME_DIR, "backups")
     CODEX_CONFIG = File.expand_path("~/.codex/config.toml")
     CODEX_BACKUP = File.join(RUNTIME_DIR, "config.toml.before-llm-proxy")
     MANAGED_BEGIN = "# >>> llm-proxy managed >>>"
