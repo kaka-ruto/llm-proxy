@@ -1,19 +1,17 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-# Launch Codex Desktop with mitmproxy interception.
-# Routes model API calls through llm-proxy, passes everything else through.
+# Launch Codex Desktop with llm-proxy.
+# Codex routes model requests through the proxy via config.toml (llm-proxy enable).
+
 require "fileutils"
-require "open3"
 
 PROXY_DIR = File.expand_path("..", __dir__)
 LOGS_DIR = File.join(PROXY_DIR, "logs")
 FileUtils.mkdir_p(LOGS_DIR)
 
-MITM_ADDON = File.join(PROXY_DIR, "mitm_addon.py")
 CODEX_BIN = "/Applications/Codex.app/Contents/MacOS/Codex"
 LLM_PROXY_PORT = 8765
-MITM_PORT = 8080
 
 def running?(port)
   system("lsof", "-ti", ":#{port}", out: "/dev/null")
@@ -60,7 +58,6 @@ def start_service(cmd, log_path, port, label)
   Process.detach(pid)
 
   unless wait_for_port(port, label)
-    # Show last 20 lines of the log to help diagnose
     if File.exist?(log_path)
       lines = File.read(log_path).lines.last(20)
       puts "  Last #{lines.size} lines of #{log_path}:"
@@ -73,7 +70,6 @@ end
 # Kill old processes
 puts "→ Cleaning up..."
 kill_by_port(LLM_PROXY_PORT)
-kill_by_port(MITM_PORT)
 kill_all_codex
 sleep 1
 
@@ -85,19 +81,6 @@ start_service(
   LLM_PROXY_PORT, "llm-proxy"
 )
 
-# Start mitmproxy — only intercept known API hosts, tunnel everything else
-puts "→ Starting mitmproxy..."
-start_service(
-  ["mitmdump", "-q", "--allow-hosts", "ab.chatgpt.com|api.openai.com", "-s", MITM_ADDON],
-  File.join(LOGS_DIR, "mitm.log"),
-  MITM_PORT, "mitmproxy"
-)
-
-# Launch Codex binary directly so HTTPS_PROXY is inherited
+# Launch Codex
 puts "→ Launching Codex..."
-exec(
-  { "HTTPS_PROXY" => "http://127.0.0.1:#{MITM_PORT}",
-    "HTTP_PROXY" => "http://127.0.0.1:#{MITM_PORT}",
-    "NO_PROXY" => "127.0.0.1,localhost,::1,*.local" },
-  CODEX_BIN
-)
+exec(CODEX_BIN)
