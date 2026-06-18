@@ -278,6 +278,13 @@ module LLMProxy
     end
 
     def build_chat(model_info, normalized)
+      # Inject model identity so the model knows who it is
+      identity = "You are running as model: #{model_info.id} (provider: #{model_info.provider})."
+      if normalized[:system]
+        normalized[:system] = "#{identity}\n\n#{normalized[:system]}"
+      else
+        normalized[:system] = identity
+      end
       # Register the model in Ask::ModelCatalog so Chat can resolve provider
       register_proxy_model(model_info)
 
