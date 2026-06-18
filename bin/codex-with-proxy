@@ -1,0 +1,75 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Launch Codex Desktop with mitmproxy interception.
+# Routes model API calls through llm-proxy, passes everything else through.
+
+require "open3"
+
+PROXY_DIR = File.expand_path("../..", __dir__)
+MITM_ADDON = File.join(PROXY_DIR, "mitm_addon.py")
+LLM_PROXY_PORT = 8765
+MITM_PORT = 8080
+
+def running?(port)
+  system("lsof", "-ti", ":#{port}", out: "/dev/null")
+end
+
+def kill(port)
+  pid = `lsof -ti :#{port} 2>/dev/null`.strip
+  return unless pid.length > 0
+  system("kill", "-9", pid) rescue nil
+  sleep 0.5
+end
+
+def wait_for_port(port, label, timeout: 10)
+  deadline = Time.now + timeout
+  loop do
+    if running?(port)
+      puts "  ✅ #{label} ready on port #{port}"
+      return true
+    end
+    if Time.now > deadline
+      puts "  ❌ #{label} failed to start within #{timeout}s"
+      return false
+    end
+    sleep 0.5
+  end
+end
+
+# Kill any existing instances
+puts "→ Cleaning up..."
+kill(LLM_PROXY_PORT)
+kill(MITM_PORT)
+sleep 1
+
+# Start llm-proxy
+puts "→ Starting llm-proxy..."
+llm_pid = spawn(
+  { "RUBYOPT" => nil, "BUNDLE_GEMFILE" => nil },
+  "ruby", File.join(PROXY_DIR, "bin", "llm-proxy"),
+  chdir: PROXY_DIR,
+  out: File.join(PROXY_DIR, "logs", "proxy.log"),
+  err: [:child, :out]
+)
+Process.detach(llm_pid)
+wait_for_port(LLM_PROXY_PORT, "llm-proxy") or exit(1)
+
+# Start mitmproxy
+puts "→ Starting mitmproxy..."
+mitm_pid = spawn(
+  "mitmdump", "-q", "-s", MITM_ADDON,
+  out: File.join(PROXY_DIR, "logs", "mitm.log"),
+  err: [:child, :out]
+)
+Process.detach(mitm_pid)
+wait_for_port(MITM_PORT, "mitmproxy") or exit(1)
+
+# Launch Codex with HTTPS_PROXY
+puts "→ Launching Codex with HTTPS_PROXY=127.0.0.1:#{MITM_PORT}..."
+exec(
+  { "HTTPS_PROXY" => "http://127.0.0.1:#{MITM_PORT}",
+    "HTTP_PROXY" => "http://127.0.0.1:#{MITM_PORT}",
+    "NO_PROXY" => "127.0.0.1,localhost,::1" },
+  "open", "/Applications/Codex.app"
+)

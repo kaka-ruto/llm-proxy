@@ -1,0 +1,17 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Stop all proxy services started by codex-with-proxy or manually.
+PROXY_DIR = File.expand_path("../..", __dir__)
+
+def kill(port)
+  pid = `lsof -ti :#{port} 2>/dev/null`.strip
+  return unless pid.length > 0
+  system("kill", pid) rescue nil
+  sleep 0.3
+end
+
+puts "→ Stopping proxy services..."
+kill(8080)  # mitmproxy
+kill(8765)  # llm-proxy
+puts "  ✅ Stopped"
