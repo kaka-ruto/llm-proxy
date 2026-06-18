@@ -85,10 +85,10 @@ start_service(
   LLM_PROXY_PORT, "llm-proxy"
 )
 
-# Start mitmproxy
+# Start mitmproxy — only intercept api.openai.com, tunnel everything else
 puts "→ Starting mitmproxy..."
 start_service(
-  ["mitmdump", "-q", "-s", MITM_ADDON],
+  ["mitmdump", "-q", "--allow-hosts", "api.openai.com", "-s", MITM_ADDON],
   File.join(LOGS_DIR, "mitm.log"),
   MITM_PORT, "mitmproxy"
 )
