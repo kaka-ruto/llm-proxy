@@ -60,6 +60,19 @@ To restore native ChatGPT:
 llm-proxy disable
 ```
 
+### After a Codex update
+
+If models stop appearing in Codex after an update:
+
+```bash
+llm-proxy enable    # rewrites the proxy config
+# then restart Codex
+```
+
+That's it — the proxy config lives in `~/.codex/config.toml` (your user config),
+not in the Codex app bundle, so it usually survives updates. If Codex resets
+the config.toml during an update, `enable` will restore it.
+
 ## Usage with Claude Code
 
 ```bash
