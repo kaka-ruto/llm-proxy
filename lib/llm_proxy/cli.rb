@@ -1,6 +1,6 @@
 module LLMProxy
   module CLI
-    COMMANDS = %w[server codex].freeze
+    COMMANDS = %w[server codex enable disable].freeze
 
     def self.run!(args = ARGV)
       load_env
@@ -38,8 +38,10 @@ module LLMProxy
         system("open", url)
         puts "Waiting for OAuth callback on http://localhost:1455/auth/callback..."
         start_callback_server
-      when "backup"
-        Codex.backup
+      when "enable"
+        Codex.enable(LLMProxy.default_model, config)
+      when "disable"
+        Codex.disable
       when "backups"
         list = Codex.list_backups
         if list.empty?
@@ -135,6 +137,8 @@ module LLMProxy
       puts "Usage: llm-proxy [command]"
       puts ""
       puts "Commands:"
+      puts "  enable              Route Codex through llm-proxy (config.toml)"
+      puts "  disable             Restore Codex to native (config.toml)"
       puts "  server              Start the proxy server (default)"
       puts "  codex patch         Patch Codex ASAR (model picker + /goal)"
       puts "  codex re-patch      Restore ASAR then re-patch (after updates)"
