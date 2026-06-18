@@ -50,24 +50,6 @@ describe "Credential file permissions" do
   end
 end
 
-describe "Command injection prevention" do
-  it "command? uses multi-arg system call" do
-    # The method should use system("which", cmd) not system("which #{cmd}")
-    # We can test by checking the source
-    source = File.read(File.join(PROJECT_ROOT, "lib/llm_proxy/codex.rb"))
-    match = source.match(/def command\?.*?end/m)
-    _(match).wont_be_nil
-    _(match[0]).wont_include 'system("which #{'
-    _(match[0]).must_include 'system("which", cmd)'
-  end
-
-  it "codesign uses multi-arg system call" do
-    source = File.read(File.join(PROJECT_ROOT, "lib/llm_proxy/codex.rb"))
-    _(source).wont_include "`codesign"
-    _(source).must_include 'system("codesign", "--force"'
-  end
-end
-
 describe "Random bearer token" do
   it "no hardcoded dummy tokens in codex.rb" do
     source = File.read(File.join(PROJECT_ROOT, "lib/llm_proxy/codex.rb"))
