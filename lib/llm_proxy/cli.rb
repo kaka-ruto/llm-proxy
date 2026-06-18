@@ -1,6 +1,6 @@
 module LLMProxy
   module CLI
-    COMMANDS = %w[server codex enable disable].freeze
+    COMMANDS = %w[server enable disable].freeze
 
     def self.run!(args = ARGV)
       load_env
@@ -16,22 +16,6 @@ module LLMProxy
       case command
       when nil, "server"
         start_server(config)
-      when "codex"
-        handle_codex(rest, config)
-      when "patch"
-        Codex.patch_asar
-      when "re-patch"
-        puts "Restoring latest backup and re-patching..."
-        Codex.restore
-        Codex.patch_asar
-      when "restore"
-        if rest.empty? || rest.first == "latest"
-          Codex.restore
-        elsif rest.first == "oldest"
-          Codex.restore_asar
-        else
-          Codex.restore(build: rest.first)
-        end
       when "login"
         puts "Opening browser for ChatGPT login..."
         url = LLMProxy::OAuth.login_url
@@ -42,29 +26,6 @@ module LLMProxy
         Codex.enable(LLMProxy.default_model, config)
       when "disable"
         Codex.disable
-      when "backups"
-        list = Codex.list_backups
-        if list.empty?
-          puts "No backups yet. Run: llm-proxy backup"
-        else
-          puts "Available Codex backups (#{File.expand_path("../../.codex-shim/backups", __dir__)}):"
-          list.each { |b| puts "  #{b[:short]} (build #{b[:build]})" }
-        end
-      when "delete-backup"
-        if rest.first == "--all"
-          FileUtils.rm_rf(Codex::BACKUP_DIR)
-          puts "Deleted all backups."
-        elsif rest.first
-          Codex.list_backups.each do |b|
-            if b[:build] == rest.first
-              FileUtils.rm_rf(b[:path])
-              puts "Deleted backup build #{rest.first}."
-            end
-          end
-        else
-          puts "Usage: llm-proxy delete-backup <build> or --all"
-          Codex.list_backups.each { |b| puts "  #{b[:build]}  #{b[:short]}" }
-        end
       when "-h", "--help"
         print_help
       when "-v", "--version"
@@ -113,26 +74,6 @@ module LLMProxy
       LLMProxy::Server.run!
     end
 
-    def self.handle_codex(args, config)
-      sub = args.first
-      rest = args.drop(1)
-
-      case sub
-      when "patch"
-        Codex.patch_asar
-      when "re-patch"
-        puts "Restoring ASAR and re-patching..."
-        Codex.restore_asar
-        Codex.patch_asar
-      when "restore"
-        Codex.restore_asar
-      when "-h", "--help"
-        puts "Usage: llm-proxy codex [patch|re-patch|restore] [model-slug]"
-      else
-        puts "Unknown codex subcommand: #{sub}"
-      end
-    end
-
     def self.print_help
       puts "Usage: llm-proxy [command]"
       puts ""
@@ -140,14 +81,6 @@ module LLMProxy
       puts "  enable              Route Codex through llm-proxy (config.toml)"
       puts "  disable             Restore Codex to native (config.toml)"
       puts "  server              Start the proxy server (default)"
-      puts "  codex patch         Patch Codex ASAR (model picker + /goal)"
-      puts "  codex re-patch      Restore ASAR then re-patch (after updates)"
-      puts "  codex restore       Restore original Codex ASAR"
-      puts "  patch               Patch Codex ASAR (model picker + /goal)"
-      puts "  re-patch            Restore ASAR then re-patch (after updates)"
-      puts "  restore             Restore Codex ASAR only"
-      puts "  backups             List available Codex backups"
-      puts "  delete-backup       Delete a backup (use --all to clear all)"
       puts "  login               Log in to ChatGPT OAuth"
       puts "  -h, --help          Show this help"
       puts "  -v, --version       Show version"
