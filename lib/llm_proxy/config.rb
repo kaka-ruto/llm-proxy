@@ -14,6 +14,7 @@ module LLMProxy
   ModelConfig = Struct.new(
     :id, :provider, :display_name, :api_key,
     :context_window, :max_tokens, :capabilities,
+    :provider_model_id,
     keyword_init: true
   ) do
     def capabilities

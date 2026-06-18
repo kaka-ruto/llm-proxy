@@ -342,6 +342,7 @@ module LLMProxy
 
       klass = Class.new(Ask::Tool) do
         description(description || "")
+        params(schema) if schema[:properties]&.any?
         define_method(:execute) { |**| raise LLMProxy::ToolCallStop }
       end
       klass.define_method(:name) { name }
