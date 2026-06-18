@@ -112,6 +112,7 @@ module LLMProxy
       post endpoint do
         protocol = protocol_class.new
         body = JSON.parse(@request_body)
+        requested_model = body["model"] || protocol.model_from(body) || "<unknown>"
 
         body = resolve_model(body, protocol)
         normalized = protocol.normalize(body)
@@ -127,7 +128,8 @@ module LLMProxy
 
         msg_count = (normalized[:messages] || []).length
         tool_count = (normalized[:tools] || []).length
-        @log.info("  model=#{model_id} (#{model_info.provider}) msgs=#{msg_count} tools=#{tool_count}")
+        resolved = model_id != requested_model ? " (resolved from #{requested_model})" : ""
+        @log.info("  model=#{model_id}#{resolved} (#{model_info.provider}) msgs=#{msg_count} tools=#{tool_count}")
         @log.debug("  system=#{normalized[:system].inspect}")
         @log.debug("  thinking=#{normalized[:thinking].inspect} stream=#{normalized[:stream]} max_tokens=#{normalized[:max_tokens]} temp=#{normalized[:temperature].inspect}")
 
