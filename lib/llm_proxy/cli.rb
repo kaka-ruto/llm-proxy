@@ -18,8 +18,6 @@ module LLMProxy
         start_server(config)
       when "codex"
         handle_codex(rest, config)
-      when "catalog"
-        Codex.generate_catalog(LLMProxy.catalog.all, port: config.server[:port] || 8765)
       when "patch"
         Codex.patch_asar
       when "re-patch"
@@ -40,19 +38,6 @@ module LLMProxy
         system("open", url)
         puts "Waiting for OAuth callback on http://localhost:1455/auth/callback..."
         start_callback_server
-      when "enable"
-        Codex.enable(port: config.server[:port] || 8765)
-        puts "Quit and reopen Codex to see proxy models."
-      when "disable"
-        Codex.disable
-        puts "Quit and reopen Codex to restore native models."
-      when "toggle"
-        if Codex.enabled?
-          Codex.disable
-        else
-          Codex.enable(port: config.server[:port] || 8765)
-          puts "Quit and reopen Codex to see the change."
-        end
       when "backup"
         Codex.backup
       when "backups"
@@ -131,11 +116,6 @@ module LLMProxy
       rest = args.drop(1)
 
       case sub
-      when nil, "launch"
-        slug = rest.first
-        Codex.launch_app(port: config.server[:port] || 8765, model_slug: slug)
-      when "catalog"
-        Codex.generate_catalog(LLMProxy.catalog.all, port: config.server[:port] || 8765)
       when "patch"
         Codex.patch_asar
       when "re-patch"
@@ -145,7 +125,7 @@ module LLMProxy
       when "restore"
         Codex.restore_asar
       when "-h", "--help"
-        puts "Usage: llm-proxy codex [launch|catalog|patch|re-patch|restore] [model-slug]"
+        puts "Usage: llm-proxy codex [patch|re-patch|restore] [model-slug]"
       else
         puts "Unknown codex subcommand: #{sub}"
       end
@@ -156,21 +136,15 @@ module LLMProxy
       puts ""
       puts "Commands:"
       puts "  server              Start the proxy server (default)"
-      puts "  codex [launch]      Launch Codex Desktop with proxy models"
-      puts "  codex catalog       Generate Codex model catalog"
       puts "  codex patch         Patch Codex ASAR (model picker + /goal)"
       puts "  codex re-patch      Restore ASAR then re-patch (after updates)"
       puts "  codex restore       Restore original Codex ASAR"
-      puts "  catalog             Generate Codex model catalog only"
       puts "  patch               Patch Codex ASAR (model picker + /goal)"
       puts "  re-patch            Restore ASAR then re-patch (after updates)"
       puts "  restore             Restore Codex ASAR only"
       puts "  backups             List available Codex backups"
       puts "  delete-backup       Delete a backup (use --all to clear all)"
       puts "  login               Log in to ChatGPT OAuth"
-      puts "  enable              Enable proxy mode in Codex config"
-      puts "  disable             Disable proxy mode in Codex config"
-      puts "  toggle              Toggle proxy mode"
       puts "  -h, --help          Show this help"
       puts "  -v, --version       Show version"
       puts ""

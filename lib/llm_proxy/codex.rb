@@ -2,26 +2,15 @@ require "open3"
 require "fileutils"
 require "digest"
 require "zlib"
-require "securerandom"
 
 module LLMProxy
   module Codex
     RUNTIME_DIR = File.expand_path("../../.codex-shim", __dir__)
-    CATALOG_PATH = File.join(RUNTIME_DIR, "custom_model_catalog.json")
-    CODEX_CONFIG = File.expand_path("~/.codex/config.toml")
-    CODEX_BACKUP = File.join(RUNTIME_DIR, "config.toml.before-llm-proxy")
     APP_ASAR = "/Applications/Codex.app/Contents/Resources/app.asar"
-    MANAGED_BEGIN = "# >>> llm-proxy managed >>>"
-    MANAGED_END = "# <<< llm-proxy managed <<<"
-    PLAN_TIERS = %w[free plus pro team business enterprise].freeze
 
     BACKUP_DIR = File.join(RUNTIME_DIR, "backups")
 
     class << self
-      def catalog_path
-        CATALOG_PATH
-      end
-
       def backup
         version = codex_version
         backup_path = File.join(BACKUP_DIR, version[:build])
@@ -91,24 +80,6 @@ module LLMProxy
         short = `/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "#{plist}" 2>/dev/null`.strip
         build = `/usr/libexec/PlistBuddy -c "Print :CFBundleVersion" "#{plist}" 2>/dev/null`.strip
         { short: short, build: build }
-      end
-
-      def generate_catalog(models, port: 8765)
-        Dir.mkdir(RUNTIME_DIR) unless Dir.exist?(RUNTIME_DIR)
-
-        entries = models.map { |m| proxy_catalog_entry(m) }
-        payload = { models: entries }
-        File.write(CATALOG_PATH, JSON.pretty_generate(payload) + "\n")
-
-        puts "Generated #{entries.size} proxy model entries: #{CATALOG_PATH}"
-        entries.first[:slug]
-      end
-
-      def launch_app(port: 8765, model_slug: nil)
-        enable(port:)
-        quit
-        system("codex", "app", ".")
-        foreground
       end
 
       def patch_asar(skip_deep: true)
@@ -193,87 +164,6 @@ module LLMProxy
         true
       end
 
-      def restore_config
-        if File.exist?(CODEX_BACKUP)
-          File.write(CODEX_CONFIG, File.read(CODEX_BACKUP))
-          FileUtils.rm(CODEX_BACKUP)
-          puts "Restored original #{CODEX_CONFIG}."
-        elsif File.exist?(CODEX_CONFIG)
-          current = File.read(CODEX_CONFIG)
-          restored = remove_managed_sections(current)
-          File.write(CODEX_CONFIG, restored.lstrip)
-          puts "Removed llm-proxy config from #{CODEX_CONFIG}."
-        else
-          puts "No Codex config to restore."
-        end
-      end
-
-      def enable(port: 8765)
-        quit
-        generate_catalog(LLMProxy.catalog.all, port:)
-        slug = LLMProxy.default_model || LLMProxy.catalog.all.first&.id&.gsub(/[^a-zA-Z0-9]+/, "-")&.downcase || "model"
-
-        Dir.mkdir(File.dirname(CODEX_CONFIG)) unless Dir.exist?(File.dirname(CODEX_CONFIG))
-        Dir.mkdir(RUNTIME_DIR) unless Dir.exist?(RUNTIME_DIR)
-
-        original = File.exist?(CODEX_CONFIG) ? File.read(CODEX_CONFIG) : ""
-        if !original.include?(MANAGED_BEGIN) && !File.exist?(CODEX_BACKUP)
-          File.write(CODEX_BACKUP, original)
-        end
-
-        cleaned = remove_managed_sections(original)
-        cleaned = remove_top_level_keys(cleaned, %w[model model_provider model_catalog_json])
-        cleaned = remove_section(cleaned, "model_providers.llm_proxy")
-
-        top = <<~TOP
-          #{MANAGED_BEGIN}
-          model = "#{slug}"
-          model_provider = "llm_proxy"
-          model_catalog_json = "#{CATALOG_PATH}"
-          #{MANAGED_END}
-        TOP
-
-        token = SecureRandom.hex(32)
-        prov = <<~PROV
-          #{MANAGED_BEGIN}
-          [model_providers.llm_proxy]
-          name = "LLM Proxy"
-          base_url = "http://127.0.0.1:#{port}/v1"
-          wire_api = "responses"
-          experimental_bearer_token = "#{token}"
-          request_max_retries = 3
-          stream_max_retries = 3
-          stream_idle_timeout_ms = 600000
-          #{MANAGED_END}
-        PROV
-
-        File.write(CODEX_CONFIG, top + "\n" + cleaned.lstrip + "\n" + prov)
-        puts "✅ Proxy mode enabled — #{LLMProxy.catalog.all.size} models available"
-      end
-
-      def disable
-        unless File.exist?(CODEX_BACKUP)
-          unless File.exist?(CODEX_CONFIG)
-            puts "No config to restore."
-            return
-          end
-          current = File.read(CODEX_CONFIG)
-          restored = remove_managed_sections(current)
-          File.write(CODEX_CONFIG, restored.lstrip)
-          puts "✅ Proxy mode disabled — Codex is back to native"
-          return
-        end
-
-        File.write(CODEX_CONFIG, File.read(CODEX_BACKUP))
-        FileUtils.rm(CODEX_BACKUP)
-        puts "✅ Proxy mode disabled — Codex restored to original config"
-      end
-
-      def enabled?
-        return false unless File.exist?(CODEX_CONFIG)
-        File.read(CODEX_CONFIG).include?(MANAGED_BEGIN)
-      end
-
       def quit
         script = 'tell application "Codex" to if it is running then quit'
         system("osascript", "-e", script)
@@ -282,97 +172,6 @@ module LLMProxy
       end
 
       private
-
-      def remove_managed_sections(text)
-        while text.include?(MANAGED_BEGIN)
-          before, rest = text.split(MANAGED_BEGIN, 2)
-          return before unless rest.include?(MANAGED_END)
-          _, after = rest.split(MANAGED_END, 2)
-          text = before + after
-        end
-        text
-      end
-
-      def remove_top_level_keys(text, keys)
-        lines = text.lines
-        in_top = true
-        out = []
-        lines.each do |line|
-          in_top = false if line.strip.start_with?("[")
-          key = line.split("=", 2).first&.strip
-          if in_top && keys.include?(key)
-            # skip
-          else
-            out << line
-          end
-        end
-        out.join
-      end
-
-      def remove_section(text, section)
-        header = "[#{section}]"
-        skip = false
-        lines = text.lines
-        out = []
-        lines.each do |line|
-          st = line.strip
-          if st.start_with?("[") && st.end_with?("]")
-            skip = (st == header)
-            next if skip
-          end
-          out << line unless skip
-        end
-        out.join
-      end
-
-      def proxy_catalog_entry(model)
-        context = model.context_window || 128_000
-        compact = [8_000, (context * 0.8).to_i].max
-        truncation = [64_000, [8_000, (context * 0.32).to_i].max].min
-        reasoning = model.supports?(:reasoning) ? "medium" : "none"
-
-        {
-          slug: model.id.gsub(/[^a-zA-Z0-9]+/, "-").downcase,
-          display_name: model.display_name || model.id,
-          description: "#{model.display_name || model.id} via llm-proxy.",
-          context_window: context,
-          max_context_window: context,
-          auto_compact_token_limit: compact,
-          truncation_policy: { mode: "tokens", limit: truncation },
-          default_reasoning_level: reasoning,
-          supported_reasoning_levels: [
-            { effort: "low", description: "Faster, lighter reasoning" },
-            { effort: "medium", description: "Balanced" },
-            { effort: "high", description: "Deeper reasoning" },
-            { effort: "xhigh", description: "Maximum reasoning" },
-          ],
-          default_reasoning_summary: "none",
-          reasoning_summary_format: "none",
-          supports_reasoning_summaries: false,
-          default_verbosity: "low",
-          support_verbosity: false,
-          apply_patch_tool_type: "freeform",
-          web_search_tool_type: "text_and_image",
-          supports_search_tool: false,
-          supports_parallel_tool_calls: true,
-          experimental_supported_tools: [],
-          input_modalities: model.supports?(:vision) ? %w[text image] : %w[text],
-          supports_image_detail_original: model.supports?(:vision),
-          shell_type: "shell_command",
-          visibility: "list",
-          minimal_client_version: "0.0.1",
-          supported_in_api: true,
-          availability_nux: nil,
-          upgrade: nil,
-          priority: 500,
-          prefer_websockets: false,
-          available_in_plans: PLAN_TIERS,
-          base_instructions: "You are a coding agent running in Codex through llm-proxy.",
-          model_messages: {
-            instructions_template: "You are Codex running on #{model.display_name || model.id} through llm-proxy.",
-          },
-        }
-      end
 
       def command?(cmd)
         system("which", cmd)
@@ -492,20 +291,6 @@ module LLMProxy
         args.insert(2, "--deep") unless skip_deep
         args << "/Applications/Codex.app"
         system(*args)
-      end
-
-      def foreground
-        script = <<~OSA
-          tell application "Codex" to activate
-          delay 0.5
-          tell application "System Events"
-            if exists process "Codex" then
-              tell process "Codex" to set frontmost to true
-            end if
-          end tell
-        OSA
-        system("osascript", "-e", script)
-      rescue
       end
     end
   end

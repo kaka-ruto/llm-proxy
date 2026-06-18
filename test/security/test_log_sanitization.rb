@@ -69,9 +69,8 @@ describe "Command injection prevention" do
 end
 
 describe "Random bearer token" do
-  it "enable generates random token, not hardcoded 'dummy'" do
+  it "no hardcoded dummy tokens in codex.rb" do
     source = File.read(File.join(PROJECT_ROOT, "lib/llm_proxy/codex.rb"))
-    _(source).wont_include 'experimental_bearer_token = "dummy"'
-    _(source).must_include "SecureRandom.hex"
+    _(source).wont_include 'bearer_token = "dummy"'
   end
 end
