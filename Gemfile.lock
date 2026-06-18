@@ -18,6 +18,7 @@ GEM
       faraday (>= 2.0)
       faraday-multipart (>= 1.0)
       json
+    ask-sandbox-providers (0.1.1)
     ask-schema (0.1.0)
     ask-skills (0.2.1)
     ask-tools (0.1.3)
@@ -131,6 +132,7 @@ DEPENDENCIES
   ask-agent (~> 0.1)
   ask-core (~> 0.1)
   ask-llm-providers (~> 0.1)
+  ask-sandbox-providers (~> 0.1)
   ask-schema (~> 0.1)
   ask-tools (~> 0.1)
   debug
@@ -152,6 +154,7 @@ CHECKSUMS
   ask-auth (0.1.0) sha256=c828df58e2d03b8baacc381c55e59ea27a7d0ee7ad7b02047c11ca15923238b4
   ask-core (0.1.5) sha256=e9806057e6290b3c0e6ee78f309caafe93da05f4268d2e376a295d933a36873b
   ask-llm-providers (0.1.15) sha256=952cb1ccc6e0be629d54d3ec7bf3b6ec83636c490480c4d403aa0cc0b2da7645
+  ask-sandbox-providers (0.1.1) sha256=138af4f3f85a06e614cc59ef52207f1786867e6fe41689a2d833c47a77f83823
   ask-schema (0.1.0) sha256=ae24b2d7e63227c760457daae41b265382acbf62eb48e15ab3cf636af8a84246
   ask-skills (0.2.1) sha256=935eb5b26aaec59599b6231072822a16abead05561d5371eebf0a80a1e6ae25e
   ask-tools (0.1.3) sha256=b476faf8d6e147fae2b48f3823d41d4e94877ff44b2a7fd07d5ca0469a52e6e6
