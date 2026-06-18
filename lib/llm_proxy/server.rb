@@ -212,7 +212,9 @@ module LLMProxy
         choice = { index: 0, message: { role: "assistant", content: content }, finish_reason: "stop" }
         if msg.tool_call?
           calls = msg.tool_calls.values.map { |tc|
-            { id: tc.id, type: "function", function: { name: tc.name, arguments: (tc.arguments.is_a?(String) ? tc.arguments : JSON.generate(tc.arguments)) } }
+            args = tc.arguments.is_a?(String) ? tc.arguments : fix_heredocs_in_hash(tc.arguments)
+            args = args.is_a?(String) ? args : JSON.generate(args)
+            { id: tc.id, type: "function", function: { name: tc.name, arguments: args } }
           }
           choice[:message][:tool_calls] = calls
           choice[:finish_reason] = "tool_calls"
@@ -237,6 +239,7 @@ module LLMProxy
         event_count = 1
 
         response = chat.ask(nil) do |chunk|
+          fix_heredocs_in_chunk!(chunk)
           events = protocol.chunk_events(chunk, model: model_info.id)
           unless events.empty?
             safe_send(out, SSE.format(events))
@@ -413,6 +416,46 @@ module LLMProxy
       out.close
     rescue Exception => e
       @log.warn("Stream close failed: #{e.class}: #{e.message}")
+    end
+
+    # Normalize tool call arguments to prevent shell expansion of unquoted
+    # heredocs. Models often generate `<< EOF` instead of `<< 'EOF'`, which
+    # causes $variables and backticks to be interpreted by the shell.
+    HEREDOC_RE = /<<[- ]?(\w+)(?!\s*['"])/
+
+    def fix_heredocs_in_chunk!(chunk)
+      return unless chunk.respond_to?(:tool_calls) && chunk.tool_calls.respond_to?(:each_value)
+      chunk.tool_calls.each_value do |tc|
+        next unless tc.respond_to?(:arguments)
+        case tc.arguments
+        when Hash then fix_strings!(tc.arguments)
+        when String then tc.arguments = fix_heredocs(tc.arguments)
+        end
+      end
+    end
+
+    def fix_heredocs_in_hash(hash)
+      deep_dup = JSON.parse(JSON.generate(hash))
+      fix_strings!(deep_dup)
+      deep_dup
+    end
+
+    def fix_strings!(obj)
+      case obj
+      when Hash then obj.each_value { |v| fix_strings!(v) }
+      when Array then obj.each { |e| fix_strings!(e) if e.is_a?(Hash) || e.is_a?(Array) }
+      when String then obj.replace(fix_heredocs(obj))
+      end
+    end
+
+    def fix_heredocs(str)
+      str.gsub(HEREDOC_RE) {
+        if $&.include?("-")
+          "<<-'#$1'"
+        else
+          "<< '#$1'"
+        end
+      }
     end
   end
 
