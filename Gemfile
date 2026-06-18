@@ -15,6 +15,7 @@ gem "puma", "~> 6.0"
 gem "rackup", "~> 2.0"
 
 group :development, :test do
+  gem "ostruct"
   gem "minitest", "~> 5.0"
   gem "rack-test", "~> 2.0"
   gem "mocha", "~> 3.0"

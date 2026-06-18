@@ -345,7 +345,7 @@ module LLMProxy
         define_method(:execute) { |**| raise LLMProxy::ToolCallStop }
       end
       klass.define_method(:name) { name }
-      klass
+      klass.new
     end
 
     def safe_send(out, data)

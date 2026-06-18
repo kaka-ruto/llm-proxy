@@ -1,7 +1,7 @@
 PATH
   remote: ../ask-agent
   specs:
-    ask-agent (0.1.11)
+    ask-agent (0.1.12)
       ask-core (~> 0.1)
       ask-llm-providers (~> 0.1)
       ask-skills (~> 0.1)
@@ -15,7 +15,7 @@ PATH
 PATH
   remote: ../ask-llm-providers
   specs:
-    ask-llm-providers (0.1.8)
+    ask-llm-providers (0.1.10)
       ask-auth (~> 0.1)
       ask-core (>= 0.1.1)
       base64 (~> 0.2)
@@ -31,7 +31,7 @@ PATH
 PATH
   remote: ../ask-tools
   specs:
-    ask-tools (0.1.2)
+    ask-tools (0.1.4)
 
 GEM
   remote: https://rubygems.org/
@@ -76,6 +76,7 @@ GEM
     net-http (0.9.1)
       uri (>= 0.11.1)
     nio4r (2.7.5)
+    ostruct (0.6.3)
     pp (0.6.3)
       prettyprint
     prettyprint (0.2.0)
@@ -155,6 +156,7 @@ DEPENDENCIES
   debug
   minitest (~> 5.0)
   mocha (~> 3.0)
+  ostruct
   puma (~> 6.0)
   rack-test (~> 2.0)
   rackup (~> 2.0)
@@ -166,13 +168,13 @@ DEPENDENCIES
 
 CHECKSUMS
   addressable (2.9.0) sha256=7fdf6ac3660f7f4e867a0838be3f6cf722ace541dd97767fa42bc6cfa980c7af
-  ask-agent (0.1.11)
+  ask-agent (0.1.12)
   ask-auth (0.1.0) sha256=c828df58e2d03b8baacc381c55e59ea27a7d0ee7ad7b02047c11ca15923238b4
   ask-core (0.1.2)
-  ask-llm-providers (0.1.8)
+  ask-llm-providers (0.1.10)
   ask-schema (0.1.0)
   ask-skills (0.2.1) sha256=935eb5b26aaec59599b6231072822a16abead05561d5371eebf0a80a1e6ae25e
-  ask-tools (0.1.2)
+  ask-tools (0.1.4)
   base64 (0.3.0) sha256=27337aeabad6ffae05c265c450490628ef3ebd4b67be58257393227588f5a97b
   bigdecimal (4.1.2) sha256=53d217666027eab4280346fba98e7d5b66baaae1b9c3c1c0ffe89d48188a3fbd
   bundler (4.0.12) sha256=7f8b757d28dfb636e7b24fba2344ac6dd13b5b24f4b46d62573d483f211825ac
@@ -194,6 +196,7 @@ CHECKSUMS
   mustermann (3.1.1) sha256=4c6170c7234d5499c345562ba7c7dfe73e1754286dcc1abb053064d66a127198
   net-http (0.9.1) sha256=25ba0b67c63e89df626ed8fac771d0ad24ad151a858af2cc8e6a716ca4336996
   nio4r (2.7.5) sha256=6c90168e48fb5f8e768419c93abb94ba2b892a1d0602cb06eef16d8b7df1dca1
+  ostruct (0.6.3)
   pp (0.6.3) sha256=2951d514450b93ccfeb1df7d021cae0da16e0a7f95ee1e2273719669d0ab9df6
   prettyprint (0.2.0) sha256=2bc9e15581a94742064a3cc8b0fb9d45aae3d03a1baa6ef80922627a0766f193
   prism (1.9.0) sha256=7b530c6a9f92c24300014919c9dcbc055bf4cdf51ec30aed099b06cd6674ef85

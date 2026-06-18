@@ -90,7 +90,7 @@ module TestSupport
   end
 
   # Build a mock Ask::Chunk for testing protocols
-  def build_chunk(content: nil, tool_calls: nil, role: :assistant)
+  def build_chunk(content: nil, tool_calls: nil, role: :assistant, thinking: nil)
     tc = nil
     if tool_calls
       tc = {}
@@ -101,7 +101,7 @@ module TestSupport
         tc[id] = OpenStruct.new(id: id, name: name, arguments: args)
       end
     end
-    Ask::Agent::ChatChunk.new(content: content, tool_calls: tc || {})
+    Ask::Agent::ChatChunk.new(content: content, tool_calls: tc || {}, thinking: thinking)
   end
 
   # Parse SSE events from protocol output
