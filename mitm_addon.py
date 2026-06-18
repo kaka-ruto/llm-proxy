@@ -4,8 +4,9 @@ import mitmproxy.http
 from mitmproxy import ctx
 
 LLM_PROXY = "http://127.0.0.1:8765"
-OPENAI_HOST = "api.openai.com"
-CHATGPT_HOST = "ab.chatgpt.com"
+
+# Codex Framework uses ab.chatgpt.com; older builds and third-party tools use api.openai.com
+INTERCEPT_HOSTS = {"api.openai.com", "ab.chatgpt.com"}
 
 MODEL_PATHS = [
     "/v1/chat/completions",
@@ -18,8 +19,7 @@ def request(flow: mitmproxy.http.HTTPFlow) -> None:
     host = flow.request.pretty_host
     path = flow.request.path
 
-    # Only intercept api.openai.com
-    if host != OPENAI_HOST:
+    if host not in INTERCEPT_HOSTS:
         return
 
     is_model = any(path.startswith(p) for p in MODEL_PATHS)

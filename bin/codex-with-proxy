@@ -80,15 +80,15 @@ sleep 1
 # Start llm-proxy
 puts "→ Starting llm-proxy..."
 start_service(
-  ["ruby", File.join(PROXY_DIR, "bin", "llm-proxy")],
+  ["bundle", "exec", "ruby", File.join(PROXY_DIR, "bin", "llm-proxy")],
   File.join(LOGS_DIR, "proxy.log"),
   LLM_PROXY_PORT, "llm-proxy"
 )
 
-# Start mitmproxy — only intercept api.openai.com, tunnel everything else
+# Start mitmproxy — only intercept known API hosts, tunnel everything else
 puts "→ Starting mitmproxy..."
 start_service(
-  ["mitmdump", "-q", "--allow-hosts", "api.openai.com", "-s", MITM_ADDON],
+  ["mitmdump", "-q", "--allow-hosts", "ab.chatgpt.com|api.openai.com", "-s", MITM_ADDON],
   File.join(LOGS_DIR, "mitm.log"),
   MITM_PORT, "mitmproxy"
 )
