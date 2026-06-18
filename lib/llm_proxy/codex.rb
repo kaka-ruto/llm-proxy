@@ -369,8 +369,7 @@ module LLMProxy
           available_in_plans: PLAN_TIERS,
           base_instructions: "You are a coding agent running in Codex through llm-proxy.",
           model_messages: {
-            instructions_template: "You are Codex running on {model_name} through llm-proxy.",
-            instructions_variables: { model_name: model.display_name || model.id },
+            instructions_template: "You are Codex running on #{model.display_name || model.id} through llm-proxy.",
           },
         }
       end
