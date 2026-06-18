@@ -2,12 +2,13 @@ source "https://rubygems.org"
 
 ruby ">= 3.2"
 
-# ask-rb ecosystem (replaces ruby_llm)
-gem "ask-core", path: "../ask-core"
-gem "ask-llm-providers", path: "../ask-llm-providers"
-gem "ask-agent", path: "../ask-agent"
-gem "ask-tools", path: "../ask-tools"
-gem "ask-schema", path: "../ask-schema"
+# ask-rb ecosystem — all gems live under ASK_RB_ROOT (default: parent directory)
+ask_rb = ENV.fetch("ASK_RB_ROOT") { File.expand_path("..", __dir__) }
+gem "ask-core", path: "#{ask_rb}/ask-core"
+gem "ask-llm-providers", path: "#{ask_rb}/ask-llm-providers"
+gem "ask-agent", path: "#{ask_rb}/ask-agent"
+gem "ask-tools", path: "#{ask_rb}/ask-tools"
+gem "ask-schema", path: "#{ask_rb}/ask-schema"
 
 gem "sinatra", "~> 4.0"
 gem "sqlite3", "~> 2.0"
