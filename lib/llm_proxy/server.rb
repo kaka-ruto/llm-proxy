@@ -313,6 +313,7 @@ module LLMProxy
     end
 
     def handle_stream(out, protocol, chat, model_info)
+      Thread.current[:llm_request_id] = @request_id
       @_stream_dead = false
 
       begin
