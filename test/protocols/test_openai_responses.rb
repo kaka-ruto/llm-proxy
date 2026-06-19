@@ -199,4 +199,73 @@ describe LLMProxy::Protocols::OpenAIResponses do
       _(events.first.dig(:error, :message)).must_equal "Something went wrong"
     end
   end
+
+  describe "#chunk_events with parallel tool calls" do
+    it "routes multiple parallel tool calls by id, not reverse-find" do
+      protocol = LLMProxy::Protocols::OpenAIResponses.new
+      protocol.send(:start_events, model: "test")
+
+      tc1 = Ask::Agent::ToolCallInfo.new(id: "call_1", name: "read_file", arguments: "")
+      c1 = Ask::Agent::ChatChunk.new(content: nil, tool_calls: { "call_1" => tc1 }, thinking: nil)
+      e1 = protocol.chunk_events(c1, model: "test")
+      added1 = e1.select { |e| e[:type] == "response.output_item.added" }
+      _(added1.length).must_equal 1
+      _(added1.first[:item][:call_id]).must_equal "call_1"
+
+      tc2 = Ask::Agent::ToolCallInfo.new(id: "call_2", name: "search_files", arguments: "")
+      c2 = Ask::Agent::ChatChunk.new(content: nil, tool_calls: { "call_2" => tc2 }, thinking: nil)
+      e2 = protocol.chunk_events(c2, model: "test")
+      added2 = e2.select { |e| e[:type] == "response.output_item.added" }
+      _(added2.length).must_equal 1
+      _(added2.first[:item][:call_id]).must_equal "call_2"
+
+      tc = protocol.instance_variable_get(:@tool_calls)
+      _(tc.keys).must_include "call_1"
+      _(tc.keys).must_include "call_2"
+      _(tc.length).must_equal 2
+    end
+
+    it "accumulates arguments for parallel calls without mixing" do
+      protocol = LLMProxy::Protocols::OpenAIResponses.new
+      protocol.send(:start_events, model: "test")
+
+      tc1 = Ask::Agent::ToolCallInfo.new(id: "call_1", name: "tool_a", arguments: "")
+      protocol.chunk_events(
+        Ask::Agent::ChatChunk.new(content: nil, tool_calls: { "call_1" => tc1 }, thinking: nil),
+        model: "test"
+      )
+
+      tc2 = Ask::Agent::ToolCallInfo.new(id: "call_2", name: "tool_b", arguments: "")
+      protocol.chunk_events(
+        Ask::Agent::ChatChunk.new(content: nil, tool_calls: { "call_2" => tc2 }, thinking: nil),
+        model: "test"
+      )
+
+      tc1a = Ask::Agent::ToolCallInfo.new(id: "call_1", name: "tool_a", arguments: %q({"key": "val"}))
+      e3 = protocol.chunk_events(
+        Ask::Agent::ChatChunk.new(content: nil, tool_calls: { "call_1" => tc1a }, thinking: nil),
+        model: "test"
+      )
+
+      tc2a = Ask::Agent::ToolCallInfo.new(id: "call_2", name: "tool_b", arguments: %q({"query": "foo"}))
+      e4 = protocol.chunk_events(
+        Ask::Agent::ChatChunk.new(content: nil, tool_calls: { "call_2" => tc2a }, thinking: nil),
+        model: "test"
+      )
+
+      t1 = protocol.instance_variable_get(:@tool_calls)["call_1"]
+      _(t1[:arguments]).must_equal %q({"key": "val"})
+
+      t2 = protocol.instance_variable_get(:@tool_calls)["call_2"]
+      _(t2[:arguments]).must_equal %q({"query": "foo"})
+
+      ds1 = e3.select { |e| e[:type] == "response.function_call_arguments.delta" }
+      _(ds1.length).must_equal 1
+      _(ds1.first[:item_id]).must_equal "call_1"
+
+      ds2 = e4.select { |e| e[:type] == "response.function_call_arguments.delta" }
+      _(ds2.length).must_equal 1
+      _(ds2.first[:item_id]).must_equal "call_2"
+    end
+  end
 end
