@@ -4,3 +4,4 @@
 *.log
 .auth.json
 .oauth_session.json
+tmp/
