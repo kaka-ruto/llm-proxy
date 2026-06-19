@@ -44,6 +44,7 @@ module LLMProxy
       Thread.current[:llm_request_id] = @request_id
       @log = settings.logger
       @_errors = []
+      @log.info("─" * 60)
       @log.info("#{request.request_method} #{request.path_info}")
 
       headers = request.env.select { |k, _| k.start_with?("HTTP_") }
@@ -213,12 +214,12 @@ module LLMProxy
     def handle_nonstreaming(protocol, chat, model_info)
       response = chat.ask(nil)
       final_msg = response
+      log_model_response(final_msg)
       usage = token_usage(final_msg)
       @log.info("  Usage: #{usage.inspect}")
       @log.info("  Finish reason: #{final_msg&.tool_call? ? 'tool_calls' : 'stop'}")
 
       result_json = format_protocol_response(protocol, model_info, final_msg, usage)
-      log_nonstreaming_response(final_msg, result_json)
       result_json
     rescue Exception => e
       @_errors << "Non-streaming error: #{e.class}: #{e.message}"
@@ -228,14 +229,14 @@ module LLMProxy
       { error: { message: e.message } }.to_json
     end
 
-    def log_nonstreaming_response(msg, result_json)
+    def log_model_response(msg)
       if msg.tool_call?
         msg.tool_calls.values.each do |tc|
           args = tc.arguments.is_a?(String) ? tc.arguments : JSON.generate(tc.arguments)
-          @log.info("  => NONSTREAM tool=#{tc.name} args=#{truncate(args)}")
+          @log.info("  => tool=#{tc.name} args=#{args}")
         end
       elsif msg.content&.length&.> 0
-        @log.info("  => NONSTREAM text=#{truncate(msg.content)}")
+        @log.info("  => text=#{msg.content}")
       end
     end
 
@@ -246,8 +247,7 @@ module LLMProxy
         choice = { index: 0, message: { role: "assistant", content: content }, finish_reason: "stop" }
         if msg.tool_call?
           calls = msg.tool_calls.values.map { |tc|
-            args = protocol.normalize_heredocs(tc.arguments)
-            args = args.is_a?(String) ? args : JSON.generate(args)
+            args = tc.arguments.is_a?(String) ? tc.arguments : JSON.generate(tc.arguments)
             { id: tc.id, type: "function", function: { name: tc.name, arguments: args } }
           }
           choice[:message][:tool_calls] = calls
@@ -260,8 +260,7 @@ module LLMProxy
         output = []
         if msg.tool_call?
           msg.tool_calls.values.each_with_index do |tc, idx|
-            args = protocol.normalize_heredocs(tc.arguments)
-            args = args.is_a?(String) ? args : JSON.generate(args)
+            args = tc.arguments.is_a?(String) ? tc.arguments : JSON.generate(tc.arguments)
             output << {
               id: tc.id || "call_#{idx}", type: "function_call",
               status: "completed", call_id: tc.id, name: tc.name, arguments: args
@@ -288,8 +287,7 @@ module LLMProxy
         if msg.tool_call?
           stop_reason = "tool_use"
           msg.tool_calls.values.each_with_index do |tc, idx|
-            args = protocol.normalize_heredocs(tc.arguments)
-            args = args.is_a?(String) ? args : JSON.generate(args)
+            args = tc.arguments.is_a?(String) ? tc.arguments : JSON.generate(tc.arguments)
             content << {
               type: "tool_use", id: tc.id || "toolu_#{idx}",
               name: tc.name, input: args
@@ -341,6 +339,7 @@ module LLMProxy
 
         @log.info("  Streamed #{event_count} events total")
         final_msg = response
+        log_model_response(final_msg)
         usage = token_usage(final_msg)
         @log.info("  Usage: #{usage.inspect}")
         @log.info("  Finish reason: #{final_msg&.tool_call? ? 'tool_calls' : 'stop'}")
@@ -349,6 +348,7 @@ module LLMProxy
 
       rescue ToolCallStop
         final_msg = response
+        log_model_response(final_msg)
         tool_calls_info = final_msg&.tool_call? ? final_msg.tool_calls.values.map { |tc| { id: tc.id, name: tc.name } } : []
         @log.info("  Tool call stop: #{tool_calls_info}")
         usage = token_usage(final_msg)

@@ -146,48 +146,6 @@ describe "LLM Proxy — Chat Completions" do
     end
   end
 
-  describe "heredoc normalization" do
-    it "quotes unquoted heredoc delimiters" do
-      # Test the fix_heredocs regex directly
-      fix = ->(s) { s.gsub(/<<[- ]?(\w+)(?!\s*['"])/) { $&.include?("-") ? "<<-'#$1'" : "<< '#$1'" } }
-
-      _(fix.call("cat << EOF > /tmp/x")).must_equal "cat << 'EOF' > /tmp/x"
-      _(fix.call("cat <<-EOF")).must_equal "cat <<-'EOF'"
-      _(fix.call("cat << 'EOF'")).must_equal "cat << 'EOF'"   # already quoted
-      _(fix.call("cat <<\"EOF\"")).must_equal "cat <<\"EOF\"" # already quoted
-      _(fix.call("echo hi")).must_equal "echo hi"              # no heredoc
-      _(fix.call("")).must_equal ""                            # empty
-    end
-
-    it "normalizes nested heredocs in tool call arguments" do
-      fix = ->(s) { s.gsub(/<<[- ]?(\w+)(?!\s*['"])/) { $&.include?("-") ? "<<-'#$1'" : "<< '#$1'" } }
-
-      args = {
-        "command" => "cat << SCRIPT > /tmp/deploy.sh\necho $HOME\nSCRIPT",
-        "language" => "bash"
-      }
-      normalized = args.transform_values { |v| v.is_a?(String) ? fix.call(v) : v }
-      _(normalized["command"]).must_equal "cat << 'SCRIPT' > /tmp/deploy.sh\necho $HOME\nSCRIPT"
-      _(normalized["language"]).must_equal "bash"
-    end
-
-    it "does not modify already-quoted heredocs" do
-      fix = ->(s) { s.gsub(/<<[- ]?(\w+)(?!\s*['"])/) { $&.include?("-") ? "<<-'#$1'" : "<< '#$1'" } }
-
-      _(fix.call("cat << 'RUBY'")).must_equal "cat << 'RUBY'"
-      _(fix.call("cat <<\"SCRIPT\"")).must_equal "cat <<\"SCRIPT\""
-      _(fix.call("cat <<-'YAML'")).must_equal "cat <<-'YAML'"
-    end
-
-    it "handles multiple heredocs in one string" do
-      fix = ->(s) { s.gsub(/<<[- ]?(\w+)(?!\s*['"])/) { $&.include?("-") ? "<<-'#$1'" : "<< '#$1'" } }
-
-      input = "cat << A > a.txt\n$a\nA\ncat << B > b.txt\n$b\nB"
-      expected = "cat << 'A' > a.txt\n$a\nA\ncat << 'B' > b.txt\n$b\nB"
-      _(fix.call(input)).must_equal expected
-    end
-  end
-
   describe "protocol completeness" do
     it "normalizes stream: false correctly" do
       protocol = LLMProxy::Protocols::OpenAICompletions.new

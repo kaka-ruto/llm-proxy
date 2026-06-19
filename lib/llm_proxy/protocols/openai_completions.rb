@@ -54,8 +54,7 @@ module LLMProxy
           @_tc_seen ||= {}
           @_tc_args ||= {}
           chunk.tool_calls.each_with_index do |(id, tc), idx|
-            full_args = normalize_heredocs(tc.arguments)
-            full_args = full_args.is_a?(String) ? full_args : JSON.generate(full_args)
+            full_args = tc.arguments.is_a?(String) ? tc.arguments : JSON.generate(tc.arguments)
             prev_args = @_tc_args[id] || ""
             if @_tc_seen[id]
               # Ongoing tool call — send only the arguments delta

@@ -301,8 +301,7 @@ module LLMProxy
           key = id || @tool_calls.keys.reverse.find { |k| k != nil && !@tool_calls[k][:closed] }
           state = key ? @tool_calls[key] : nil
 
-          arg_text = normalize_heredocs(tc.arguments)
-          arg_text = arg_text.is_a?(String) ? arg_text : JSON.generate(arg_text)
+          arg_text = tc.arguments.is_a?(String) ? tc.arguments : JSON.generate(tc.arguments)
 
           if state.nil?
             events.concat(close_message) if @message_opened && !@message_closed

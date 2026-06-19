@@ -158,8 +158,7 @@ module LLMProxy
           idx = next_block_index
           @tool_call_indices << idx
 
-          arg_text = normalize_heredocs(tc.arguments)
-          arg_text = arg_text.is_a?(String) ? arg_text : JSON.generate(arg_text)
+          arg_text = tc.arguments.is_a?(String) ? tc.arguments : JSON.generate(tc.arguments)
 
           events << {
             type: "content_block_start",
