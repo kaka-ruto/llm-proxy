@@ -128,11 +128,11 @@ PLATFORMS
   x86_64-linux-musl
 
 DEPENDENCIES
-  ask-agent (~> 0.1)
-  ask-core (~> 0.1)
-  ask-llm-providers (~> 0.1)
-  ask-schema (~> 0.1)
-  ask-tools (~> 0.1)
+  ask-agent
+  ask-core
+  ask-llm-providers
+  ask-schema
+  ask-tools
   debug
   minitest (~> 5.0)
   mocha (~> 3.0)
