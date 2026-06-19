@@ -20,7 +20,7 @@ gem "ask-schema", "~> 0.1"
 
 gem "sinatra", "~> 4.0"
 gem "sqlite3", "~> 2.0"
-gem "puma", "~> 6.0"
+gem "puma", "~> 8.0"
 gem "rackup", "~> 2.0"
 
 group :development, :test do

@@ -4,6 +4,7 @@ require "fileutils"
 require "set"
 require "ostruct"
 require "securerandom"
+require "puma/const"
 
 module LLMProxy
   class Server < Sinatra::Base
@@ -25,7 +26,8 @@ module LLMProxy
       }
       set :logger, _logger
       set :server, :puma
-      set :server_settings, { write_timeout: 300 }
+      Puma::Const::WRITE_TIMEOUT = 600
+      set :server_settings, {}
       set :show_exceptions, false
       set :raise_errors, false
       set :dump_errors, false
@@ -46,12 +48,13 @@ module LLMProxy
 
       headers = request.env.select { |k, _| k.start_with?("HTTP_") }
       headers = headers.merge("HTTP_AUTHORIZATION" => "[REDACTED]") if headers.key?("HTTP_AUTHORIZATION")
+      headers["HTTP_X_OAI_ATTESTATION"] = truncate(headers["HTTP_X_OAI_ATTESTATION"]) if headers["HTTP_X_OAI_ATTESTATION"]
       @log.debug("  Headers: #{headers.to_json}")
 
       body_str = request.body.read
       request.body.rewind
       safe_body = body_str.gsub(/(?:"apiKey"|"key")\s*:\s*"[^"]+"/, '\1: "[REDACTED]"')
-      @log.debug("  Body: #{safe_body}")
+      @log.debug("  Body: #{truncate(safe_body)}")
       @request_body = body_str
       @_streaming = false
       @_start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
@@ -143,7 +146,7 @@ module LLMProxy
         tool_count = (normalized[:tools] || []).length
         resolved = model_id != requested_model ? " (resolved from #{requested_model})" : ""
         @log.info("  model=#{model_id}#{resolved} (#{model_info.provider}) msgs=#{msg_count} tools=#{tool_count}")
-        @log.debug("  system=#{normalized[:system].inspect}")
+        @log.debug("  system=#{normalized[:system] ? truncate(normalized[:system]) : "nil"}")
         @log.debug("  thinking=#{normalized[:thinking].inspect} stream=#{normalized[:stream]} max_tokens=#{normalized[:max_tokens]} temp=#{normalized[:temperature].inspect}")
 
         chat = build_chat(model_info, normalized)
@@ -395,11 +398,11 @@ module LLMProxy
       chat.with_instructions(normalized[:system]) if normalized[:system]
 
 
-# Forward tool_choice and parallel_tool_calls to provider
-extra_params = {}
-extra_params[:tool_choice] = normalized[:tool_choice] if normalized.key?(:tool_choice) && !normalized[:tool_choice].nil?
-extra_params[:parallel_tool_calls] = normalized[:parallel_tool_calls] if normalized.key?(:parallel_tool_calls) && !normalized[:parallel_tool_calls].nil?
-chat.with_params(**extra_params) unless extra_params.empty?
+      # Forward tool_choice and parallel_tool_calls to provider
+      extra_params = {}
+      extra_params[:tool_choice] = normalized[:tool_choice] if normalized.key?(:tool_choice) && !normalized[:tool_choice].nil?
+      extra_params[:parallel_tool_calls] = normalized[:parallel_tool_calls] if normalized.key?(:parallel_tool_calls) && !normalized[:parallel_tool_calls].nil?
+      chat.with_params(**extra_params) unless extra_params.empty?
 
 
       pending_thinking = nil
@@ -422,6 +425,8 @@ chat.with_params(**extra_params) unless extra_params.empty?
           tc_hash[call_id] = OpenStruct.new(id: call_id, name: name, arguments: args)
         end
         chat.add_message(role: :assistant, content: nil, tool_calls: tc_hash)
+        @_pending_tool_call_ids ||= Set.new
+        tc_hash.each_key { |id| @_pending_tool_call_ids << id }
         buffer = nil
       end
 
@@ -441,6 +446,9 @@ chat.with_params(**extra_params) unless extra_params.empty?
             }
             if match
               chat.add_message(role: :tool, content: msg[:content] || "", tool_call_id: call_id)
+            elsif @_pending_tool_call_ids&.include?(call_id)
+              chat.add_message(role: :tool, content: msg[:content] || "", tool_call_id: call_id)
+              @_pending_tool_call_ids.delete(call_id)
             else
               chat.add_message(role: :user, content: "> Output: #{msg[:content].to_s.strip}")
             end

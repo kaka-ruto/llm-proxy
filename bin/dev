@@ -1,0 +1,17 @@
+#!/usr/bin/env sh
+set -e
+
+cd "$(dirname "$0")/.."
+
+export PORT="${PORT:-8765}"
+
+bin/llm-proxy enable
+
+cleanup() {
+  echo ""
+  echo "==> Restoring Codex to native..."
+  bin/llm-proxy disable
+}
+trap cleanup EXIT
+
+overmind start -T -f Procfile.dev "$@"
