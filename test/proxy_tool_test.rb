@@ -21,7 +21,7 @@ class ProxyToolTest < Minitest::Test
 
     assert_kind_of Ask::Tool, tool
     assert_equal "simple", tool.name
-    assert_nil tool.params_schema
+    assert_equal({ "type" => "object" }, tool.params_schema)
   end
 
   def test_build_dynamic_tool_raises_tool_call_stop_on_execute

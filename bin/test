@@ -1,0 +1,18 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+$LOAD_PATH.unshift File.expand_path("../test", __dir__)
+$LOAD_PATH.unshift File.expand_path("../lib", __dir__)
+
+require "fileutils"
+
+tests = ARGV.empty? ? Dir["test/**/*_test.rb", "test/**/test_*.rb"] : ARGV
+
+tests.each do |file|
+  file = file.sub(/\A\.\//, "")
+  file = File.expand_path(file, __dir__ + "/..") unless file.start_with?("/")
+  next unless File.exist?(file)
+
+  $stderr.puts "\n==> #{File.basename(file)}"
+  system("ruby", "-Itest", "-Ilib", file)
+end

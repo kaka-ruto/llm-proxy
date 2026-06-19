@@ -26,7 +26,9 @@ module LLMProxy
           thinking: body.dig("reasoning_effort"),
           stream: body["stream"] != false,
           max_tokens: body["max_tokens"] || body["max_completion_tokens"],
-          temperature: body["temperature"]
+          temperature: body["temperature"],
+          tool_choice: body["tool_choice"],
+          parallel_tool_calls: body["parallel_tool_calls"]
         }
       end
 
@@ -52,7 +54,8 @@ module LLMProxy
           @_tc_seen ||= {}
           @_tc_args ||= {}
           chunk.tool_calls.each_with_index do |(id, tc), idx|
-            full_args = tc.arguments.is_a?(String) ? tc.arguments : JSON.generate(tc.arguments)
+            full_args = normalize_heredocs(tc.arguments)
+            full_args = full_args.is_a?(String) ? full_args : JSON.generate(full_args)
             prev_args = @_tc_args[id] || ""
             if @_tc_seen[id]
               # Ongoing tool call — send only the arguments delta

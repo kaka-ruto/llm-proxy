@@ -64,13 +64,10 @@ describe "Log cleanup" do
                  "all rotated files should be deleted"
   end
 
-  it "mirrors the exact code from server.rb" do
-    Dir[File.join(log_dir, "development.log.*")].each { |f| File.delete(f) }
-
-    # Confirm the exact line exists in the server source
+  it "server.rb cleans rotated logs on startup" do
     server_source = File.read(File.expand_path("../../lib/llm_proxy/server.rb", __FILE__))
     assert_includes server_source,
-      %{Dir[File.join(LOG_DIR, "development.log.*")].each { |f| File.delete(f) }},
-      "server.rb must contain the cleanup line"
+      %q{age_seconds > 86400},
+      "server.rb should clean rotated logs older than 1 day"
   end
 end

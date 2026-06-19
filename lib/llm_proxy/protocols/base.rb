@@ -1,6 +1,8 @@
 module LLMProxy
   module Protocols
     class Base
+      HEREDOC_RE = /<<[- ]?(\w+)(?!\s*['"])/.freeze
+
       VALID_ROLES = %w[system user assistant tool].freeze
       ROLE_MAP = {
         "developer" => "system",
@@ -62,6 +64,36 @@ module LLMProxy
 
       def tool_call_events(tool_calls, model:)
         []
+      end
+
+      # Normalize tool call arguments to prevent shell expansion of unquoted
+      # heredocs. Models often generate << EOF instead of << 'EOF', which
+      # causes $variables and backticks to be interpreted by the shell.
+      def normalize_heredocs(args)
+        case args
+        when Hash then normalize_hash(args)
+        when String then fix_heredocs(args)
+        else args
+        end
+      end
+
+      private
+
+      def normalize_hash(hash)
+        hash.each_with_object({}) do |(k, v), result|
+          result[k] = case v
+          when String then fix_heredocs(v)
+          when Hash then normalize_hash(v)
+          when Array then v.map { |e| e.is_a?(Hash) ? normalize_hash(e) : e }
+          else v
+          end
+        end
+      end
+
+      def fix_heredocs(str)
+        str.gsub(HEREDOC_RE) {
+          $&.include?("-") ? "<<-'#$1'" : "<< '#$1'"
+        }
       end
     end
   end

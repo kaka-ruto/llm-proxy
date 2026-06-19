@@ -29,7 +29,9 @@ module LLMProxy
           thinking: body.dig("thinking", "type") == "enabled" ? (body.dig("thinking", "budget_tokens") ? "high" : "medium") : nil,
           stream: body["stream"] != false,
           max_tokens: body["max_tokens"],
-          temperature: body["temperature"]
+          temperature: body["temperature"],
+          tool_choice: body["tool_choice"],
+          parallel_tool_calls: body["parallel_tool_calls"]
         }
       end
 
@@ -156,7 +158,8 @@ module LLMProxy
           idx = next_block_index
           @tool_call_indices << idx
 
-          arg_text = tc.arguments.is_a?(String) ? tc.arguments : JSON.generate(tc.arguments)
+          arg_text = normalize_heredocs(tc.arguments)
+          arg_text = arg_text.is_a?(String) ? arg_text : JSON.generate(arg_text)
 
           events << {
             type: "content_block_start",

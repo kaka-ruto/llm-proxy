@@ -36,7 +36,9 @@ module LLMProxy
           thinking: body.dig("reasoning", "effort"),
           stream: body["stream"] != false,
           max_tokens: body["max_output_tokens"] || body["max_tokens"],
-          temperature: body["temperature"]
+          temperature: body["temperature"],
+          tool_choice: body["tool_choice"],
+          parallel_tool_calls: body["parallel_tool_calls"]
         }
       end
 

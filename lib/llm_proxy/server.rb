@@ -3,6 +3,7 @@ require "logger"
 require "fileutils"
 require "set"
 require "ostruct"
+require "securerandom"
 
 module LLMProxy
   class Server < Sinatra::Base
@@ -14,20 +15,33 @@ module LLMProxy
     configure do
       FileUtils.mkdir_p(LOG_DIR)
       File.chmod(0700, LOG_DIR)
-      logger = Logger.new(LOG_FILE, "daily")
+      _logger = Logger.new(LOG_FILE, "daily")
       File.chmod(0600, LOG_FILE) if File.exist?(LOG_FILE)
-      logger.level = Logger::DEBUG
-      logger.formatter = proc { |severity, datetime, _progname, msg|
-        "[#{datetime.strftime("%Y-%m-%d %H:%M:%S %z")}] #{severity}: #{msg}\n"
+      _logger.level = Logger::DEBUG
+      _logger.formatter = proc { |severity, datetime, _progname, msg|
+        rid = Thread.current[:llm_request_id]
+        tag = rid ? "[#{rid}]" : " " * 9
+        "[#{datetime.strftime("%Y-%m-%d %H:%M:%S %z")}] #{tag} #{severity}: #{msg}\n"
       }
-      set :logger, logger
+      set :logger, _logger
       set :server, :puma
+      set :server_settings, { write_timeout: 300 }
       set :show_exceptions, false
       set :raise_errors, false
+      set :dump_errors, false
+
+      # Clean rotated logs older than 1 day on startup
+      Dir[File.join(LOG_DIR, "development.log.*")].each do |f|
+        age_seconds = (Time.now - File.mtime(f)).to_i
+        File.delete(f) if age_seconds > 86400
+      end
     end
 
     before do
+      @request_id = SecureRandom.hex(8)
+      Thread.current[:llm_request_id] = @request_id
       @log = settings.logger
+      @_errors = []
       @log.info("#{request.request_method} #{request.path_info}")
 
       headers = request.env.select { |k, _| k.start_with?("HTTP_") }
@@ -41,15 +55,15 @@ module LLMProxy
       @request_body = body_str
       @_streaming = false
       @_start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-
-      Dir[File.join(LOG_DIR, "development.log.*")].each { |f| File.delete(f) }
     end
 
     after do
       unless @_streaming
         duration = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - @_start_time) * 1000).round(1)
-        @log.info("  => #{response.status} (#{duration}ms)")
+        @log.info("  Completed #{response.status} (#{duration}ms)")
       end
+    ensure
+      Thread.current[:llm_request_id] = nil
     end
 
     get "/health" do
@@ -144,8 +158,9 @@ module LLMProxy
             begin
               handle_stream(out, protocol, chat, model_info)
             rescue Exception => e
-              @log.error("Fatal stream error: #{e.class}: #{e.message}")
-              @log.debug("  #{e.backtrace&.first(3)&.join("\n    ")}")
+              @_errors << "Fatal stream error: #{e.class}: #{e.message}"
+              @log.error("  => #{e.class}: #{e.message}")
+              e.backtrace&.first(3)&.each { |line| @log.error("     #{line}") }
               safe_send(out, "data: [DONE]\n\n")
             end
           end
@@ -157,12 +172,15 @@ module LLMProxy
     end
 
     error JSON::ParserError do
+      @_errors << "Invalid JSON in request body"
+      @log.error("  Invalid JSON in request body")
       status 400
       content_type :json
       { error: { message: "Invalid JSON" } }.to_json
     end
 
     not_found do
+      @log.warn("  Route not found: #{request.request_method} #{request.path_info}")
       content_type :json
       { error: { message: "Not found" } }.to_json
     end
@@ -190,18 +208,31 @@ module LLMProxy
     end
 
     def handle_nonstreaming(protocol, chat, model_info)
-      begin
-        response = chat.ask(nil)
-        final_msg = response
-        usage = token_usage(final_msg)
-        @log.info("  Usage: #{usage.inspect}")
+      response = chat.ask(nil)
+      final_msg = response
+      usage = token_usage(final_msg)
+      @log.info("  Usage: #{usage.inspect}")
+      @log.info("  Finish reason: #{final_msg&.tool_call? ? 'tool_calls' : 'stop'}")
 
-        format_protocol_response(protocol, model_info, final_msg, usage)
-      rescue Exception => e
-        @log.error("Non-streaming error: #{e.class}: #{e.message}")
-        @log.debug("  #{e.backtrace&.first(5)&.join("\n    ")}")
-        status 500
-        { error: { message: e.message } }.to_json
+      result_json = format_protocol_response(protocol, model_info, final_msg, usage)
+      log_nonstreaming_response(final_msg, result_json)
+      result_json
+    rescue Exception => e
+      @_errors << "Non-streaming error: #{e.class}: #{e.message}"
+      @log.error("  => #{e.class}: #{e.message}")
+      e.backtrace&.first(3)&.each { |line| @log.error("     #{line}") }
+      status 500
+      { error: { message: e.message } }.to_json
+    end
+
+    def log_nonstreaming_response(msg, result_json)
+      if msg.tool_call?
+        msg.tool_calls.values.each do |tc|
+          args = tc.arguments.is_a?(String) ? tc.arguments : JSON.generate(tc.arguments)
+          @log.info("  => NONSTREAM tool=#{tc.name} args=#{truncate(args)}")
+        end
+      elsif msg.content&.length&.> 0
+        @log.info("  => NONSTREAM text=#{truncate(msg.content)}")
       end
     end
 
@@ -212,7 +243,7 @@ module LLMProxy
         choice = { index: 0, message: { role: "assistant", content: content }, finish_reason: "stop" }
         if msg.tool_call?
           calls = msg.tool_calls.values.map { |tc|
-            args = tc.arguments.is_a?(String) ? tc.arguments : fix_heredocs_in_hash(tc.arguments)
+            args = protocol.normalize_heredocs(tc.arguments)
             args = args.is_a?(String) ? args : JSON.generate(args)
             { id: tc.id, type: "function", function: { name: tc.name, arguments: args } }
           }
@@ -223,31 +254,85 @@ module LLMProxy
         result[:usage] = { prompt_tokens: usage[:input] || 0, completion_tokens: usage[:output] || 0, total_tokens: (usage[:input] || 0) + (usage[:output] || 0) } if usage
         result.to_json
       when Protocols::OpenAIResponses
-        {
+        output = []
+        if msg.tool_call?
+          msg.tool_calls.values.each_with_index do |tc, idx|
+            args = protocol.normalize_heredocs(tc.arguments)
+            args = args.is_a?(String) ? args : JSON.generate(args)
+            output << {
+              id: tc.id || "call_#{idx}", type: "function_call",
+              status: "completed", call_id: tc.id, name: tc.name, arguments: args
+            }
+          end
+        elsif msg.content&.length&.> 0
+          output << {
+            id: "msg_0", type: "message", role: "assistant",
+            content: [{ type: "output_text", text: msg.content, annotations: [] }]
+          }
+        end
+        result = {
           type: "response.completed",
-          response: { id: "resp_0", status: "completed", model: model_info.id, output: [] }
-        }.to_json
-      else
-        {}.to_json
+          response: {
+            id: "resp_0", object: "response", status: "completed",
+            model: model_info.id, output: output, created_at: Time.now.to_i
+          }
+        }
+        result[:response][:usage] = usage if usage
+        result.to_json
+      when Protocols::AnthropicMessages
+        content = []
+        stop_reason = "end_turn"
+        if msg.tool_call?
+          stop_reason = "tool_use"
+          msg.tool_calls.values.each_with_index do |tc, idx|
+            args = protocol.normalize_heredocs(tc.arguments)
+            args = args.is_a?(String) ? args : JSON.generate(args)
+            content << {
+              type: "tool_use", id: tc.id || "toolu_#{idx}",
+              name: tc.name, input: args
+            }
+          end
+        elsif msg.content&.length&.> 0
+          content << { type: "text", text: msg.content }
+        end
+        result = {
+          type: "message", id: "msg_0", role: "assistant",
+          content: content, model: model_info.id,
+          stop_reason: stop_reason, stop_sequence: nil,
+          usage: usage ? { input_tokens: usage[:input] || 0, output_tokens: usage[:output] || 0 } : { input_tokens: 0, output_tokens: 0 }
+        }
+        result.to_json
       end
     end
 
+    TRUNCATE_LIMIT = 500
+
+    def truncate(str)
+      s = str.to_s
+      s.length > TRUNCATE_LIMIT ? "#{s[0, TRUNCATE_LIMIT]}...[#{s.length - TRUNCATE_LIMIT} more bytes]" : s
+    end
+
     def handle_stream(out, protocol, chat, model_info)
+      @_stream_dead = false
+
       begin
         @log.debug("  Starting stream...")
-        safe_send(out, SSE.format(protocol.start_events(model: model_info.id)))
+        start_events = protocol.start_events(model: model_info.id)
+        safe_send(out, SSE.format(start_events))
         event_count = 1
 
         response = chat.ask(nil) do |chunk|
-          fix_heredocs_in_chunk!(chunk)
+          break if @_stream_dead
           events = protocol.chunk_events(chunk, model: model_info.id)
           unless events.empty?
             safe_send(out, SSE.format(events))
             event_count += events.length
-            if event_count % 50 == 0 && event_count > 0
-              @log.debug("  Streamed #{event_count} events...")
-            end
           end
+        end
+
+        if @_stream_dead
+          @log.warn("  Stream aborted after #{event_count} events (client disconnected)")
+          return
         end
 
         @log.info("  Streamed #{event_count} events total")
@@ -256,8 +341,6 @@ module LLMProxy
         @log.info("  Usage: #{usage.inspect}")
         @log.info("  Finish reason: #{final_msg&.tool_call? ? 'tool_calls' : 'stop'}")
         complete_events = protocol.complete_events(model: model_info.id, usage: usage)
-        completed = complete_events.find { |e| e.is_a?(Hash) && e[:type] == "response.completed" }
-        @log.debug("  complete_events count=#{complete_events.length}") if completed
         safe_send(out, SSE.format(complete_events))
 
       rescue ToolCallStop
@@ -266,16 +349,21 @@ module LLMProxy
         @log.info("  Tool call stop: #{tool_calls_info}")
         usage = token_usage(final_msg)
         @log.info("  Usage: #{usage.inspect}") if usage
-        safe_send(out, SSE.format(protocol.complete_events(model: model_info.id, usage: usage)))
+        complete_events = protocol.complete_events(model: model_info.id, usage: usage)
+        safe_send(out, SSE.format(complete_events))
       rescue Exception => e
-        @log.error("Streaming error: #{e.class}: #{e.message}")
-        @log.debug("  #{e.backtrace&.first(5)&.join("\n    ")}")
-        safe_send(out, SSE.format(protocol.error_events(e.message)))
-        safe_send(out, SSE.format(protocol.complete_events(model: model_info.id)))
+        @_errors << "Streaming error: #{e.class}: #{e.message}"
+        @log.error("  => #{e.class}: #{e.message}")
+        e.backtrace&.first(3)&.each { |line| @log.error("     #{line}") }
+        error_events = protocol.error_events(e.message)
+        safe_send(out, SSE.format(error_events))
+        complete_events = protocol.complete_events(model: model_info.id)
+        safe_send(out, SSE.format(complete_events))
       ensure
         safe_send(out, "data: [DONE]\n\n")
         duration = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - @_start_time) * 1000).round(1)
-        @log.info("  => 200 (#{duration}ms)")
+        status_tag = @_errors.any? ? "500" : "200"
+        @log.info("  Completed #{status_tag} (#{duration}ms) streamed=#{@_stream_dead ? 'aborted' : 'ok'}")
         safe_close(out)
       end
     end
@@ -304,6 +392,14 @@ module LLMProxy
       )
 
       chat.with_instructions(normalized[:system]) if normalized[:system]
+
+
+# Forward tool_choice and parallel_tool_calls to provider
+extra_params = {}
+extra_params[:tool_choice] = normalized[:tool_choice] if normalized.key?(:tool_choice) && !normalized[:tool_choice].nil?
+extra_params[:parallel_tool_calls] = normalized[:parallel_tool_calls] if normalized.key?(:parallel_tool_calls) && !normalized[:parallel_tool_calls].nil?
+chat.with_params(**extra_params) unless extra_params.empty?
+
 
       pending_thinking = nil
       buffer = nil
@@ -394,12 +490,10 @@ module LLMProxy
     def build_dynamic_tool(name, description, parameters)
       schema = (parameters || {}).transform_keys(&:to_sym)
       schema[:type] ||= "object"
-      schema[:properties] ||= {}
-      schema[:additionalProperties] = false unless schema.key?(:additionalProperties)
 
       klass = Class.new(Ask::Tool) do
         description(description || "")
-        params(schema) if schema[:properties]&.any?
+        params(schema) if schema[:properties]&.any? || schema[:type]
         define_method(:execute) { |**| raise LLMProxy::ToolCallStop }
       end
       klass.define_method(:name) { name }
@@ -407,56 +501,21 @@ module LLMProxy
     end
 
     def safe_send(out, data)
+      return if @_stream_dead
       out << data
     rescue Exception => e
-      @log.warn("Stream write failed (client disconnected?): #{e.class}: #{e.message}")
+      @_stream_dead = true
+      @_errors << "Write failed: #{e.class}: #{e.message}"
+      @log.warn("  Write failed (client disconnected?): #{e.class}: #{e.message}")
     end
 
     def safe_close(out)
+      return if @_stream_dead
       out.close
     rescue Exception => e
-      @log.warn("Stream close failed: #{e.class}: #{e.message}")
+      @log.warn("  Close failed: #{e.class}: #{e.message}")
     end
 
-    # Normalize tool call arguments to prevent shell expansion of unquoted
-    # heredocs. Models often generate `<< EOF` instead of `<< 'EOF'`, which
-    # causes $variables and backticks to be interpreted by the shell.
-    HEREDOC_RE = /<<[- ]?(\w+)(?!\s*['"])/
-
-    def fix_heredocs_in_chunk!(chunk)
-      return unless chunk.respond_to?(:tool_calls) && chunk.tool_calls.respond_to?(:each_value)
-      chunk.tool_calls.each_value do |tc|
-        next unless tc.respond_to?(:arguments)
-        case tc.arguments
-        when Hash then fix_strings!(tc.arguments)
-        when String then tc.arguments = fix_heredocs(tc.arguments)
-        end
-      end
-    end
-
-    def fix_heredocs_in_hash(hash)
-      deep_dup = JSON.parse(JSON.generate(hash))
-      fix_strings!(deep_dup)
-      deep_dup
-    end
-
-    def fix_strings!(obj)
-      case obj
-      when Hash then obj.each_value { |v| fix_strings!(v) }
-      when Array then obj.each { |e| fix_strings!(e) if e.is_a?(Hash) || e.is_a?(Array) }
-      when String then obj.replace(fix_heredocs(obj))
-      end
-    end
-
-    def fix_heredocs(str)
-      str.gsub(HEREDOC_RE) {
-        if $&.include?("-")
-          "<<-'#$1'"
-        else
-          "<< '#$1'"
-        end
-      }
-    end
   end
 
   module SSE
