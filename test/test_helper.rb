@@ -32,6 +32,7 @@ require "ask/result"
 require "ask/agent/chat"
 require "ask/agent/events"
 require "ask-llm-providers"
+require "ask-auth"
 
 # Load custom providers before llm_proxy
 

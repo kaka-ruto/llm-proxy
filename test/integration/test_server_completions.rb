@@ -32,13 +32,8 @@ describe "LLM Proxy — Chat Completions" do
     }.merge(overrides).to_json
   end
 
-  def live_or_skip
-    skip "DEEPSEEK_API_KEY not set" unless ENV["DEEPSEEK_API_KEY"]
-  end
-
   describe "streaming" do
     it "returns SSE events for basic chat" do
-      live_or_skip
       with_cassette("server/completions_stream_basic") do
         post "/v1/chat/completions", completions_body, REQ_HEADERS
 
@@ -58,7 +53,6 @@ describe "LLM Proxy — Chat Completions" do
     end
 
     it "excludes stream: false from body" do
-      live_or_skip
       with_cassette("server/completions_stream_default") do
         post "/v1/chat/completions", completions_body, REQ_HEADERS
 
@@ -72,7 +66,6 @@ describe "LLM Proxy — Chat Completions" do
 
   describe "non-streaming (stream: false)" do
     it "returns proper chat completions JSON" do
-      live_or_skip
       with_cassette("server/completions_nonstream_basic") do
         post "/v1/chat/completions", completions_body(stream: false), REQ_HEADERS
 
@@ -88,7 +81,6 @@ describe "LLM Proxy — Chat Completions" do
     end
 
     it "returns tool_calls in non-streaming response" do
-      live_or_skip
       with_cassette("server/completions_nonstream_tool") do
         post "/v1/chat/completions", completions_with_tools_body(stream: false), REQ_HEADERS
 
@@ -105,7 +97,6 @@ describe "LLM Proxy — Chat Completions" do
     end
 
     it "handles multi-turn tool calls" do
-      live_or_skip
       with_cassette("server/completions_multi_turn_tool") do
         # Step 1: get tool call
         post "/v1/chat/completions", completions_with_tools_body(stream: false), REQ_HEADERS

@@ -443,7 +443,6 @@ module LLMProxy
           next
         end
         build_dynamic_tool(t[:name], t[:description], t[:parameters])
-      @_tool_call_count = (@_tool_call_count || 0) + 1
       end
 
       chat = Ask::Agent::Chat.new(
