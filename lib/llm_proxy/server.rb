@@ -2,12 +2,20 @@ require "sinatra/base"
 require "logger"
 require "fileutils"
 require "set"
+begin; require "ask/instrumentation/tool"; rescue LoadError; end
 require "ostruct"
 require "securerandom"
 require "puma/const"
 
 module LLMProxy
   class Server < Sinatra::Base
+    # Tools that should not have their schemas processed — passed through as-is.
+    PASSTHROUGH_TOOLS = %w[
+      view_image list_mcp_resources list_mcp_resource_templates
+      read_mcp_resource request_user_input get_goal create_goal
+      update_goal
+    ].freeze
+
     LOG_DIR = File.expand_path("../../logs", __dir__)
     LOG_FILE = File.join(LOG_DIR, "development.log")
 
@@ -26,7 +34,9 @@ module LLMProxy
       }
       set :logger, _logger
       set :server, :puma
+      v = $VERBOSE; $VERBOSE = nil
       Puma::Const::WRITE_TIMEOUT = 600
+      $VERBOSE = v
       set :server_settings, {}
       set :show_exceptions, false
       set :raise_errors, false
@@ -58,6 +68,7 @@ module LLMProxy
       @log.debug("  Body: #{truncate(safe_body)}")
       @request_body = body_str
       @_streaming = false
+      @_request_count = (@_request_count || 0) + 1
       @_start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
     end
 
@@ -69,6 +80,36 @@ module LLMProxy
     ensure
       Thread.current[:llm_request_id] = nil
     end
+
+
+
+    get "/metrics" do
+
+      content_type "text/plain; version=0.0.4"
+
+      metrics = []
+
+      metrics << '# HELP llm_proxy_tool_calls_total Total tool calls'
+
+      metrics << '# TYPE llm_proxy_tool_calls_total counter'
+
+      metrics << "llm_proxy_tool_calls_total 0"
+
+      metrics << '# HELP llm_proxy_tool_call_duration_ms Tool call duration in ms'
+
+      metrics << '# TYPE llm_proxy_tool_call_duration_ms histogram'
+
+      metrics << '# HELP llm_proxy_requests_total Total proxy requests'
+
+      metrics << '# TYPE llm_proxy_requests_total counter'
+
+      metrics << "llm_proxy_requests_total 0"
+
+      metrics.join("\n") + "\n"
+
+    end
+
+
 
     get "/health" do
       content_type :json
@@ -325,8 +366,20 @@ module LLMProxy
 
         response = chat.ask(nil) do |chunk|
           break if @_stream_dead
+
+          if chunk.tool_calls&.any?
+            chunk.tool_calls.each do |id, tc|
+              @log.debug("  Model chunk: tool_call id=#{id || 'nil'} name=#{tc.name} args=#{tc.arguments.inspect}")
+            end
+          end
+
           events = protocol.chunk_events(chunk, model: model_info.id)
+
           unless events.empty?
+            tool_events = events.select { |e| e[:type].to_s.include?("function_call") || e[:type].to_s.include?("output_item.added") || e[:type].to_s.include?("output_item.done") || e[:type].to_s.include?("content_part") }
+            tool_events.each do |e|
+              @log.debug("  SSE event: #{e[:type]}#{e[:item] ? " item=#{e[:item][:call_id] || e[:item][:id]}" : ""}#{e[:arguments] ? " args=#{e[:arguments].inspect}" : ""}#{e[:delta] ? " delta=#{e[:delta].inspect}" : ""}")
+            end
             safe_send(out, SSE.format(events))
             event_count += events.length
           end
@@ -385,8 +438,12 @@ module LLMProxy
 
       # Build dynamic tools from request
       tools = (normalized[:tools] || []).filter_map do |t|
-        next if t[:name].nil? || t[:name].strip.empty?
+        if t[:name].nil? || t[:name].strip.empty?
+          @log.warn("Skipping tool definition with missing or empty name")
+          next
+        end
         build_dynamic_tool(t[:name], t[:description], t[:parameters])
+      @_tool_call_count = (@_tool_call_count || 0) + 1
       end
 
       chat = Ask::Agent::Chat.new(
@@ -496,7 +553,32 @@ module LLMProxy
       end
     end
 
+
+
+    def passthrough_tool(name, description)
+
+      # Create a minimal tool that passes schema through unprocessed
+
+      klass = Class.new(Ask::Tool) do
+
+        description(description || "")
+
+        define_method(:execute) { |**| raise LLMProxy::ToolCallStop }
+
+      end
+
+      klass.define_method(:name) { name }
+
+      klass.define_method(:params_schema) { nil }
+
+      klass.new
+
+    end
+
+
+
     def build_dynamic_tool(name, description, parameters)
+      return passthrough_tool(name, description) if PASSTHROUGH_TOOLS.include?(name)
       schema = (parameters || {}).transform_keys(&:to_sym)
       schema[:type] ||= "object"
 
@@ -519,7 +601,6 @@ module LLMProxy
     end
 
     def safe_close(out)
-      return if @_stream_dead
       out.close
     rescue Exception => e
       @log.warn("  Close failed: #{e.class}: #{e.message}")
