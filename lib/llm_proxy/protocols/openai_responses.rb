@@ -142,6 +142,10 @@ module LLMProxy
         events
       end
 
+      def cleanup_accumulated_tool_calls(exclude_names: [])
+        @tool_calls.delete_if { |_id, tc| exclude_names.include?(tc[:name]) }
+      end
+
       def error_events(message, type: "error")
         [{
           type: "error",

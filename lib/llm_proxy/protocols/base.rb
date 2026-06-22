@@ -48,6 +48,9 @@ module LLMProxy
         []
       end
 
+      def cleanup_accumulated_tool_calls(exclude_names: [])
+      end
+
       def error_events(message, type: "error")
         [{ type: :error, message: message }]
       end

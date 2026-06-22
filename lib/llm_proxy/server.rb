@@ -412,6 +412,7 @@ module LLMProxy
           break if @_stream_dead
         end
 
+        protocol.cleanup_accumulated_tool_calls(exclude_names: %w[web_search])
         final_msg = response
         log_model_response(final_msg)
         usage = token_usage(final_msg)
@@ -428,6 +429,7 @@ module LLMProxy
         @log.info("  Finish reason: #{final_msg&.tool_call? ? 'tool_calls' : 'stop'}")
         tool_calls_info = final_msg&.tool_call? ? final_msg.tool_calls.values.map { |tc| { id: tc.id, name: tc.name } } : []
         @log.info("  Tool call stop: #{tool_calls_info}")
+        protocol.cleanup_accumulated_tool_calls(exclude_names: %w[web_search])
         complete_events = protocol.complete_events(model: model_info.id, usage: usage)
         safe_send(out, SSE.format(complete_events))
       rescue Exception => e
