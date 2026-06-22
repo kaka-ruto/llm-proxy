@@ -15,15 +15,16 @@ module LLMProxy
 
         tools = (body["tools"] || []).filter_map do |t|
           type = t["type"]
-          if type == "function" || t["function"]
-            fn = t["function"] || t
-            name = fn["name"].to_s.strip
-            next if name.empty?
-            { name: name, description: fn["description"] || "", parameters: fn["parameters"] || {} }
-          else
-            logger&.debug("  Non-function tool filtered out: #{type}")
-            nil
-          end
+          fn = case type
+               when "function" then t["function"] || t
+               when "custom" then t
+               else
+                 logger&.debug("  Non-function tool filtered out: #{type}")
+                 next
+               end
+          name = fn["name"].to_s.strip
+          next if name.empty?
+          { name: name, description: fn["description"] || "", parameters: fn["parameters"] || {} }
         end
 
         {
