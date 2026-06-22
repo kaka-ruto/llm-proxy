@@ -1,0 +1,66 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://api.deepseek.com/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"model":"deepseek-v4-flash","messages":[{"role":"system","content":"You
+        are a helpful assistant. When asked about current events or facts, use web_search
+        to find up-to-date information. Always search before answering."},{"role":"user","content":"What
+        is the Ruby programming language? Search the web for it."}],"stream":false,"temperature":0.5,"tools":[{"type":"function","function":{"name":"web_search","description":"Search
+        the web for current information. Use this to get up-to-date results, recent
+        events, or facts that may have changed.","parameters":{"type":"object","properties":{"query":{"type":"string","description":"The
+        search query"}},"required":["query"]}}}]}'
+    headers:
+      Content-Type:
+      - application/json
+      Authorization:
+      - Bearer <BEARER_TOKEN>
+      User-Agent:
+      - Faraday v2.14.3
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Date:
+      - Mon, 22 Jun 2026 23:04:34 GMT
+      Server:
+      - elb
+      Vary:
+      - origin, access-control-request-method, access-control-request-headers
+      Access-Control-Allow-Credentials:
+      - 'true'
+      X-Ds-Trace-Id:
+      - e7de919b6b198895a0325cdd226c77b6
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains; preload
+      X-Content-Type-Options:
+      - nosniff
+      X-Cache:
+      - Miss from cloudfront
+      Via:
+      - 1.1 6232896167731658a5559699e1ba7092.cloudfront.net (CloudFront)
+      X-Amz-Cf-Pop:
+      - NBO50-P1
+      X-Amz-Cf-Id:
+      - Frg23STH8EU8htY34uG6znT8DzrbemG-JvP5e-1Q8a6zq2IEqNEs7Q==
+    body:
+      encoding: ASCII-8BIT
+      string: '{"id":"af4b4ddf-1325-4e11-917c-e77a4d865966","object":"chat.completion","created":1782169474,"model":"deepseek-v4-flash","choices":[{"index":0,"message":{"role":"assistant","content":"","reasoning_content":"The
+        user wants to know about the Ruby programming language and wants me to search
+        the web for it. Let me do that.","tool_calls":[{"index":0,"id":"call_00_jpd5CirKJGLNuK95xqOA7956","type":"function","function":{"name":"web_search","arguments":"{\"query\":
+        \"Ruby programming language\"}"}}]},"logprobs":null,"finish_reason":"tool_calls"}],"usage":{"prompt_tokens":341,"completion_tokens":71,"total_tokens":412,"prompt_tokens_details":{"cached_tokens":0},"completion_tokens_details":{"reasoning_tokens":25},"prompt_cache_hit_tokens":0,"prompt_cache_miss_tokens":341},"system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402"}'
+  recorded_at: Mon, 22 Jun 2026 23:04:35 GMT
+recorded_with: VCR 6.4.0

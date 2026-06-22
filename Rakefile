@@ -1,8 +1,7 @@
 require "rake/testtask"
 
 Rake::TestTask.new(:test) do |t|
-  t.pattern = "test/**/{test_*.*,*.rb}"
-  t.warning = false
+  t.pattern = "test/**/*_test.rb"
   t.ruby_opts = ["-Itest"]
 end
 

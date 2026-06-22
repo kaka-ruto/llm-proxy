@@ -18,6 +18,7 @@ module LLMProxy
 
     LOG_DIR = File.expand_path("../../logs", __dir__)
     LOG_FILE = File.join(LOG_DIR, "development.log")
+    MAX_WEB_SEARCH_ROUNDS = 3
 
     set :protection, false
 
@@ -81,8 +82,6 @@ module LLMProxy
       Thread.current[:llm_request_id] = nil
     end
 
-
-
     get "/metrics" do
 
       content_type "text/plain; version=0.0.4"
@@ -108,8 +107,6 @@ module LLMProxy
       metrics.join("\n") + "\n"
 
     end
-
-
 
     get "/health" do
       content_type :json
@@ -254,6 +251,16 @@ module LLMProxy
 
     def handle_nonstreaming(protocol, chat, model_info)
       response = chat.ask(nil)
+
+      MAX_WEB_SEARCH_ROUNDS.times do |round|
+        log_model_response(response)
+        break unless execute_web_search_tools(chat, response, round)
+
+        @log.info("  Web search continuation round #{round + 1}...")
+        response = chat.ask(nil)
+        log_model_response(response)
+      end
+
       final_msg = response
       log_model_response(final_msg)
       usage = token_usage(final_msg)
@@ -369,17 +376,15 @@ module LLMProxy
 
           if chunk.tool_calls&.any?
             chunk.tool_calls.each do |id, tc|
-              @log.debug("  Model chunk: tool_call id=#{id || 'nil'} name=#{tc.name} args=#{tc.arguments.inspect}")
+              @log.info("  Model chunk: tool_call id=#{id || 'nil'} name=#{tc.name} args=#{tc.arguments.inspect}")
             end
           end
 
           events = protocol.chunk_events(chunk, model: model_info.id)
 
           unless events.empty?
-            tool_events = events.select { |e| e[:type].to_s.include?("function_call") || e[:type].to_s.include?("output_item.added") || e[:type].to_s.include?("output_item.done") || e[:type].to_s.include?("content_part") }
-            tool_events.each do |e|
-              @log.debug("  SSE event: #{e[:type]}#{e[:item] ? " item=#{e[:item][:call_id] || e[:item][:id]}" : ""}#{e[:arguments] ? " args=#{e[:arguments].inspect}" : ""}#{e[:delta] ? " delta=#{e[:delta].inspect}" : ""}")
-            end
+
+
             safe_send(out, SSE.format(events))
             event_count += events.length
           end
@@ -390,7 +395,23 @@ module LLMProxy
           return
         end
 
-        @log.info("  Streamed #{event_count} events total")
+        @log.info("  Streamed #{event_count} events total, handling tool calls...")
+
+        MAX_WEB_SEARCH_ROUNDS.times do |round|
+          log_model_response(response)
+          break unless execute_web_search_tools(chat, response, round)
+
+          @log.info("  Web search continuation round #{round + 1}...")
+          response = chat.ask(nil) do |chunk|
+            break if @_stream_dead
+            events = protocol.chunk_events(chunk, model: model_info.id)
+            safe_send(out, SSE.format(events)) unless events.empty?
+            event_count += events.length unless events.empty?
+          end
+
+          break if @_stream_dead
+        end
+
         final_msg = response
         log_model_response(final_msg)
         usage = token_usage(final_msg)
@@ -402,10 +423,11 @@ module LLMProxy
       rescue ToolCallStop
         final_msg = response
         log_model_response(final_msg)
+        usage = token_usage(final_msg)
+        @log.info("  Usage: #{usage.inspect}")
+        @log.info("  Finish reason: #{final_msg&.tool_call? ? 'tool_calls' : 'stop'}")
         tool_calls_info = final_msg&.tool_call? ? final_msg.tool_calls.values.map { |tc| { id: tc.id, name: tc.name } } : []
         @log.info("  Tool call stop: #{tool_calls_info}")
-        usage = token_usage(final_msg)
-        @log.info("  Usage: #{usage.inspect}") if usage
         complete_events = protocol.complete_events(model: model_info.id, usage: usage)
         safe_send(out, SSE.format(complete_events))
       rescue Exception => e
@@ -427,7 +449,7 @@ module LLMProxy
 
     def build_chat(model_info, normalized)
       # Inject model identity so the model knows who it is
-      identity = "You are running as model: #{model_info.id} (provider: #{model_info.provider})."
+      identity = "You are running as model: #{model_info.id} (provider: #{model_info.provider}). You have access to the web_search tool to look up current information, recent events, and facts on the web."
       if normalized[:system]
         normalized[:system] = "#{identity}\n\n#{normalized[:system]}"
       else
@@ -435,6 +457,24 @@ module LLMProxy
       end
       # Register the model in Ask::ModelCatalog so Chat can resolve provider
       register_proxy_model(model_info)
+
+      # Auto-inject the web_search tool so every client gets it as a native tool.
+      web_search_tool = {
+        name: "web_search",
+        description: "Search the web for current information. Use this to get up-to-date results, recent events, or facts that may have changed.",
+        parameters: {
+          type: "object",
+          properties: {
+            query: { type: "string", description: "The search query" }
+          },
+          required: ["query"]
+        }
+      }
+
+      unless (normalized[:tools] || []).any? { |t| t[:name] == "web_search" }
+        normalized[:tools] = (normalized[:tools] || []) + [web_search_tool]
+        @log.info("  Auto-injected web_search tool")
+      end
 
       # Build dynamic tools from request
       tools = (normalized[:tools] || []).filter_map do |t|
@@ -453,13 +493,11 @@ module LLMProxy
 
       chat.with_instructions(normalized[:system]) if normalized[:system]
 
-
       # Forward tool_choice and parallel_tool_calls to provider
       extra_params = {}
       extra_params[:tool_choice] = normalized[:tool_choice] if normalized.key?(:tool_choice) && !normalized[:tool_choice].nil?
       extra_params[:parallel_tool_calls] = normalized[:parallel_tool_calls] if normalized.key?(:parallel_tool_calls) && !normalized[:parallel_tool_calls].nil?
       chat.with_params(**extra_params) unless extra_params.empty?
-
 
       pending_thinking = nil
       buffer = nil
@@ -542,6 +580,68 @@ module LLMProxy
       JSON.parse(args) rescue {}
     end
 
+    def execute_web_search_tools(chat, response, log_round = 0)
+      return false unless response.tool_call?
+
+      web_search_calls = response.tool_calls.select { |_id, tc| tc.name == "web_search" }
+      return false if web_search_calls.empty?
+
+      @log.info("  Executing #{web_search_calls.length} web_search call(s)...") if log_round == 0
+
+      web_search_calls.each do |id, tc|
+        args = tc.arguments
+        args = JSON.parse(args) if args.is_a?(String)
+        query = args["query"] || args[:query]
+        result = Ask::Tools::WebSearch.new.execute(query: query)
+        chat.add_message(role: :tool, content: result.to_s, tool_call_id: id)
+        @log.info("  web_search[#{id}]: #{truncate(result.to_s)}")
+      end
+
+      true
+    end
+
+    def build_stream_complete_event(protocol, model_info, msg, usage)
+      case protocol
+      when Protocols::OpenAICompletions
+        choice = { index: 0, message: { role: "assistant", content: msg.content.to_s }, finish_reason: "stop" }
+        if msg.tool_call?
+          calls = msg.tool_calls.values.map { |tc|
+            args = tc.arguments.is_a?(String) ? tc.arguments : JSON.generate(tc.arguments)
+            { id: tc.id, type: "function", function: { name: tc.name, arguments: args } }
+          }
+          choice[:message][:tool_calls] = calls
+          choice[:finish_reason] = "tool_calls"
+        end
+        result = { id: "chatcmpl_#{model_info.id}", object: "chat.completion", model: model_info.id, choices: [choice], created: Time.now.to_i }
+        result[:usage] = usage if usage
+        [result]
+      when Protocols::OpenAIResponses
+        output = []
+        if msg.tool_call?
+          msg.tool_calls.values.each_with_index do |tc, idx|
+            args = tc.arguments.is_a?(String) ? tc.arguments : JSON.generate(tc.arguments)
+            output << { id: tc.id || "call_#{idx}", type: "function_call",
+                        status: "completed", call_id: tc.id, name: tc.name, arguments: args }
+          end
+        elsif msg.content&.length&.> 0
+          output << { id: "msg_0", type: "message", role: "assistant",
+                      content: [{ type: "output_text", text: msg.content, annotations: [] }] }
+        end
+        result = { type: "response.completed",
+                   response: { id: "resp_0", object: "response", status: "completed",
+                               model: model_info.id, output: output, created_at: Time.now.to_i } }
+        result[:response][:usage] = usage if usage
+        [result]
+      when Protocols::AnthropicMessages
+        stop_reason = msg.tool_call? ? "tool_use" : "end_turn"
+        usage_out = usage ? { input_tokens: usage[:input] || 0, output_tokens: usage[:output] || 0 } : { input_tokens: 0, output_tokens: 0 }
+        [
+          { type: "message_delta", delta: { stop_reason: stop_reason, stop_sequence: nil }, usage: usage_out },
+          { type: "message_stop" }
+        ]
+      end
+    end
+
     def token_usage(msg)
       return nil unless msg
       if msg.respond_to?(:input_tokens)
@@ -551,8 +651,6 @@ module LLMProxy
         nil
       end
     end
-
-
 
     def passthrough_tool(name, description)
 
@@ -573,8 +671,6 @@ module LLMProxy
       klass.new
 
     end
-
-
 
     def build_dynamic_tool(name, description, parameters)
       return passthrough_tool(name, description) if PASSTHROUGH_TOOLS.include?(name)

@@ -5,15 +5,20 @@ module LLMProxy
         "/v1/messages"
       end
 
-      def normalize(body)
+      def normalize(body, logger: nil)
         messages = (body["messages"] || []).map do |msg|
           { role: normalize_role(msg["role"]), content: msg["content"] }.tap do |h|
             h[:content] = msg["content"].is_a?(String) ? msg["content"] : extract_anthropic_content(msg["content"])
           end
         end
 
-        tools = (body["tools"] || []).map do |t|
-          { name: t["name"], description: t["description"] || "", parameters: t["input_schema"] || t["parameters"] || {} }
+        tools = (body["tools"] || []).filter_map do |t|
+          if t["name"] || t["input_schema"] || t["parameters"]
+            { name: t["name"], description: t["description"] || "", parameters: t["input_schema"] || t["parameters"] || {} }
+          else
+            logger&.debug("  Non-function tool filtered out: #{t["type"]}")
+            nil
+          end
         end
 
         system_prompt = body["system"]

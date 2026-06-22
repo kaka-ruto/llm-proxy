@@ -20,7 +20,10 @@ GEM
       json
     ask-schema (0.1.0)
     ask-skills (0.2.1)
-    ask-tools (0.1.3)
+    ask-tools (0.2.2)
+      ask-schema (>= 0.1)
+    ask-web-search (0.2.0)
+      ask-tools (>= 0.1)
     base64 (0.3.0)
     bigdecimal (4.1.2)
     crack (1.0.1)
@@ -133,6 +136,7 @@ DEPENDENCIES
   ask-llm-providers
   ask-schema
   ask-tools
+  ask-web-search
   debug
   minitest (~> 5.0)
   mocha (~> 3.0)
@@ -154,7 +158,8 @@ CHECKSUMS
   ask-llm-providers (0.2.1) sha256=203867a8ef5faca4c5b9dc9782d50822cd7d98db14dcba59b73364c56a49a222
   ask-schema (0.1.0) sha256=ae24b2d7e63227c760457daae41b265382acbf62eb48e15ab3cf636af8a84246
   ask-skills (0.2.1) sha256=935eb5b26aaec59599b6231072822a16abead05561d5371eebf0a80a1e6ae25e
-  ask-tools (0.1.3) sha256=b476faf8d6e147fae2b48f3823d41d4e94877ff44b2a7fd07d5ca0469a52e6e6
+  ask-tools (0.2.2) sha256=8630a5849b9dff3ff97ad240411b37ad752366cc2867e1f7add9886fdf15dbc5
+  ask-web-search (0.2.0) sha256=e347ea45ec8912c27d166804dd3f6e04d4eb17d5be280d626e8acfa8ed79cdd3
   base64 (0.3.0) sha256=27337aeabad6ffae05c265c450490628ef3ebd4b67be58257393227588f5a97b
   bigdecimal (4.1.2) sha256=53d217666027eab4280346fba98e7d5b66baaae1b9c3c1c0ffe89d48188a3fbd
   bundler (4.0.12) sha256=7f8b757d28dfb636e7b24fba2344ac6dd13b5b24f4b46d62573d483f211825ac

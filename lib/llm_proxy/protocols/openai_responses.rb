@@ -9,7 +9,7 @@ module LLMProxy
         "/v1/responses"
       end
 
-      def normalize(body)
+      def normalize(body, logger: nil)
         input = body["input"]
         input = case input
                 when String then [{ "type" => "message", "role" => "user", "content" => [{ "type" => "input_text", "text" => input }] }]
@@ -19,8 +19,14 @@ module LLMProxy
         prev_messages = input.filter_map { |item| response_item_to_message(item) }
         raw_tools = body["tools"] || []
         tools = raw_tools.filter_map do |t|
-          next unless t["type"] == "function" || t.key?("function")
-          fn = t["function"] || t
+          type = t["type"]
+          fn = case type
+               when "function" then t["function"] || t
+               when "custom" then t
+               else
+                 logger&.debug("  Non-function tool filtered out: #{type}")
+                 next
+               end
           name = fn["name"].to_s.strip
           next if name.empty?
           params = fn["parameters"]

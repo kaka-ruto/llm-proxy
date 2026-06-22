@@ -3,6 +3,7 @@ require "json"
 require "sinatra/base"
 
 require "ask/agent"
+require "ask/web_search"
 
 module LLMProxy
   class Error < StandardError; end

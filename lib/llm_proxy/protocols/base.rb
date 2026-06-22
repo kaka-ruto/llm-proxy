@@ -18,7 +18,7 @@ module LLMProxy
         body["model"]
       end
 
-      def normalize(body)
+      def normalize(body, logger: nil)
         raise NotImplementedError
       end
 

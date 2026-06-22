@@ -5,7 +5,7 @@ module LLMProxy
         "/v1/chat/completions"
       end
 
-      def normalize(body)
+      def normalize(body, logger: nil)
         messages = (body["messages"] || []).map do |msg|
           { role: normalize_role(msg["role"]), content: extract_content(msg) }.tap do |h|
             h[:tool_calls] = msg["tool_calls"] if msg["tool_calls"]
@@ -13,9 +13,17 @@ module LLMProxy
           end
         end
 
-        tools = (body["tools"] || []).map do |t|
-          fn = t["function"] || t
-          { name: fn["name"], description: fn["description"] || "", parameters: fn["parameters"] || {} }
+        tools = (body["tools"] || []).filter_map do |t|
+          type = t["type"]
+          if type == "function" || t["function"]
+            fn = t["function"] || t
+            name = fn["name"].to_s.strip
+            next if name.empty?
+            { name: name, description: fn["description"] || "", parameters: fn["parameters"] || {} }
+          else
+            logger&.debug("  Non-function tool filtered out: #{type}")
+            nil
+          end
         end
 
         {
