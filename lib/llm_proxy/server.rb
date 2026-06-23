@@ -453,42 +453,22 @@ module LLMProxy
       # Register the model in Ask::ModelCatalog so Chat can resolve provider
       register_proxy_model(model_info)
 
-      # Auto-inject built-in tools so every client gets them regardless of client-side filtering.
-      builtin_tools = [
-        {
-          name: "web_search",
-          description: "Search the web for current information. Use this to get up-to-date results, recent events, or facts that may have changed.",
-          parameters: {
-            type: "object",
-            properties: {
-              query: { type: "string", description: "The search query" }
-            },
-            required: ["query"]
-          }
-        },
-        {
-          name: "apply_patch",
-          description: "Edit files using a unified diff format. " \
-            "Wrap all changes in a \"*** Begin Patch\" / \"*** End Patch\" envelope. " \
-            "Each file section starts with a header: \"*** Add File: <path>\" for new files, " \
-            "\"*** Update File: <path>\" for changes, or \"*** Delete File: <path>\" for removals. " \
-            "Prefix new lines with the character +.",
-          parameters: {
-            type: "object",
-            properties: {
-              patchText: { type: "string", description: "The full patch text describing all file changes" }
-            },
-            required: ["patchText"]
-          }
+      # Auto-inject the web_search tool so every client gets it as a native tool.
+      web_search_tool = {
+        name: "web_search",
+        description: "Search the web for current information. Use this to get up-to-date results, recent events, or facts that may have changed.",
+        parameters: {
+          type: "object",
+          properties: {
+            query: { type: "string", description: "The search query" }
+          },
+          required: ["query"]
         }
-      ]
+      }
 
-      existing_names = normalized[:tools] ? Set.new(normalized[:tools].map { |t| t[:name] }) : Set.new
-      builtin_tools.each do |tool|
-        unless existing_names.include?(tool[:name])
-          normalized[:tools] = (normalized[:tools] || []) + [tool]
-          @log.info("  Auto-injected #{tool[:name]} tool")
-        end
+      unless (normalized[:tools] || []).any? { |t| t[:name] == "web_search" }
+        normalized[:tools] = (normalized[:tools] || []) + [web_search_tool]
+        @log.info("  Auto-injected web_search tool")
       end
 
       # Build dynamic tools from request
