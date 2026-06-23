@@ -18,10 +18,14 @@ GEM
       faraday (>= 2.0)
       faraday-multipart (>= 1.0)
       json
+    ask-sandbox-providers (0.1.1)
     ask-schema (0.1.0)
     ask-skills (0.2.1)
     ask-tools (0.2.2)
       ask-schema (>= 0.1)
+    ask-tools-shell (0.3.1)
+      ask-sandbox-providers (>= 0.1)
+      ask-tools (>= 0.1)
     ask-web-search (0.2.0)
       ask-tools (>= 0.1)
     base64 (0.3.0)
@@ -136,6 +140,7 @@ DEPENDENCIES
   ask-llm-providers
   ask-schema
   ask-tools
+  ask-tools-shell
   ask-web-search
   debug
   minitest (~> 5.0)
@@ -156,9 +161,11 @@ CHECKSUMS
   ask-auth (0.1.0) sha256=c828df58e2d03b8baacc381c55e59ea27a7d0ee7ad7b02047c11ca15923238b4
   ask-core (0.2.0) sha256=8a0c8dd851e11b1e66bf7709590a000a94d545732126f018c13956d676f3cbe8
   ask-llm-providers (0.2.1) sha256=203867a8ef5faca4c5b9dc9782d50822cd7d98db14dcba59b73364c56a49a222
+  ask-sandbox-providers (0.1.1) sha256=138af4f3f85a06e614cc59ef52207f1786867e6fe41689a2d833c47a77f83823
   ask-schema (0.1.0) sha256=ae24b2d7e63227c760457daae41b265382acbf62eb48e15ab3cf636af8a84246
   ask-skills (0.2.1) sha256=935eb5b26aaec59599b6231072822a16abead05561d5371eebf0a80a1e6ae25e
   ask-tools (0.2.2) sha256=8630a5849b9dff3ff97ad240411b37ad752366cc2867e1f7add9886fdf15dbc5
+  ask-tools-shell (0.3.1) sha256=336ac4010a6fdbd8e67a26d816c6141a9b68f27a312f4b3ae2cac6666ee71889
   ask-web-search (0.2.0) sha256=e347ea45ec8912c27d166804dd3f6e04d4eb17d5be280d626e8acfa8ed79cdd3
   base64 (0.3.0) sha256=27337aeabad6ffae05c265c450490628ef3ebd4b67be58257393227588f5a97b
   bigdecimal (4.1.2) sha256=53d217666027eab4280346fba98e7d5b66baaae1b9c3c1c0ffe89d48188a3fbd
