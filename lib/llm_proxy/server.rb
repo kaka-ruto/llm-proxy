@@ -9,13 +9,6 @@ require "puma/const"
 
 module LLMProxy
   class Server < Sinatra::Base
-    # Tools that should not have their schemas processed — passed through as-is.
-    PASSTHROUGH_TOOLS = %w[
-      view_image list_mcp_resources list_mcp_resource_templates
-      read_mcp_resource request_user_input get_goal create_goal
-      update_goal
-    ].freeze
-
     LOG_DIR = File.expand_path("../../logs", __dir__)
     LOG_FILE = File.join(LOG_DIR, "development.log")
     MAX_WEB_SEARCH_ROUNDS = 3
@@ -654,28 +647,7 @@ module LLMProxy
       end
     end
 
-    def passthrough_tool(name, description)
-
-      # Create a minimal tool that passes schema through unprocessed
-
-      klass = Class.new(Ask::Tool) do
-
-        description(description || "")
-
-        define_method(:execute) { |**| raise LLMProxy::ToolCallStop }
-
-      end
-
-      klass.define_method(:name) { name }
-
-      klass.define_method(:params_schema) { nil }
-
-      klass.new
-
-    end
-
     def build_dynamic_tool(name, description, parameters)
-      return passthrough_tool(name, description) if PASSTHROUGH_TOOLS.include?(name)
       schema = (parameters || {}).transform_keys(&:to_sym)
       schema[:type] ||= "object"
 
