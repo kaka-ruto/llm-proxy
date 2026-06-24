@@ -59,6 +59,7 @@ module LLMProxy
         @tool_calls = {}
         @reasoning_blocks = {}
         @next_output_index = 0
+        @apply_patch_buffers = {}
 
         [{
           type: "response.created",
@@ -308,6 +309,23 @@ module LLMProxy
       def tool_call_events(tool_calls)
         events = []
         tool_calls.each do |id, tc|
+          if tc.name == "apply_patch"
+            # Convert apply_patch tool calls to inline text so Codex Desktop
+            # can handle them natively (freeform mode).  Do NOT create
+            # function_call SSE events — stream the patch as text deltas
+            # appended to the assistant message.
+            arg_text = tc.arguments.is_a?(String) ? tc.arguments : JSON.generate(tc.arguments)
+            parsed = arg_text.is_a?(Hash) ? arg_text : (JSON.parse(arg_text) rescue {})
+            full_patch = parsed["patchText"].to_s
+            prev = @apply_patch_buffers[id] || ""
+            if full_patch.length > prev.length
+              delta = full_patch[prev.length..]
+              @apply_patch_buffers[id] = full_patch
+              events.concat(text_events(delta))
+            end
+            next
+          end
+
           key = id || @tool_calls.keys.reverse.find { |k| k != nil && !@tool_calls[k][:closed] }
           state = key ? @tool_calls[key] : nil
 

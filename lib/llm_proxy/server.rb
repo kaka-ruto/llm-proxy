@@ -299,7 +299,36 @@ module LLMProxy
         result.to_json
       when Protocols::OpenAIResponses
         output = []
+        text_parts = []
+        has_apply_patch = false
         if msg.tool_call?
+          msg.tool_calls.values.each do |tc|
+            if tc.name == "apply_patch"
+              has_apply_patch = true
+              args = tc.arguments.is_a?(String) ? tc.arguments : JSON.generate(tc.arguments)
+              parsed = args.is_a?(Hash) ? args : (JSON.parse(args) rescue {})
+              patch_text = parsed["patchText"].to_s
+              text_parts << patch_text if patch_text.length > 0
+            end
+          end
+        end
+        if has_apply_patch
+          all_text = text_parts.join("\n")
+          all_text = "#{msg.content}\n\n#{all_text}" if msg.content&.length&.> 0
+          output << {
+            id: "msg_0", type: "message", role: "assistant",
+            content: [{ type: "output_text", text: all_text, annotations: [] }]
+          }
+          # Also forward regular (non-apply_patch) tool calls
+          msg.tool_calls&.values&.each_with_index do |tc, idx|
+            next if tc.name == "apply_patch"
+            args = tc.arguments.is_a?(String) ? tc.arguments : JSON.generate(tc.arguments)
+            output << {
+              id: tc.id || "call_#{idx}", type: "function_call",
+              status: "completed", call_id: tc.id, name: tc.name, arguments: args
+            }
+          end
+        elsif msg.tool_call?
           msg.tool_calls.values.each_with_index do |tc, idx|
             args = tc.arguments.is_a?(String) ? tc.arguments : JSON.generate(tc.arguments)
             output << {
@@ -445,7 +474,10 @@ module LLMProxy
     def build_chat(model_info, normalized)
       # Inject model identity so the model knows who it is
       identity = "You are running as model: #{model_info.id} (provider: #{model_info.provider}). " \
-                  "You have access to the web_search tool for web lookups and the apply_patch tool for file editing."
+                  "You have access to the web_search tool for web lookups. " \
+                  "To edit files, output patches inline using the format: " \
+                  "*** Begin Patch / *** End Patch with " \
+                  "*** Add File:, *** Update File:, or *** Delete File: headers."
       if normalized[:system]
         normalized[:system] = "#{identity}\n\n#{normalized[:system]}"
       else
