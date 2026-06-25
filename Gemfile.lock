@@ -3,26 +3,30 @@ GEM
   specs:
     addressable (2.9.0)
       public_suffix (>= 2.0.2, < 8.0)
-    ask-agent (0.1.12)
-      ask-core (~> 0.1)
-      ask-llm-providers (~> 0.1)
-      ask-skills (~> 0.1)
-      ask-tools (~> 0.1)
-    ask-auth (0.1.0)
+    ask-agent (0.2.1)
+      ask-core (>= 0.1)
+      ask-llm-providers (>= 0.1)
+      ask-skills (>= 0.1)
+      ask-tools (>= 0.1)
+    ask-auth (0.1.1)
       base64 (~> 0.2)
-    ask-core (0.2.0)
-    ask-llm-providers (0.2.1)
-      ask-auth (~> 0.1)
+    ask-core (0.2.1)
+    ask-llm-providers (0.2.2)
+      ask-auth (>= 0.1)
       ask-core (>= 0.2.0)
       base64 (~> 0.2)
       faraday (>= 2.0)
       faraday-multipart (>= 1.0)
       json
-    ask-schema (0.1.0)
-    ask-skills (0.2.1)
-    ask-tools (0.2.2)
+    ask-sandbox-providers (0.1.2)
+    ask-schema (0.1.1)
+    ask-skills (0.2.2)
+    ask-tools (0.2.4)
       ask-schema (>= 0.1)
-    ask-web-search (0.2.0)
+    ask-tools-shell (0.3.3)
+      ask-sandbox-providers (>= 0.1)
+      ask-tools (>= 0.1)
+    ask-web-search (0.2.1)
       ask-tools (>= 0.1)
     base64 (0.3.0)
     bigdecimal (4.1.2)
@@ -49,7 +53,7 @@ GEM
       prism (>= 1.3.0)
       rdoc (>= 4.0.0)
       reline (>= 0.4.2)
-    json (2.19.9)
+    json (2.20.0)
     logger (1.7.0)
     minitest (5.27.0)
     mocha (3.1.0)
@@ -60,7 +64,7 @@ GEM
       uri (>= 0.11.1)
     nio4r (2.7.5)
     ostruct (0.6.3)
-    pp (0.6.3)
+    pp (0.6.4)
       prettyprint
     prettyprint (0.2.0)
     prism (1.9.0)
@@ -136,6 +140,7 @@ DEPENDENCIES
   ask-llm-providers
   ask-schema
   ask-tools
+  ask-tools-shell
   ask-web-search
   debug
   minitest (~> 5.0)
@@ -152,14 +157,16 @@ DEPENDENCIES
 
 CHECKSUMS
   addressable (2.9.0) sha256=7fdf6ac3660f7f4e867a0838be3f6cf722ace541dd97767fa42bc6cfa980c7af
-  ask-agent (0.1.12) sha256=8e08c71b256401af83abd815cdc0362c715514720b9d177383b31d1d3e62ce72
-  ask-auth (0.1.0) sha256=c828df58e2d03b8baacc381c55e59ea27a7d0ee7ad7b02047c11ca15923238b4
-  ask-core (0.2.0) sha256=8a0c8dd851e11b1e66bf7709590a000a94d545732126f018c13956d676f3cbe8
-  ask-llm-providers (0.2.1) sha256=203867a8ef5faca4c5b9dc9782d50822cd7d98db14dcba59b73364c56a49a222
-  ask-schema (0.1.0) sha256=ae24b2d7e63227c760457daae41b265382acbf62eb48e15ab3cf636af8a84246
-  ask-skills (0.2.1) sha256=935eb5b26aaec59599b6231072822a16abead05561d5371eebf0a80a1e6ae25e
-  ask-tools (0.2.2) sha256=8630a5849b9dff3ff97ad240411b37ad752366cc2867e1f7add9886fdf15dbc5
-  ask-web-search (0.2.0) sha256=e347ea45ec8912c27d166804dd3f6e04d4eb17d5be280d626e8acfa8ed79cdd3
+  ask-agent (0.2.1) sha256=6c2d4782cafcc480438d2ba942f63782255608c58d69260d43ab863b8efd30e7
+  ask-auth (0.1.1) sha256=ee3cbe3239145ab1b27f9760fb13ad8a25129a29a5c4b2355a9ead633f002ada
+  ask-core (0.2.1) sha256=2ad208695cdb06729683012878cf48b63d2224fda6e8c9e3b8804b35b05d2cfb
+  ask-llm-providers (0.2.2) sha256=e0194f582e096a4cfff3bbc704ee4b1e521968e57a54d4902699fbedc75e5347
+  ask-sandbox-providers (0.1.2) sha256=388d2486d6d8f0b78a5fc87f90d56095892f88dff6197b74e081ea96833c0500
+  ask-schema (0.1.1) sha256=1be1c107c2f7cdacde9cf8d4dfc004e586f652c2b979e1829fab748f66ca98bd
+  ask-skills (0.2.2) sha256=b41cd44de3b887cf75d29a972d78327c444c2718b313e06014b172d3ba495f8c
+  ask-tools (0.2.4) sha256=c7f6fbcb99ed9e8201316300c4d6295f4e2df1dca5cec1d10de4c3bb2b2aa7a7
+  ask-tools-shell (0.3.3) sha256=bec219677b25e81928f4cbdafeb4f3d0c12bd9af10f28ab607252e97385a7cc9
+  ask-web-search (0.2.1) sha256=29c376e687c06447d7ba30ad31551c5731a01bf066f093568215cf9298029b05
   base64 (0.3.0) sha256=27337aeabad6ffae05c265c450490628ef3ebd4b67be58257393227588f5a97b
   bigdecimal (4.1.2) sha256=53d217666027eab4280346fba98e7d5b66baaae1b9c3c1c0ffe89d48188a3fbd
   bundler (4.0.12) sha256=7f8b757d28dfb636e7b24fba2344ac6dd13b5b24f4b46d62573d483f211825ac
@@ -173,7 +180,7 @@ CHECKSUMS
   hashdiff (1.2.1) sha256=9c079dbc513dfc8833ab59c0c2d8f230fa28499cc5efb4b8dd276cf931457cd1
   io-console (0.8.2) sha256=d6e3ae7a7cc7574f4b8893b4fca2162e57a825b223a177b7afa236c5ef9814cc
   irb (1.18.0) sha256=de9454a0703a54704b9811a5ef31a60c86949fbf4013fcf244fabc7c775248e3
-  json (2.19.9) sha256=9b9025b7cdddafa38d316eca0b2358488e42d417045c1b90d216a9fefe46b79a
+  json (2.20.0) sha256=9362bc6e55a952b056abf9167cf053358181c904cb70cd6eee0808ea830fc32b
   logger (1.7.0) sha256=196edec7cc44b66cfb40f9755ce11b392f21f7967696af15d274dde7edff0203
   minitest (5.27.0) sha256=2d3b17f8a36fe7801c1adcffdbc38233b938eb0b4966e97a6739055a45fa77d5
   mocha (3.1.0) sha256=75f42d69ebfb1f10b32489dff8f8431d37a418120ecdfc07afe3bc183d4e1d56
@@ -182,7 +189,7 @@ CHECKSUMS
   net-http (0.9.1) sha256=25ba0b67c63e89df626ed8fac771d0ad24ad151a858af2cc8e6a716ca4336996
   nio4r (2.7.5) sha256=6c90168e48fb5f8e768419c93abb94ba2b892a1d0602cb06eef16d8b7df1dca1
   ostruct (0.6.3) sha256=95a2ed4a4bd1d190784e666b47b2d3f078e4a9efda2fccf18f84ddc6538ed912
-  pp (0.6.3) sha256=2951d514450b93ccfeb1df7d021cae0da16e0a7f95ee1e2273719669d0ab9df6
+  pp (0.6.4) sha256=dfcb0fce700c41456265922884f9fe195d7fbb0674a3578e6c0f69588e82b570
   prettyprint (0.2.0) sha256=2bc9e15581a94742064a3cc8b0fb9d45aae3d03a1baa6ef80922627a0766f193
   prism (1.9.0) sha256=7b530c6a9f92c24300014919c9dcbc055bf4cdf51ec30aed099b06cd6674ef85
   psych (5.4.0) sha256=14f72d69a611af663d7d70e4a7b67d9eb1f3ae9f8d916b478961d5a0075ba5b7

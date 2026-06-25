@@ -4,6 +4,7 @@ require "sinatra/base"
 
 require "ask/agent"
 require "ask/web_search"
+require "ask/tools/shell/apply_patch"
 
 module LLMProxy
   class Error < StandardError; end

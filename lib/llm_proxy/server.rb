@@ -12,6 +12,7 @@ module LLMProxy
     LOG_DIR = File.expand_path("../../logs", __dir__)
     LOG_FILE = File.join(LOG_DIR, "development.log")
     MAX_WEB_SEARCH_ROUNDS = 3
+    MAX_APPLY_PATCH_ROUNDS = 3
 
     set :protection, false
 
@@ -254,6 +255,14 @@ module LLMProxy
         log_model_response(response)
       end
 
+      MAX_APPLY_PATCH_ROUNDS.times do |round|
+        break unless execute_apply_patch_tools(chat, response)
+
+        @log.info("  Apply patch continuation round #{round + 1}...")
+        response = chat.ask(nil)
+        log_model_response(response)
+      end
+
       final_msg = response
       log_model_response(final_msg)
       usage = token_usage(final_msg)
@@ -299,36 +308,7 @@ module LLMProxy
         result.to_json
       when Protocols::OpenAIResponses
         output = []
-        text_parts = []
-        has_apply_patch = false
         if msg.tool_call?
-          msg.tool_calls.values.each do |tc|
-            if tc.name == "apply_patch"
-              has_apply_patch = true
-              args = tc.arguments.is_a?(String) ? tc.arguments : JSON.generate(tc.arguments)
-              parsed = args.is_a?(Hash) ? args : (JSON.parse(args) rescue {})
-              patch_text = parsed["patchText"].to_s
-              text_parts << patch_text if patch_text.length > 0
-            end
-          end
-        end
-        if has_apply_patch
-          all_text = text_parts.join("\n")
-          all_text = "#{msg.content}\n\n#{all_text}" if msg.content&.length&.> 0
-          output << {
-            id: "msg_0", type: "message", role: "assistant",
-            content: [{ type: "output_text", text: all_text, annotations: [] }]
-          }
-          # Also forward regular (non-apply_patch) tool calls
-          msg.tool_calls&.values&.each_with_index do |tc, idx|
-            next if tc.name == "apply_patch"
-            args = tc.arguments.is_a?(String) ? tc.arguments : JSON.generate(tc.arguments)
-            output << {
-              id: tc.id || "call_#{idx}", type: "function_call",
-              status: "completed", call_id: tc.id, name: tc.name, arguments: args
-            }
-          end
-        elsif msg.tool_call?
           msg.tool_calls.values.each_with_index do |tc, idx|
             args = tc.arguments.is_a?(String) ? tc.arguments : JSON.generate(tc.arguments)
             output << {
@@ -434,7 +414,22 @@ module LLMProxy
           break if @_stream_dead
         end
 
-        protocol.cleanup_accumulated_tool_calls(exclude_names: %w[web_search])
+        MAX_APPLY_PATCH_ROUNDS.times do |round|
+          break unless execute_apply_patch_tools(chat, response)
+
+          @log.info("  Apply patch continuation round #{round + 1}...")
+          response = chat.ask(nil) do |chunk|
+            break if @_stream_dead
+            events = protocol.chunk_events(chunk, model: model_info.id)
+            safe_send(out, SSE.format(events)) unless events.empty?
+            event_count += events.length unless events.empty?
+          end
+
+          break if @_stream_dead
+          log_model_response(response)
+        end
+
+        protocol.cleanup_accumulated_tool_calls(exclude_names: %w[web_search apply_patch])
         final_msg = response
         log_model_response(final_msg)
         usage = token_usage(final_msg)
@@ -451,7 +446,7 @@ module LLMProxy
         @log.info("  Finish reason: #{final_msg&.tool_call? ? 'tool_calls' : 'stop'}")
         tool_calls_info = final_msg&.tool_call? ? final_msg.tool_calls.values.map { |tc| { id: tc.id, name: tc.name } } : []
         @log.info("  Tool call stop: #{tool_calls_info}")
-        protocol.cleanup_accumulated_tool_calls(exclude_names: %w[web_search])
+        protocol.cleanup_accumulated_tool_calls(exclude_names: %w[web_search apply_patch])
         complete_events = protocol.complete_events(model: model_info.id, usage: usage)
         safe_send(out, SSE.format(complete_events))
       rescue Exception => e
@@ -474,10 +469,7 @@ module LLMProxy
     def build_chat(model_info, normalized)
       # Inject model identity so the model knows who it is
       identity = "You are running as model: #{model_info.id} (provider: #{model_info.provider}). " \
-                  "You have access to the web_search tool for web lookups. " \
-                  "To edit files, output patches inline using the format: " \
-                  "*** Begin Patch / *** End Patch with " \
-                  "*** Add File:, *** Update File:, or *** Delete File: headers."
+                  "You have access to the web_search tool for web lookups and the apply_patch tool for file editing."
       if normalized[:system]
         normalized[:system] = "#{identity}\n\n#{normalized[:system]}"
       else
@@ -642,9 +634,35 @@ module LLMProxy
         args = tc.arguments
         args = JSON.parse(args) if args.is_a?(String)
         query = args["query"] || args[:query]
-        result = Ask::Tools::WebSearch.new.execute(query: query)
-        chat.add_message(role: :tool, content: result.to_s, tool_call_id: id)
-        @log.info("  web_search[#{id}]: #{truncate(result.to_s)}")
+        output = begin
+          result = Ask::Tools::WebSearch.new.execute(query: query)
+          result.to_s
+        rescue => e
+          "Error: web_search is not available"
+        end
+        chat.add_message(role: :tool, content: output, tool_call_id: id)
+        @log.info("  web_search[#{id}]: #{truncate(output)}")
+      end
+
+      true
+    end
+
+    def execute_apply_patch_tools(chat, response)
+      return false unless response&.tool_call?
+
+      apply_patch_calls = response.tool_calls.select { |_id, tc| tc.name == "apply_patch" }
+      return false if apply_patch_calls.empty?
+
+      @log.info("  Executing #{apply_patch_calls.length} apply_patch call(s)...")
+
+      apply_patch_calls.each do |id, tc|
+        args = tc.arguments
+        args = JSON.parse(args) if args.is_a?(String)
+        patch_text = args["patchText"] || args[:patchText] || ""
+        result = Ask::Tools::ApplyPatch.new.execute(patchText: patch_text)
+        output = result.error? ? "Error: #{result.error_message}" : (result.output[:summary] rescue "Patch applied")
+        chat.add_message(role: :tool, content: output, tool_call_id: id)
+        @log.info("  apply_patch[#{id}]: #{output}")
       end
 
       true
