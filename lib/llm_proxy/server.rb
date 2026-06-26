@@ -2,6 +2,7 @@ require "sinatra/base"
 require "logger"
 require "fileutils"
 require "set"
+require "time"
 begin; require "ask/instrumentation/tool"; rescue LoadError; end
 require "ostruct"
 require "securerandom"
@@ -9,10 +10,10 @@ require "puma/const"
 
 module LLMProxy
   class Server < Sinatra::Base
+    DEBUG = ENV["DEBUG"] == "1"
+
     LOG_DIR = File.expand_path("../../logs", __dir__)
     LOG_FILE = File.join(LOG_DIR, "development.log")
-    MAX_WEB_SEARCH_ROUNDS = 3
-    MAX_APPLY_PATCH_ROUNDS = 3
 
     set :protection, false
 
@@ -49,6 +50,7 @@ module LLMProxy
       Thread.current[:llm_request_id] = @request_id
       @log = settings.logger
       @_errors = []
+      debug_log "#{request.request_method} #{request.path_info} (req=#{@request_id})"
       @log.info("─" * 60)
       @log.info("#{request.request_method} #{request.path_info}")
 
@@ -181,11 +183,13 @@ module LLMProxy
         @log.info("  model=#{model_id}#{resolved} (#{model_info.provider}) msgs=#{msg_count} tools=#{tool_count}")
         @log.debug("  system=#{normalized[:system] ? truncate(normalized[:system]) : "nil"}")
         @log.debug("  thinking=#{normalized[:thinking].inspect} stream=#{normalized[:stream]} max_tokens=#{normalized[:max_tokens]} temp=#{normalized[:temperature].inspect}")
+        debug_log "#{model_id}#{resolved} (#{model_info.provider}) msgs=#{msg_count} tools=#{tool_count} stream=#{is_streaming}"
 
         chat = build_chat(model_info, normalized)
 
         if is_streaming
           @_streaming = true
+          debug_log "Starting stream for #{model_id} (req=#{@request_id})"
           content_type "text/event-stream"
           headers "Cache-Control" => "no-cache"
           headers "X-Accel-Buffering" => "no"
@@ -196,12 +200,14 @@ module LLMProxy
             rescue Exception => e
               @_errors << "Fatal stream error: #{e.class}: #{e.message}"
               @log.error("  => #{e.class}: #{e.message}")
+              debug_log "Fatal stream error: #{e.class}: #{e.message}"
               e.backtrace&.first(3)&.each { |line| @log.error("     #{line}") }
               safe_send(out, "data: [DONE]\n\n")
             end
           end
         else
           content_type :json
+          debug_log "Non-streaming for #{model_id} (req=#{@request_id})"
           handle_nonstreaming(protocol, chat, model_info)
         end
       end
@@ -210,6 +216,7 @@ module LLMProxy
     error JSON::ParserError do
       @_errors << "Invalid JSON in request body"
       @log.error("  Invalid JSON in request body")
+      debug_log "Invalid JSON in request body"
       status 400
       content_type :json
       { error: { message: "Invalid JSON" } }.to_json
@@ -217,6 +224,7 @@ module LLMProxy
 
     not_found do
       @log.warn("  Route not found: #{request.request_method} #{request.path_info}")
+      debug_log "Route not found: #{request.request_method} #{request.path_info}"
       content_type :json
       { error: { message: "Not found" } }.to_json
     end
@@ -245,31 +253,13 @@ module LLMProxy
 
     def handle_nonstreaming(protocol, chat, model_info)
       response = chat.ask(nil)
-
-      MAX_WEB_SEARCH_ROUNDS.times do |round|
-        log_model_response(response)
-        break unless execute_web_search_tools(chat, response, round)
-
-        @log.info("  Web search continuation round #{round + 1}...")
-        response = chat.ask(nil)
-        log_model_response(response)
-      end
-
-      MAX_APPLY_PATCH_ROUNDS.times do |round|
-        break unless execute_apply_patch_tools(chat, response)
-
-        @log.info("  Apply patch continuation round #{round + 1}...")
-        response = chat.ask(nil)
-        log_model_response(response)
-      end
-
-      final_msg = response
-      log_model_response(final_msg)
-      usage = token_usage(final_msg)
+      log_model_response(response)
+      debug_log "Non-streaming complete: tool_call=#{response&.tool_call?} finish_reason=#{response&.tool_call? ? 'tool_calls' : 'stop'}"
+      usage = token_usage(response)
       @log.info("  Usage: #{usage.inspect}")
-      @log.info("  Finish reason: #{final_msg&.tool_call? ? 'tool_calls' : 'stop'}")
+      @log.info("  Finish reason: #{response&.tool_call? ? 'tool_calls' : 'stop'}")
 
-      result_json = format_protocol_response(protocol, model_info, final_msg, usage)
+      result_json = format_protocol_response(protocol, model_info, response, usage)
       result_json
     rescue Exception => e
       @_errors << "Non-streaming error: #{e.class}: #{e.message}"
@@ -368,7 +358,7 @@ module LLMProxy
       @_stream_dead = false
 
       begin
-        @log.debug("  Starting stream...")
+        debug_log "Stream starting for #{model_info.id}"
         start_events = protocol.start_events(model: model_info.id)
         safe_send(out, SSE.format(start_events))
         event_count = 1
@@ -379,14 +369,13 @@ module LLMProxy
           if chunk.tool_calls&.any?
             chunk.tool_calls.each do |id, tc|
               @log.info("  Model chunk: tool_call id=#{id || 'nil'} name=#{tc.name} args=#{tc.arguments.inspect}")
+              debug_log "Chunk: tool_call id=#{id || 'nil'} name=#{tc.name}"
             end
           end
 
           events = protocol.chunk_events(chunk, model: model_info.id)
 
           unless events.empty?
-
-
             safe_send(out, SSE.format(events))
             event_count += events.length
           end
@@ -394,64 +383,24 @@ module LLMProxy
 
         if @_stream_dead
           @log.warn("  Stream aborted after #{event_count} events (client disconnected)")
+          debug_log "Stream aborted after #{event_count} events (client disconnected)"
           return
         end
 
-        @log.info("  Streamed #{event_count} events total, handling tool calls...")
+        @log.info("  Streamed #{event_count} events total")
+        debug_log "Streamed #{event_count} events total"
 
-        MAX_WEB_SEARCH_ROUNDS.times do |round|
-          log_model_response(response)
-          break unless execute_web_search_tools(chat, response, round)
-
-          @log.info("  Web search continuation round #{round + 1}...")
-          response = chat.ask(nil) do |chunk|
-            break if @_stream_dead
-            events = protocol.chunk_events(chunk, model: model_info.id)
-            safe_send(out, SSE.format(events)) unless events.empty?
-            event_count += events.length unless events.empty?
-          end
-
-          break if @_stream_dead
-        end
-
-        MAX_APPLY_PATCH_ROUNDS.times do |round|
-          break unless execute_apply_patch_tools(chat, response)
-
-          @log.info("  Apply patch continuation round #{round + 1}...")
-          response = chat.ask(nil) do |chunk|
-            break if @_stream_dead
-            events = protocol.chunk_events(chunk, model: model_info.id)
-            safe_send(out, SSE.format(events)) unless events.empty?
-            event_count += events.length unless events.empty?
-          end
-
-          break if @_stream_dead
-          log_model_response(response)
-        end
-
-        protocol.cleanup_accumulated_tool_calls(exclude_names: %w[web_search apply_patch])
-        final_msg = response
-        log_model_response(final_msg)
-        usage = token_usage(final_msg)
+        log_model_response(response)
+        usage = token_usage(response)
         @log.info("  Usage: #{usage.inspect}")
-        @log.info("  Finish reason: #{final_msg&.tool_call? ? 'tool_calls' : 'stop'}")
-        complete_events = protocol.complete_events(model: model_info.id, usage: usage)
-        safe_send(out, SSE.format(complete_events))
-
-      rescue ToolCallStop
-        final_msg = response
-        log_model_response(final_msg)
-        usage = token_usage(final_msg)
-        @log.info("  Usage: #{usage.inspect}")
-        @log.info("  Finish reason: #{final_msg&.tool_call? ? 'tool_calls' : 'stop'}")
-        tool_calls_info = final_msg&.tool_call? ? final_msg.tool_calls.values.map { |tc| { id: tc.id, name: tc.name } } : []
-        @log.info("  Tool call stop: #{tool_calls_info}")
-        protocol.cleanup_accumulated_tool_calls(exclude_names: %w[web_search apply_patch])
+        @log.info("  Finish reason: #{response&.tool_call? ? 'tool_calls' : 'stop'}")
+        debug_log "Stream complete: tool_call=#{response&.tool_call?} usage=#{usage.inspect}"
         complete_events = protocol.complete_events(model: model_info.id, usage: usage)
         safe_send(out, SSE.format(complete_events))
       rescue Exception => e
         @_errors << "Streaming error: #{e.class}: #{e.message}"
         @log.error("  => #{e.class}: #{e.message}")
+        debug_log "Streaming error: #{e.class}: #{e.message}"
         e.backtrace&.first(3)&.each { |line| @log.error("     #{line}") }
         error_events = protocol.error_events(e.message)
         safe_send(out, SSE.format(error_events))
@@ -462,14 +411,14 @@ module LLMProxy
         duration = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - @_start_time) * 1000).round(1)
         status_tag = @_errors.any? ? "500" : "200"
         @log.info("  Completed #{status_tag} (#{duration}ms) streamed=#{@_stream_dead ? 'aborted' : 'ok'}")
+        debug_log "Completed #{status_tag} (#{duration}ms) streamed=#{@_stream_dead ? 'aborted' : 'ok'}"
         safe_close(out)
       end
     end
 
     def build_chat(model_info, normalized)
       # Inject model identity so the model knows who it is
-      identity = "You are running as model: #{model_info.id} (provider: #{model_info.provider}). " \
-                  "You have access to the web_search tool for web lookups and the apply_patch tool for file editing."
+      identity = "You are running as model: #{model_info.id} (provider: #{model_info.provider})."
       if normalized[:system]
         normalized[:system] = "#{identity}\n\n#{normalized[:system]}"
       else
@@ -478,48 +427,10 @@ module LLMProxy
       # Register the model in Ask::ModelCatalog so Chat can resolve provider
       register_proxy_model(model_info)
 
-      # Auto-inject built-in tools so every client gets them as native tools.
-      builtin_tools = [
-        {
-          name: "web_search",
-          description: "Search the web for current information. Use this to get up-to-date results, recent events, or facts that may have changed.",
-          parameters: {
-            type: "object",
-            properties: {
-              query: { type: "string", description: "The search query" }
-            },
-            required: ["query"]
-          }
-        },
-        {
-          name: "apply_patch",
-          description: "Edit files using a unified diff format. " \
-            "Wrap all changes in a \"*** Begin Patch\" / \"*** End Patch\" envelope. " \
-            "Each file section starts with a header: " \
-            "\"*** Add File: <path>\" for new files, " \
-            "\"*** Update File: <path>\" for changes, or " \
-            "\"*** Delete File: <path>\" for removals. " \
-            "Prefix new lines with +.",
-          parameters: {
-            type: "object",
-            properties: {
-              patchText: { type: "string", description: "The full patch text describing all file changes" }
-            },
-            required: ["patchText"]
-          }
-        }
-      ]
-
-      existing_names = normalized[:tools] ? Set.new(normalized[:tools].map { |t| t[:name] }) : Set.new
-      builtin_tools.each do |tool|
-        unless existing_names.include?(tool[:name])
-          normalized[:tools] = (normalized[:tools] || []) + [tool]
-          @log.info("  Auto-injected #{tool[:name]} tool")
-        end
-      end
-
       # Build dynamic tools from request
-      tools = (normalized[:tools] || []).filter_map do |t|
+      raw_tools = normalized[:tools] || []
+      debug_log "Building chat with #{raw_tools.length} tools(s)"
+      tools = raw_tools.filter_map do |t|
         if t[:name].nil? || t[:name].strip.empty?
           @log.warn("Skipping tool definition with missing or empty name")
           next
@@ -527,6 +438,7 @@ module LLMProxy
         build_dynamic_tool(t[:name], t[:description], t[:parameters])
       end
 
+      debug_log "Registered #{tools.length} dynamic tools: #{tools.map(&:name).join(', ')}"
       chat = Ask::Agent::Chat.new(
         model: model_info.id,
         tools: tools,
@@ -622,52 +534,6 @@ module LLMProxy
       JSON.parse(args) rescue {}
     end
 
-    def execute_web_search_tools(chat, response, log_round = 0)
-      return false unless response.tool_call?
-
-      web_search_calls = response.tool_calls.select { |_id, tc| tc.name == "web_search" }
-      return false if web_search_calls.empty?
-
-      @log.info("  Executing #{web_search_calls.length} web_search call(s)...") if log_round == 0
-
-      web_search_calls.each do |id, tc|
-        args = tc.arguments
-        args = JSON.parse(args) if args.is_a?(String)
-        query = args["query"] || args[:query]
-        output = begin
-          result = Ask::Tools::WebSearch.new.execute(query: query)
-          result.to_s
-        rescue => e
-          "Error: web_search is not available"
-        end
-        chat.add_message(role: :tool, content: output, tool_call_id: id)
-        @log.info("  web_search[#{id}]: #{truncate(output)}")
-      end
-
-      true
-    end
-
-    def execute_apply_patch_tools(chat, response)
-      return false unless response&.tool_call?
-
-      apply_patch_calls = response.tool_calls.select { |_id, tc| tc.name == "apply_patch" }
-      return false if apply_patch_calls.empty?
-
-      @log.info("  Executing #{apply_patch_calls.length} apply_patch call(s)...")
-
-      apply_patch_calls.each do |id, tc|
-        args = tc.arguments
-        args = JSON.parse(args) if args.is_a?(String)
-        patch_text = args["patchText"] || args[:patchText] || ""
-        result = Ask::Tools::ApplyPatch.new.execute(patchText: patch_text)
-        output = result.error? ? "Error: #{result.error_message}" : (result.output[:summary] rescue "Patch applied")
-        chat.add_message(role: :tool, content: output, tool_call_id: id)
-        @log.info("  apply_patch[#{id}]: #{output}")
-      end
-
-      true
-    end
-
     def build_stream_complete_event(protocol, model_info, msg, usage)
       case protocol
       when Protocols::OpenAICompletions
@@ -746,6 +612,16 @@ module LLMProxy
       out.close
     rescue Exception => e
       @log.warn("  Close failed: #{e.class}: #{e.message}")
+    end
+
+    def self.debug_log(msg)
+      return unless DEBUG
+      ts = Time.now.strftime("%H:%M:%S.%L")
+      $stderr.puts "[#{ts}] [llm-proxy] #{msg}"
+    end
+
+    def debug_log(msg)
+      self.class.debug_log(msg)
     end
 
   end

@@ -59,7 +59,6 @@ module LLMProxy
         @tool_calls = {}
         @reasoning_blocks = {}
         @next_output_index = 0
-        @apply_patch_buffers = {}
 
         [{
           type: "response.created",
@@ -141,10 +140,6 @@ module LLMProxy
         }
 
         events
-      end
-
-      def cleanup_accumulated_tool_calls(exclude_names: [])
-        @tool_calls.delete_if { |_id, tc| exclude_names.include?(tc[:name]) }
       end
 
       def error_events(message, type: "error")
@@ -309,14 +304,6 @@ module LLMProxy
       def tool_call_events(tool_calls)
         events = []
         tool_calls.each do |id, tc|
-          if tc.name == "apply_patch"
-            arg_text = tc.arguments.is_a?(String) ? tc.arguments : JSON.generate(tc.arguments)
-            parsed = arg_text.is_a?(Hash) ? arg_text : (JSON.parse(arg_text) rescue {})
-            full = parsed["patchText"].to_s
-            @apply_patch_buffers[id] = full if full.length > 0
-            next
-          end
-
           key = id || @tool_calls.keys.reverse.find { |k| k != nil && !@tool_calls[k][:closed] }
           state = key ? @tool_calls[key] : nil
 

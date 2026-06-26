@@ -1,6 +1,10 @@
 require_relative "../test_helper"
 require "mocha/minitest"
 
+# Ask::Tools::WebSearch is no longer auto-loaded by llm_proxy.
+# These manual tests require the gem explicitly.
+require "ask/web_search"
+
 describe "Manual: Web Search Integration" do
   include VCRTestHelpers
 
@@ -56,24 +60,5 @@ describe "Manual: Web Search Integration" do
     _(res.code).must_equal "200"
     data = JSON.parse(res.body)
     _(data["results"]).must_be_kind_of Array
-  end
-
-  it "tests execute_web_search_tools helper with mock chat" do
-    server = LLMProxy::Server.new!
-    server.instance_variable_set(:@log, Logger.new(File::NULL))
-
-    tool_calls = {
-      "call_test" => OpenStruct.new(id: "call_test", name: "web_search", arguments: { "query" => "Ruby on Rails" })
-    }
-    mock_response = Ask::Agent::ResponseMessage.new(content: "", tool_calls: tool_calls, thinking: nil)
-
-    add_calls = []
-    mock_chat = Object.new
-    mock_chat.define_singleton_method(:add_message) { |**args| add_calls << args }
-
-    result = server.send(:execute_web_search_tools, mock_chat, mock_response, 0)
-    _(result).must_equal true
-    _(add_calls.length).must_equal 1
-    _(add_calls[0][:role]).must_equal :tool
   end
 end

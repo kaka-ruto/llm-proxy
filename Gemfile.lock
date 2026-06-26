@@ -23,7 +23,7 @@ GEM
     ask-skills (0.2.2)
     ask-tools (0.2.4)
       ask-schema (>= 0.1)
-    ask-tools-shell (0.3.3)
+    ask-tools-shell (0.3.4)
       ask-sandbox-providers (>= 0.1)
       ask-tools (>= 0.1)
     ask-web-search (0.2.1)
@@ -165,7 +165,7 @@ CHECKSUMS
   ask-schema (0.1.1) sha256=1be1c107c2f7cdacde9cf8d4dfc004e586f652c2b979e1829fab748f66ca98bd
   ask-skills (0.2.2) sha256=b41cd44de3b887cf75d29a972d78327c444c2718b313e06014b172d3ba495f8c
   ask-tools (0.2.4) sha256=c7f6fbcb99ed9e8201316300c4d6295f4e2df1dca5cec1d10de4c3bb2b2aa7a7
-  ask-tools-shell (0.3.3) sha256=bec219677b25e81928f4cbdafeb4f3d0c12bd9af10f28ab607252e97385a7cc9
+  ask-tools-shell (0.3.4) sha256=15deeff7a5f74003f2eaf0a803d310844e8bbe1f768506182a133a394a587332
   ask-web-search (0.2.1) sha256=29c376e687c06447d7ba30ad31551c5731a01bf066f093568215cf9298029b05
   base64 (0.3.0) sha256=27337aeabad6ffae05c265c450490628ef3ebd4b67be58257393227588f5a97b
   bigdecimal (4.1.2) sha256=53d217666027eab4280346fba98e7d5b66baaae1b9c3c1c0ffe89d48188a3fbd
