@@ -5,10 +5,13 @@ require "ask-tools-shell"
 require "ask-web-search"
 
 module LLMProxy
-  # MCP server exposing ask-rb tools over stdio.
+  # MCP server exposing a curated set of ask-rb tools over stdio.
   # Start with: bin/llm-proxy mcp
   module MCPServer
-    TOOLS = (Ask::Tools::Shell::TOOLS.map(&:new) + [Ask::Tools::WebSearch.new]).freeze
+    TOOLS = [
+      Ask::Tools::ApplyPatch.new,
+      Ask::Tools::WebSearch.new
+    ].freeze
 
     def self.start
       Ask::MCP::Server.start_stdio(

@@ -90,30 +90,19 @@ class MCPServerTest < Minitest::Test
     assert_equal "llm-proxy", resp[:result][:serverInfo][:name]
   end
 
-  def test_tools_list_includes_shell_tools
+  def test_tools_list_exposes_only_apply_patch_and_web_search
     start_server
     initialize_session
     send_line('{"jsonrpc":"2.0","id":2,"method":"tools/list"}')
     resp = read_response
     tools = resp[:result][:tools]
     names = tools.map { |t| t[:name] }
-    assert_includes names, "bash"
-    assert_includes names, "read"
-    assert_includes names, "write"
+    assert_includes names, "apply_patch"
     assert_includes names, "web_search"
+    assert_equal 2, names.size, "Should only expose apply_patch and web_search"
   end
 
-  def test_tool_call_bash
-    start_server
-    initialize_session
-    send_line('{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"bash","arguments":{"command":"echo hello"}}}')
-    resp = read_response
-    assert resp[:result], "Expected result, got: #{resp[:error]}"
-    text = resp[:result][:content].first[:text]
-    assert_match(/hello/, text)
-  end
-
-  def test_tool_call_unknown_tool
+  def test_tool_call_unknown_tool_returns_error
     start_server
     initialize_session
     send_line('{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"nonexistent","arguments":{}}}')
