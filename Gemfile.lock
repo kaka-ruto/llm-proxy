@@ -1,3 +1,10 @@
+PATH
+  remote: ../ask-mcp
+  specs:
+    ask-mcp (0.2.0)
+      httpx (~> 1.4)
+      json-schema (~> 5.0)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -47,6 +54,9 @@ GEM
     faraday-net_http (3.4.4)
       net-http (~> 0.5)
     hashdiff (1.2.1)
+    http-2 (1.2.0)
+    httpx (1.8.0)
+      http-2 (>= 1.2.0)
     io-console (0.8.2)
     irb (1.18.0)
       pp (>= 0.6.0)
@@ -54,6 +64,8 @@ GEM
       rdoc (>= 4.0.0)
       reline (>= 0.4.2)
     json (2.20.0)
+    json-schema (5.1.0)
+      addressable (~> 2.8)
     logger (1.7.0)
     minitest (5.27.0)
     mocha (3.1.0)
@@ -138,6 +150,7 @@ DEPENDENCIES
   ask-agent
   ask-core
   ask-llm-providers
+  ask-mcp!
   ask-schema
   ask-tools
   ask-tools-shell
@@ -161,6 +174,7 @@ CHECKSUMS
   ask-auth (0.1.1) sha256=ee3cbe3239145ab1b27f9760fb13ad8a25129a29a5c4b2355a9ead633f002ada
   ask-core (0.2.1) sha256=2ad208695cdb06729683012878cf48b63d2224fda6e8c9e3b8804b35b05d2cfb
   ask-llm-providers (0.2.2) sha256=e0194f582e096a4cfff3bbc704ee4b1e521968e57a54d4902699fbedc75e5347
+  ask-mcp (0.2.0)
   ask-sandbox-providers (0.1.2) sha256=388d2486d6d8f0b78a5fc87f90d56095892f88dff6197b74e081ea96833c0500
   ask-schema (0.1.1) sha256=1be1c107c2f7cdacde9cf8d4dfc004e586f652c2b979e1829fab748f66ca98bd
   ask-skills (0.2.2) sha256=b41cd44de3b887cf75d29a972d78327c444c2718b313e06014b172d3ba495f8c
@@ -178,9 +192,12 @@ CHECKSUMS
   faraday-multipart (1.2.0) sha256=7d89a949693714176f612323ca13746a2ded204031a6ba528adee788694ef757
   faraday-net_http (3.4.4) sha256=0e78af151747ed1b00f33e25973b4bc220d7f16c00c39676817c8b12331eb588
   hashdiff (1.2.1) sha256=9c079dbc513dfc8833ab59c0c2d8f230fa28499cc5efb4b8dd276cf931457cd1
+  http-2 (1.2.0) sha256=5bed923379ae67895d3bde440502219543da2885104b46ed7d604f5990efad1c
+  httpx (1.8.0) sha256=10b300875be99cbc3497397278cf99632262567886f3582ee25ce492bdadbe2a
   io-console (0.8.2) sha256=d6e3ae7a7cc7574f4b8893b4fca2162e57a825b223a177b7afa236c5ef9814cc
   irb (1.18.0) sha256=de9454a0703a54704b9811a5ef31a60c86949fbf4013fcf244fabc7c775248e3
   json (2.20.0) sha256=9362bc6e55a952b056abf9167cf053358181c904cb70cd6eee0808ea830fc32b
+  json-schema (5.1.0) sha256=c12729e346dce58ecc9be07301f4f247aeba1e3daae208e867278f3d27c64eb7
   logger (1.7.0) sha256=196edec7cc44b66cfb40f9755ce11b392f21f7967696af15d274dde7edff0203
   minitest (5.27.0) sha256=2d3b17f8a36fe7801c1adcffdbc38233b938eb0b4966e97a6739055a45fa77d5
   mocha (3.1.0) sha256=75f42d69ebfb1f10b32489dff8f8431d37a418120ecdfc07afe3bc183d4e1d56

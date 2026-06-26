@@ -24,6 +24,9 @@ module LLMProxy
         start_callback_server
       when "enable"
         Codex.enable(LLMProxy.default_model, config)
+      when "mcp"
+        LLMProxy::MCPServer.start
+
       when "disable"
         Codex.disable
       when "-h", "--help"

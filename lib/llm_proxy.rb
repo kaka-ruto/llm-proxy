@@ -25,5 +25,7 @@ require_relative "llm_proxy/protocols/openai_responses"
 require_relative "llm_proxy/protocols/anthropic_messages"
 require_relative "llm_proxy/goals"
 require_relative "llm_proxy/codex"
+require_relative "llm_proxy/mcp_server"
+
 require_relative "llm_proxy/cli"
 require_relative "llm_proxy/server"
