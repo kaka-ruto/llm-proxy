@@ -14,7 +14,7 @@ gem "ask-tools"
 gem "ask-schema"
 gem "ask-web-search"
 gem "ask-tools-shell"
-gem "ask-mcp"
+gem "ask-mcp", "~> 0.4"
 # Local development overrides (uncomment to use local copies):
 # gem "ask-core", path: "../ask-core"
 

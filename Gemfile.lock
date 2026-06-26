@@ -18,7 +18,7 @@ GEM
       faraday (>= 2.0)
       faraday-multipart (>= 1.0)
       json
-    ask-mcp (0.3.0)
+    ask-mcp (0.4.0)
       httpx (~> 1.4)
       json-schema (~> 5.0)
     ask-sandbox-providers (0.1.2)
@@ -29,7 +29,7 @@ GEM
     ask-tools-shell (0.3.4)
       ask-sandbox-providers (>= 0.1)
       ask-tools (>= 0.1)
-    ask-web-search (0.2.1)
+    ask-web-search (0.2.2)
       ask-tools (>= 0.1)
     base64 (0.3.0)
     bigdecimal (4.1.2)
@@ -146,7 +146,7 @@ DEPENDENCIES
   ask-agent
   ask-core
   ask-llm-providers
-  ask-mcp
+  ask-mcp (~> 0.4)
   ask-schema
   ask-tools
   ask-tools-shell
@@ -170,13 +170,13 @@ CHECKSUMS
   ask-auth (0.1.1) sha256=ee3cbe3239145ab1b27f9760fb13ad8a25129a29a5c4b2355a9ead633f002ada
   ask-core (0.2.1) sha256=2ad208695cdb06729683012878cf48b63d2224fda6e8c9e3b8804b35b05d2cfb
   ask-llm-providers (0.2.2) sha256=e0194f582e096a4cfff3bbc704ee4b1e521968e57a54d4902699fbedc75e5347
-  ask-mcp (0.3.0) sha256=a9fa586e2706180ccb2ec275a8e9335a9b416713b8179b97281734b7cbb6e78c
+  ask-mcp (0.4.0) sha256=3578ee0cbe19e65f20c206710f7c57af69b362c9647dc51acee111ed18a7b9dc
   ask-sandbox-providers (0.1.2) sha256=388d2486d6d8f0b78a5fc87f90d56095892f88dff6197b74e081ea96833c0500
   ask-schema (0.1.1) sha256=1be1c107c2f7cdacde9cf8d4dfc004e586f652c2b979e1829fab748f66ca98bd
   ask-skills (0.2.2) sha256=b41cd44de3b887cf75d29a972d78327c444c2718b313e06014b172d3ba495f8c
   ask-tools (0.2.4) sha256=c7f6fbcb99ed9e8201316300c4d6295f4e2df1dca5cec1d10de4c3bb2b2aa7a7
   ask-tools-shell (0.3.4) sha256=15deeff7a5f74003f2eaf0a803d310844e8bbe1f768506182a133a394a587332
-  ask-web-search (0.2.1) sha256=29c376e687c06447d7ba30ad31551c5731a01bf066f093568215cf9298029b05
+  ask-web-search (0.2.2) sha256=5d3b93c22470fb011340dc29d5ab393b15f1f49012a3ea9259271abf851df149
   base64 (0.3.0) sha256=27337aeabad6ffae05c265c450490628ef3ebd4b67be58257393227588f5a97b
   bigdecimal (4.1.2) sha256=53d217666027eab4280346fba98e7d5b66baaae1b9c3c1c0ffe89d48188a3fbd
   bundler (4.0.12) sha256=7f8b757d28dfb636e7b24fba2344ac6dd13b5b24f4b46d62573d483f211825ac
