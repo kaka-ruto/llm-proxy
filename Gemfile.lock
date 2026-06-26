@@ -150,7 +150,7 @@ DEPENDENCIES
   ask-schema
   ask-tools
   ask-tools-shell
-  ask-web-search
+  ask-web-search (~> 0.2)
   debug
   minitest (~> 5.0)
   mocha (~> 3.0)

@@ -12,7 +12,7 @@ gem "ask-llm-providers"
 gem "ask-agent"
 gem "ask-tools"
 gem "ask-schema"
-gem "ask-web-search"
+gem "ask-web-search", "~> 0.2"
 gem "ask-tools-shell"
 gem "ask-mcp", "~> 0.4"
 # Local development overrides (uncomment to use local copies):
