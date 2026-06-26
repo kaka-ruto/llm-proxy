@@ -1,10 +1,3 @@
-PATH
-  remote: ../ask-mcp
-  specs:
-    ask-mcp (0.2.0)
-      httpx (~> 1.4)
-      json-schema (~> 5.0)
-
 GEM
   remote: https://rubygems.org/
   specs:
@@ -25,6 +18,9 @@ GEM
       faraday (>= 2.0)
       faraday-multipart (>= 1.0)
       json
+    ask-mcp (0.3.0)
+      httpx (~> 1.4)
+      json-schema (~> 5.0)
     ask-sandbox-providers (0.1.2)
     ask-schema (0.1.1)
     ask-skills (0.2.2)
@@ -150,7 +146,7 @@ DEPENDENCIES
   ask-agent
   ask-core
   ask-llm-providers
-  ask-mcp!
+  ask-mcp
   ask-schema
   ask-tools
   ask-tools-shell
@@ -174,7 +170,7 @@ CHECKSUMS
   ask-auth (0.1.1) sha256=ee3cbe3239145ab1b27f9760fb13ad8a25129a29a5c4b2355a9ead633f002ada
   ask-core (0.2.1) sha256=2ad208695cdb06729683012878cf48b63d2224fda6e8c9e3b8804b35b05d2cfb
   ask-llm-providers (0.2.2) sha256=e0194f582e096a4cfff3bbc704ee4b1e521968e57a54d4902699fbedc75e5347
-  ask-mcp (0.2.0)
+  ask-mcp (0.3.0) sha256=a9fa586e2706180ccb2ec275a8e9335a9b416713b8179b97281734b7cbb6e78c
   ask-sandbox-providers (0.1.2) sha256=388d2486d6d8f0b78a5fc87f90d56095892f88dff6197b74e081ea96833c0500
   ask-schema (0.1.1) sha256=1be1c107c2f7cdacde9cf8d4dfc004e586f652c2b979e1829fab748f66ca98bd
   ask-skills (0.2.2) sha256=b41cd44de3b887cf75d29a972d78327c444c2718b313e06014b172d3ba495f8c

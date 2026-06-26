@@ -2,7 +2,7 @@ source "https://rubygems.org"
 
 ruby ">= 3.2"
 
-# ask-rb ecosystem (replaces ruby_llm)
+# ask-rb ecosystem
 #
 # When developing / testing local changes: uncomment the `path:` lines
 # and comment out the rubygems lines above them.
@@ -14,16 +14,9 @@ gem "ask-tools"
 gem "ask-schema"
 gem "ask-web-search"
 gem "ask-tools-shell"
-gem "ask-mcp", path: "../ask-mcp"
-  # Local development overrides (uncomment to use local copies):
-  # gem "ask-core", path: "../ask-core"
-  # gem "ask-llm-providers", path: "../ask-llm-providers"
-  # gem "ask-agent", path: "../ask-agent"
-  # gem "ask-tools", path: "../ask-tools"
-  # gem "ask-schema", path: "../ask-schema"
-  # gem "ask-web-search", path: "../ask-web-search"
-  # gem "ask-tools-shell", path: "../ask-tools-shell"
-  # gem "ask-mcp", path: "../ask-mcp"
+gem "ask-mcp"
+# Local development overrides (uncomment to use local copies):
+# gem "ask-core", path: "../ask-core"
 
 gem "sinatra", "~> 4.0"
 gem "sqlite3", "~> 2.0"
