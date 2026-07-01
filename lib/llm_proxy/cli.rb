@@ -1,6 +1,8 @@
 module LLMProxy
   module CLI
     COMMANDS = %w[server enable disable].freeze
+    CLIENTS = %w[codex zcode].freeze
+    DEFAULT_CLIENT = "codex".freeze
 
     def self.run!(args = ARGV)
       load_env
@@ -23,12 +25,30 @@ module LLMProxy
         puts "Waiting for OAuth callback on http://localhost:1455/auth/callback..."
         start_callback_server
       when "enable"
-        Codex.enable(LLMProxy.default_model, config)
+        client, model = parse_client_args(rest)
+        case client
+        when "codex"
+          Codex.enable(resolve_model(model, config), config)
+        when "zcode"
+          ZCode.enable(resolve_model(model, config), config)
+        else
+          warn "Unknown client: #{client}. Supported: #{CLIENTS.join(", ")}"
+          exit 1
+        end
       when "mcp"
         LLMProxy::MCPServer.start
 
       when "disable"
-        Codex.disable
+        client, = parse_client_args(rest)
+        case client
+        when "codex"
+          Codex.disable
+        when "zcode"
+          ZCode.disable
+        else
+          warn "Unknown client: #{client}. Supported: #{CLIENTS.join(", ")}"
+          exit 1
+        end
       when "-h", "--help"
         print_help
       when "-v", "--version"
@@ -56,6 +76,53 @@ module LLMProxy
       end
     end
 
+    # Parse `enable`/`disable` arguments: an optional client name
+    # (codex|zcode, defaults to codex) and, for enable only, --model MODEL_ID.
+    # Accepts `--model X`, `--model=X`, or a bare positional model id.
+    def self.parse_client_args(args)
+      client = DEFAULT_CLIENT
+      model = nil
+      expect_model_next = false
+
+      args.each_with_index do |arg, _i|
+        if expect_model_next
+          model = arg
+          expect_model_next = false
+          next
+        end
+
+        case arg
+        when /\A--model=(.+)\z/
+          model = Regexp.last_match(1)
+        when "--model"
+          expect_model_next = true
+        when /\A--/
+          warn "Unknown option: #{arg}"
+          exit 1
+        when *CLIENTS
+          client = arg
+        else
+          model = arg
+        end
+      end
+
+      if expect_model_next
+        warn "--model requires a value"
+        exit 1
+      end
+
+      [client, model]
+    end
+
+    # Resolve the model id from --model, else default_model, else first catalog
+    # model id. Matches the fallback chain the Codex tests previously asserted.
+    def self.resolve_model(explicit, config)
+      explicit ||
+        LLMProxy.default_model ||
+        config.models.first&.id ||
+        "model"
+    end
+
     def self.start_server(config)
       host = config.server[:host] || "127.0.0.1"
       port = config.server[:port] || 8765
@@ -68,7 +135,7 @@ module LLMProxy
       puts ""
       puts "  POST /v1/chat/completions   — OpenAI Chat (Cursor, Aider)"
       puts "  POST /v1/responses           — OpenAI Responses (Codex Desktop)"
-      puts "  POST /v1/messages            — Anthropic Messages (Claude Code)"
+      puts "  POST /v1/messages            — Anthropic Messages (Claude Code, ZCode)"
       puts "  GET  /v1/models              — List models"
       puts "  GET  /health                 — Health check"
       puts ""
@@ -86,12 +153,16 @@ module LLMProxy
       puts "Usage: llm-proxy [command]"
       puts ""
       puts "Commands:"
-      puts "  enable              Route Codex through llm-proxy (config.toml)"
-      puts "  disable             Restore Codex to native (config.toml)"
-      puts "  server              Start the proxy server (default)"
-      puts "  login               Log in to ChatGPT OAuth"
-      puts "  -h, --help          Show this help"
-      puts "  -v, --version       Show version"
+      puts "  enable [codex|zcode] [--model ID]  Route a client through llm-proxy"
+      puts "  disable [codex|zcode]              Restore a client to its native config"
+      puts "  server                             Start the proxy server (default)"
+      puts "  login                              Log in to ChatGPT OAuth"
+      puts "  -h, --help                         Show this help"
+      puts "  -v, --version                      Show version"
+      puts ""
+      puts "Clients (default: codex):"
+      puts "  codex   Codex Desktop  — writes ~/.codex/config.toml (OpenAI Responses)"
+      puts "  zcode   ZCode          — writes ~/.zcode/v2/config.json (Anthropic Messages)"
       puts ""
       puts "Endpoints:"
       puts "  POST /api/goals          Goal management (Codex /goal support)"

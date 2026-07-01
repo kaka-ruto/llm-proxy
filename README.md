@@ -2,13 +2,14 @@
 
 > **For Research Purposes Only**
 
-A Ruby HTTP proxy that exposes any LLM provider through multiple wire protocols simultaneously. Lets you use the same models in **Codex Desktop**, **Claude Code**, **Cursor**, and any other client, without changing provider configs per tool.
+A Ruby HTTP proxy that exposes any LLM provider through multiple wire protocols simultaneously. Lets you use the same models in **ZCode**, **Codex Desktop**, **Claude Code**, **Cursor**, and any other client, without changing provider configs per tool.
 
 ```
                     ┌─────────────────────┐
- Codex Desktop ────▶│  POST /v1/responses │
- Claude Code ──────▶│  POST /v1/messages  │── ask-llm-providers ──▶ OpenAI / Anthropic / Google
- Cursor / Aider ───▶│  POST /v1/chat/comp │                       OpenRouter / OpenCode / ...
+ ZCode ────────────▶│                     │
+ Codex Desktop ────▶│  POST /v1/messages  │── ask-llm-providers ──▶ OpenAI / Anthropic / Google
+ Claude Code ──────▶│  POST /v1/responses │                       OpenRouter / OpenCode / ...
+ Cursor / Aider ───▶│  POST /v1/chat/comp │
                     └─────────────────────┘
 ```
 
@@ -37,8 +38,11 @@ curl http://127.0.0.1:8765/v1/chat/completions \
 
 ```bash
 llm-proxy server            # Start the HTTP proxy (default command)
-llm-proxy enable            # Install proxy provider into Codex config
-llm-proxy disable           # Restore Codex to native (ChatGPT)
+llm-proxy enable codex      # Install proxy provider into Codex config
+llm-proxy enable zcode      # Install proxy provider into ZCode config
+llm-proxy enable zcode --model kimi-k2.6   # Use a specific model
+llm-proxy disable codex     # Restore Codex to native (ChatGPT)
+llm-proxy disable zcode     # Remove proxy provider from ZCode config
 llm-proxy login             # ChatGPT OAuth login (opens browser)
 llm-proxy -h, --help        # Show help
 llm-proxy -v, --version     # Show version
@@ -49,7 +53,7 @@ llm-proxy -v, --version     # Show version
 The proxy integrates with Codex as a custom model provider. Enable it:
 
 ```bash
-llm-proxy enable
+llm-proxy enable codex
 ```
 
 This adds the `[model_providers.llm_proxy]` section to `~/.codex/config.toml` with a bearer token, model, and wire protocol config. Models appear in Codex's model picker automatically.
@@ -57,7 +61,7 @@ This adds the `[model_providers.llm_proxy]` section to `~/.codex/config.toml` wi
 To restore native ChatGPT:
 
 ```bash
-llm-proxy disable
+llm-proxy disable codex
 ```
 
 ### After a Codex update
@@ -65,13 +69,13 @@ llm-proxy disable
 If models stop appearing in Codex after an update:
 
 ```bash
-llm-proxy enable    # rewrites the proxy config
+llm-proxy enable codex    # rewrites the proxy config
 # then restart Codex
 ```
 
 That's it — the proxy config lives in `~/.codex/config.toml` (your user config),
 not in the Codex app bundle, so it usually survives updates. If Codex resets
-the config.toml during an update, `enable` will restore it.
+the config.toml during an update, `enable codex` will restore it.
 
 ## Usage with Claude Code
 
@@ -93,6 +97,30 @@ Or add to `~/.claude/settings.local.json`:
 }
 ```
 
+## Usage with ZCode
+
+ZCode speaks the Anthropic Messages protocol, which the proxy already serves at `POST /v1/messages`. Enable it:
+
+```bash
+llm-proxy enable zcode
+```
+
+This adds a custom `"LLM Proxy"` provider to `~/.zcode/v2/config.json` with all models from `config.yml` exposed in ZCode's model picker. The original config is backed up to `.zcode-shim/`.
+
+To use a specific model instead of the default:
+
+```bash
+llm-proxy enable zcode --model kimi-k2.6
+```
+
+To remove the proxy provider and restore ZCode's original config:
+
+```bash
+llm-proxy disable zcode
+```
+
+Restart ZCode after enabling or disabling.
+
 ## Usage with Cursor / Aider
 
 ```bash
@@ -109,7 +137,7 @@ aider --openai-api-base http://127.0.0.1:8765/v1 --model kimi-k2.6
 |----------|--------|--------|
 | `POST /v1/chat/completions` | OpenAI chat completions | Cursor, Aider, open-interpreter |
 | `POST /v1/responses` | OpenAI Responses API | Codex Desktop |
-| `POST /v1/messages` | Anthropic Messages API | Claude Code CLI |
+| `POST /v1/messages` | Anthropic Messages API | Claude Code CLI, ZCode |
 | `POST /api/goals` | Goal management | Codex /goal support |
 | `GET /v1/models` | OpenAI models list | Model discovery |
 | `GET /health` | Health check | Monitoring |
@@ -182,18 +210,21 @@ POST /v1/responses
 llm-proxy/
 ├── bin/
 │   ├── llm-proxy              # CLI entry point
+│   ├── test                   # Rails-style test runner
 │   ├── codex-with-proxy       # Launch llm-proxy + Codex
 │   └── codex-without-proxy    # Launch Codex natively
 ├── config.yml                 # Model definitions
 ├── .env                       # API keys (gitignored)
 ├── logs/development.log       # Request log
-├── .codex-shim/               # Generated artifacts (gitignored)
+├── .codex-shim/               # Codex config backup (gitignored)
+├── .zcode-shim/               # ZCode config backup (gitignored)
 └── lib/
     ├── llm_proxy.rb           # Entry point
     └── llm_proxy/
         ├── server.rb          # Sinatra HTTP server
         ├── cli.rb             # CLI command dispatch
         ├── codex.rb           # Codex config.toml integration
+        ├── zcode.rb           # ZCode config.json integration
         ├── config.rb          # YAML config loader
         ├── model_catalog.rb   # Model lookup / OpenAPI format
         ├── goals.rb           # Codex /goal persistence
@@ -202,7 +233,7 @@ llm-proxy/
             ├── base.rb                   # Protocol base class
             ├── openai_completions.rb     # POST /v1/chat/completions
             ├── openai_responses.rb       # POST /v1/responses (Codex)
-            └── anthropic_messages.rb     # POST /v1/messages (Claude Code)
+            └── anthropic_messages.rb     # POST /v1/messages (Claude Code, ZCode)
 ```
 
 ## Dependencies

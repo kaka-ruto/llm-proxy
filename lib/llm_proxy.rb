@@ -3,6 +3,8 @@ require "json"
 require "sinatra/base"
 
 require "ask/agent"
+require "ask/tools/shell/apply_patch"
+require "ask/web_search"
 
 module LLMProxy
   class Error < StandardError; end
@@ -25,6 +27,7 @@ require_relative "llm_proxy/protocols/openai_responses"
 require_relative "llm_proxy/protocols/anthropic_messages"
 require_relative "llm_proxy/goals"
 require_relative "llm_proxy/codex"
+require_relative "llm_proxy/zcode"
 require_relative "llm_proxy/mcp_server"
 
 require_relative "llm_proxy/cli"

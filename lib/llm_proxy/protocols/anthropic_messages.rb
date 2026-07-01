@@ -1,14 +1,57 @@
 module LLMProxy
   module Protocols
     class AnthropicMessages < Base
+      CONTENT_TYPE_TEXT = "text".freeze
+      CONTENT_TYPE_TOOL_USE = "tool_use".freeze
+      CONTENT_TYPE_TOOL_RESULT = "tool_result".freeze
+
       def endpoint
         "/v1/messages"
       end
 
       def normalize(body, logger: nil)
-        messages = (body["messages"] || []).map do |msg|
-          { role: normalize_role(msg["role"]), content: msg["content"] }.tap do |h|
-            h[:content] = msg["content"].is_a?(String) ? msg["content"] : extract_anthropic_content(msg["content"])
+        messages = []
+        (body["messages"] || []).each do |msg|
+          raw_role = normalize_role(msg["role"])
+          content = msg["content"]
+
+          if content.is_a?(String)
+            messages << { role: raw_role, content: content }
+          elsif content.is_a?(Array)
+            text_parts = []
+            tool_uses = []
+            tool_results = []
+
+            content.each do |block|
+              case block["type"]
+              when CONTENT_TYPE_TEXT
+                text_parts << block["text"]
+              when CONTENT_TYPE_TOOL_USE
+                tool_uses << block
+              when CONTENT_TYPE_TOOL_RESULT
+                tool_results << block
+              end
+            end
+
+            if raw_role == :assistant && tool_uses.any?
+              entry = { role: raw_role, content: text_parts.join("") }
+              calls = tool_uses.map do |tu|
+                call_id = tu["id"] || "toolu_#{SecureRandom.hex(4)}"
+                args = tu["input"]
+                args_json = args.is_a?(Hash) ? JSON.generate(args) : args.to_s
+                { id: call_id, type: "function", function: { name: tu["name"], arguments: args_json } }
+              end
+              entry[:tool_calls] = calls
+              messages << entry
+            elsif raw_role == :user && tool_results.any?
+              messages << { role: raw_role, content: text_parts.join("") } if text_parts.any?
+              tool_results.each do |tr|
+                text = extract_tool_result_content(tr)
+                messages << { role: :tool, content: text, tool_call_id: tr["tool_use_id"] }
+              end
+            else
+              messages << { role: raw_role, content: text_parts.join("") }
+            end
           end
         end
 
@@ -43,8 +86,11 @@ module LLMProxy
       def start_events(model:)
         @next_block_index = 0
         @text_buffer = ""
+        @thinking_text = ""
         @text_block_opened = false
         @text_block_index = nil
+        @thinking_block_opened = false
+        @thinking_block_index = nil
         @tool_calls_buffer = []
         @tool_call_indices = []
 
@@ -67,7 +113,7 @@ module LLMProxy
         events = []
 
         if chunk.thinking.to_s.length > 0
-          events.concat(thinking_events(chunk.thinking.to_s, model:))
+          events.concat(thinking_events(chunk.thinking.to_s))
         end
 
         if chunk.content&.length&.> 0
@@ -75,7 +121,7 @@ module LLMProxy
         end
 
         if chunk.tool_calls&.any?
-          events.concat(tool_call_events(chunk.tool_calls, model:))
+          events.concat(tool_call_events(chunk.tool_calls))
         end
 
         events
@@ -85,12 +131,20 @@ module LLMProxy
         events = []
 
         if @text_block_opened
+          @text_block_opened = false
           events << { type: "content_block_stop", index: @text_block_index }
         end
+
+        if @thinking_block_opened
+          @thinking_block_opened = false
+          events << { type: "content_block_stop", index: @thinking_block_index }
+        end
+        @thinking_text = ""
 
         @tool_call_indices.each do |idx|
           events << { type: "content_block_stop", index: idx }
         end
+        @tool_call_indices.clear
 
         usage_out = {}
         if usage
@@ -143,27 +197,36 @@ module LLMProxy
         }]
       end
 
-      def thinking_events(text, model:)
-        idx = next_block_index
+      def thinking_events(text)
+        unless @thinking_block_opened
+          @thinking_block_opened = true
+          @thinking_text = text
+          @thinking_block_index = next_block_index
+          return [
+            {
+              type: "content_block_start",
+              index: @thinking_block_index,
+              content_block: { type: "thinking", thinking: text }
+            }
+          ]
+        end
+
+        @thinking_text += text
         [{
-          type: "content_block_start",
-          index: idx,
-          content_block: { type: "thinking", thinking: text }
-        }, {
           type: "content_block_delta",
-          index: idx,
+          index: @thinking_block_index,
           delta: { type: "thinking_delta", thinking: text }
         }]
       end
 
-      def tool_call_events(tool_calls, model:)
+      def tool_call_events(tool_calls)
         events = []
         tool_calls.each do |id, tc|
           @tool_calls_buffer << tc
           idx = next_block_index
           @tool_call_indices << idx
 
-          arg_text = tc.arguments.is_a?(String) ? tc.arguments : JSON.generate(tc.arguments)
+          arg_raw = tc.arguments.is_a?(String) ? tc.arguments : JSON.generate(tc.arguments)
 
           events << {
             type: "content_block_start",
@@ -179,7 +242,7 @@ module LLMProxy
           events << {
             type: "content_block_delta",
             index: idx,
-            delta: { type: "input_json_delta", partial_json: arg_text }
+            delta: { type: "input_json_delta", partial_json: arg_raw }
           }
         end
         events
@@ -193,6 +256,16 @@ module LLMProxy
 
       def chunk_tool_calls?
         @tool_calls_buffer.any?
+      end
+
+      def extract_tool_result_content(block)
+        content = block["content"]
+        case content
+        when String then content
+        when Array then content.map { |c| c["text"] }.compact.join("\n")
+        when nil then ""
+        else content.to_s
+        end
       end
     end
   end

@@ -1,18 +1,62 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
+# Rails-style test runner for llm-proxy.
+#
+#   bin/test                 # run the full aggregated suite (same as `rake test`)
+#   bin/test test/test_zcode.rb
+#   bin/test test_zcode      # bare name: matches test/test_zcode.rb
+#   bin/test zcode           # any unique substring of a test file name
+#   bin/test --name /enable # pass through to minitest's --name filter
+#
+# Any unrecognized arg starting with "-" is passed straight through to minitest
+# (so --name, --verbose, --seed, etc. all work). A bare token is resolved to a
+# file by matching it against every test file; if it's unique, that file runs.
+
+APP_ROOT = File.expand_path("..", __dir__)
+Dir.chdir(APP_ROOT)
+
 $LOAD_PATH.unshift File.expand_path("../test", __dir__)
 $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 
-require "fileutils"
+require "rake/file_list"
 
-tests = ARGV.empty? ? Dir["test/**/*_test.rb", "test/**/test_*.rb"] : ARGV
-
-tests.each do |file|
-  file = file.sub(/\A\.\//, "")
-  file = File.expand_path(file, __dir__ + "/..") unless file.start_with?("/")
-  next unless File.exist?(file)
-
-  $stderr.puts "\n==> #{File.basename(file)}"
-  system("ruby", "-Itest", "-Ilib", file)
+ALL_TESTS = Rake::FileList.new do |fl|
+  fl.add("test/**/*_test.rb", "test/**/test_*.rb")
+  fl.exclude("test/test_helper.rb")
+  fl.exclude("test/manual/**")
 end
+
+files = []
+passthrough = []
+ARGV.each do |arg|
+  if arg.start_with?("-")
+    passthrough << arg
+  elsif arg =~ /\.rb\Z/ || File.exist?(arg)
+    files << arg.sub(/\A\.\//, "")
+  else
+    # Bare name fragment: resolve against the known test files.
+    matches = ALL_TESTS.grep(/#{Regexp.escape(arg)}/i)
+    if matches.empty?
+      warn "No test file matches #{arg.inspect}"
+      exit 1
+    elsif matches.size > 1
+      warn "#{arg.inspect} is ambiguous, matches:"
+      matches.each { |m| warn "  #{m}" }
+      exit 1
+    else
+      files << matches.first
+    end
+  end
+end
+
+files = ALL_TESTS if files.empty?
+
+# Run minitest directly in-process with an aggregated runner (like `rake test`
+# and `bin/rails test`). `test_helper.rb` is required once to set up the shared
+# environment (config, VCR, etc.).
+require "bundler/setup"
+require_relative "../test/test_helper"
+
+# Load each test file into the same process so the run is aggregated.
+files.each { |f| require File.expand_path(f) }

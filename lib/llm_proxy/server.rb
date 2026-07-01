@@ -147,6 +147,52 @@ module LLMProxy
       headers "Access-Control-Allow-Headers" => "Content-Type"
       200
     end
+    post "/api/tools/apply_patch" do
+      content_type :json
+      headers "Access-Control-Allow-Origin" => "*"
+      headers "Access-Control-Allow-Methods" => "POST, OPTIONS"
+      headers "Access-Control-Allow-Headers" => "Content-Type"
+
+      body = JSON.parse(@request_body)
+      patch_text = body["patchText"].to_s
+
+      result = Ask::Tools::ApplyPatch.new.execute(patchText: patch_text)
+      if result.ok?
+        text = result.output.is_a?(Hash) ? (result.output[:summary] || result.output.to_s) : result.output.to_s
+        { ok: true, summary: text }.to_json
+      else
+        { ok: false, error: result.error_message }.to_json
+      end
+    end
+
+    options "/api/tools/apply_patch" do
+      headers "Access-Control-Allow-Origin" => "*"
+      headers "Access-Control-Allow-Methods" => "POST, OPTIONS"
+      headers "Access-Control-Allow-Headers" => "Content-Type"
+      200
+    end
+
+    post "/api/tools/web_search" do
+      content_type :json
+      headers "Access-Control-Allow-Origin" => "*"
+      headers "Access-Control-Allow-Methods" => "POST, OPTIONS"
+      headers "Access-Control-Allow-Headers" => "Content-Type"
+
+      body = JSON.parse(@request_body)
+      query = body["query"].to_s
+
+      result = Ask::Tools::WebSearch.new.execute(query: query)
+      { ok: true, results: result.to_s }.to_json
+    rescue => e
+      { ok: false, error: e.message }.to_json
+    end
+
+    options "/api/tools/web_search" do
+      headers "Access-Control-Allow-Origin" => "*"
+      headers "Access-Control-Allow-Methods" => "POST, OPTIONS"
+      headers "Access-Control-Allow-Headers" => "Content-Type"
+      200
+    end
 
     get "/v1/models" do
       content_type :json
@@ -327,10 +373,10 @@ module LLMProxy
         if msg.tool_call?
           stop_reason = "tool_use"
           msg.tool_calls.values.each_with_index do |tc, idx|
-            args = tc.arguments.is_a?(String) ? tc.arguments : JSON.generate(tc.arguments)
+            args_obj = tc.arguments.is_a?(String) ? (JSON.parse(tc.arguments) rescue tc.arguments) : tc.arguments
             content << {
               type: "tool_use", id: tc.id || "toolu_#{idx}",
-              name: tc.name, input: args
+              name: tc.name, input: args_obj
             }
           end
         elsif msg.content&.length&.> 0

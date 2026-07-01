@@ -1,5 +1,6 @@
 .env
 .codex-shim/
+.zcode-shim/
 *.pid
 *.log
 .auth.json
