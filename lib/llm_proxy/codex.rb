@@ -5,7 +5,7 @@ require "securerandom"
 
 module LLMProxy
   module Codex
-    RUNTIME_DIR = File.expand_path("../../.codex-shim", __dir__)
+    RUNTIME_DIR = File.expand_path("../../.llm-proxy", __dir__)
     TOKEN_FILE = File.join(RUNTIME_DIR, "bearer_token")
     AUTH_SCRIPT = File.join(RUNTIME_DIR, "auth-helper.sh")
     CODEX_CONFIG = File.expand_path("~/.codex/config.toml")

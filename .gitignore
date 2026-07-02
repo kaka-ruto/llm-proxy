@@ -1,9 +1,8 @@
-.env
-.codex-shim/
-.zcode-shim/
-*.pid
-*.log
 .auth.json
+.env
+.llm-proxy/
 .oauth_session.json
-tmp/
+*.log
+*.pid
 logs/
+tmp/

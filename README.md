@@ -105,7 +105,7 @@ ZCode speaks the Anthropic Messages protocol, which the proxy already serves at 
 llm-proxy enable zcode
 ```
 
-This adds a custom `"LLM Proxy"` provider to `~/.zcode/v2/config.json` with all models from `config.yml` exposed in ZCode's model picker. The original config is backed up to `.zcode-shim/`.
+This adds a custom `"LLM Proxy"` provider to `~/.zcode/v2/config.json` with all models from `config.yml` exposed in ZCode's model picker. The original config is backed up to `.llm-proxy/`.
 
 To use a specific model instead of the default:
 
@@ -216,8 +216,7 @@ llm-proxy/
 ├── config.yml                 # Model definitions
 ├── .env                       # API keys (gitignored)
 ├── logs/development.log       # Request log
-├── .codex-shim/               # Codex config backup (gitignored)
-├── .zcode-shim/               # ZCode config backup (gitignored)
+├── .llm-proxy/               # Codex config backup (gitignored)
 └── lib/
     ├── llm_proxy.rb           # Entry point
     └── llm_proxy/

@@ -19,13 +19,13 @@ module LLMProxy
     class << self
       # Overridable paths so tests can point at a tmpdir instead of the user's
       # real config. Defaults resolve to the user's ~/.zcode/v2/config.json and
-      # an in-repo .zcode-shim/ runtime dir for backups.
+      # an in-repo .llm-proxy/ runtime dir for backups.
       def config_file
         File.expand_path(ENV["ZCODE_CONFIG"] || "~/.zcode/v2/config.json")
       end
 
       def runtime_dir
-        File.expand_path(ENV["ZCODE_RUNTIME_DIR"] || "../../.zcode-shim", __dir__)
+        File.expand_path(ENV["ZCODE_RUNTIME_DIR"] || "../../.llm-proxy", __dir__)
       end
 
       def backup_file
