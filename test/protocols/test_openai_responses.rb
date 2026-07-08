@@ -77,7 +77,7 @@ describe LLMProxy::Protocols::OpenAIResponses do
       _(tools.first[:name]).must_equal "exec_command"
     end
 
-    it "filters custom/grammar tools" do
+    it "passes custom tools through with default params" do
       body = {
         "input" => [],
         "tools" => [
@@ -86,19 +86,23 @@ describe LLMProxy::Protocols::OpenAIResponses do
         ]
       }
       tools = @protocol.normalize(body)[:tools]
-      _(tools.size).must_equal 1
-      _(tools.first[:name]).must_equal "exec_command"
+      _(tools.size).must_equal 2
+      names = tools.map { |t| t[:name] }
+      _(names).must_include "apply_patch"
+      _(names).must_include "exec_command"
     end
 
-    it "filters tools without parameters" do
+    it "provides default params for tools without parameters" do
       body = {
         "input" => [],
         "tools" => [
-          { "type" => "function", "name" => "broken_tool" }
+          { "type" => "function", "name" => "bare_tool" }
         ]
       }
       tools = @protocol.normalize(body)[:tools]
-      _(tools).must_be :empty?
+      _(tools.size).must_equal 1
+      _(tools.first[:name]).must_equal "bare_tool"
+      _(tools.first[:parameters]).must_equal({ "type" => "object" })
     end
   end
 

@@ -20,16 +20,16 @@ module LLMProxy
         raw_tools = body["tools"] || []
         tools = raw_tools.filter_map do |t|
           type = t["type"]
+          # For "function" type, the definition is nested under t["function"].
+          # All other types (web_search, custom, namespace, tool_search, etc.)
+          # use the tool hash itself as the definition.
           fn = case type
                when "function" then t["function"] || t
-               when "custom" then t
-               else
-                 logger&.debug("  Non-function tool filtered out: #{type}")
-                 next
+               else t
                end
           name = fn["name"].to_s.strip
           next if name.empty?
-          params = fn["parameters"]
+          params = fn["parameters"] || { "type" => "object" }
           next unless params.is_a?(Hash)
           { name: name, description: fn["description"] || "", parameters: params }
         end
