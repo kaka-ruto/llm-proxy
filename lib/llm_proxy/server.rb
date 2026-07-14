@@ -477,10 +477,9 @@ module LLMProxy
       raw_tools = normalized[:tools] || []
 
       # Inject proxy MCP tools so models can call apply_patch and web_search
-      proxy_tool_names = %w[apply_patch web_search]
       proxy_tool_defs = [
-        { name: "apply_patch", description: "Edit files using a unified diff format. Wrap all changes in a \"*** Begin Patch\" / \"*** End Patch\" envelope. Each file section starts with a header: \"*** Add File: <path>\" for new files, \"*** Update File: <path>\" for changes, or \"*** Delete File: <path>\" for removals. Prefix new lines with +.", parameters: { "type" => "object", "properties" => { "patchText" => { "type" => "string", "description" => "The full patch text describing all file changes" } }, "required" => ["patchText"] } },
-        { name: "web_search", description: "Search the web for current information. Get up-to-date results, recent events, or facts that may have changed.", parameters: { "type" => "object", "properties" => { "query" => { "type" => "string", "description" => "The search query" } }, "required" => ["query"] } }
+        { name: "mcp__ask_tools__apply_patch", description: "Edit files using a unified diff format. Wrap all changes in a \"*** Begin Patch\" / \"*** End Patch\" envelope. Each file section starts with a header: \"*** Add File: <path>\" for new files, \"*** Update File: <path>\" for changes, or \"*** Delete File: <path>\" for removals. Prefix new lines with +.", parameters: { "type" => "object", "properties" => { "patchText" => { "type" => "string", "description" => "The full patch text describing all file changes" } }, "required" => ["patchText"] } },
+        { name: "mcp__ask_tools__web_search", description: "Search the web for current information. Get up-to-date results, recent events, or facts that may have changed.", parameters: { "type" => "object", "properties" => { "query" => { "type" => "string", "description" => "The search query" } }, "required" => ["query"] } }
       ]
       # Add proxy tools that are not already defined by the request
       request_tool_names = raw_tools.map { |t| t[:name] || t["name"] || t.dig("function", "name") }.compact
