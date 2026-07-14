@@ -182,4 +182,71 @@ http_interactions:
         user wants me to calculate 2+3 using the calculator tool.","tool_calls":[{"index":0,"id":"call_00_JlD6nzBY6KwsLgXDpxQX7449","type":"function","function":{"name":"calculator","arguments":"{\"a\":
         2, \"b\": 3}"}}]},"logprobs":null,"finish_reason":"tool_calls"}],"usage":{"prompt_tokens":447,"completion_tokens":74,"total_tokens":521,"prompt_tokens_details":{"cached_tokens":0},"completion_tokens_details":{"reasoning_tokens":15},"prompt_cache_hit_tokens":0,"prompt_cache_miss_tokens":447},"system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402"}'
   recorded_at: Tue, 14 Jul 2026 00:36:14 GMT
+- request:
+    method: post
+    uri: https://api.deepseek.com/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"model":"deepseek-v4-flash","messages":[{"role":"system","content":"You
+        are running as model: deepseek-v4-flash (provider: deepseek)."},{"role":"user","content":"What
+        is 2+3? Use the calculator tool."}],"stream":false,"tools":[{"type":"function","function":{"name":"calculator","description":"Add
+        numbers","parameters":{"type":"object","properties":{"a":{"type":"number"},"b":{"type":"number"}},"required":["a","b"]}}},{"type":"function","function":{"name":"apply_patch","description":"Edit
+        files using a unified diff format. Wrap all changes in a \"*** Begin Patch\"
+        / \"*** End Patch\" envelope. Each file section starts with a header: \"***
+        Add File: <path>\" for new files, \"*** Update File: <path>\" for changes,
+        or \"*** Delete File: <path>\" for removals. Prefix new lines with +.","parameters":{"type":"object","properties":{"patchText":{"type":"string","description":"The
+        full patch text describing all file changes"}},"required":["patchText"]}}},{"type":"function","function":{"name":"web_search","description":"Search
+        the web for current information. Get up-to-date results, recent events, or
+        facts that may have changed.","parameters":{"type":"object","properties":{"query":{"type":"string","description":"The
+        search query"}},"required":["query"]}}}]}'
+    headers:
+      Content-Type:
+      - application/json
+      Authorization:
+      - Bearer <BEARER_TOKEN>
+      User-Agent:
+      - Faraday v2.14.3
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Date:
+      - Tue, 14 Jul 2026 00:50:34 GMT
+      Server:
+      - elb
+      Vary:
+      - origin, access-control-request-method, access-control-request-headers
+      Access-Control-Allow-Credentials:
+      - 'true'
+      X-Ds-Trace-Id:
+      - 8ec30c51fe7f0327c7f2ff06a719edcb
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains; preload
+      X-Content-Type-Options:
+      - nosniff
+      X-Cache:
+      - Miss from cloudfront
+      Via:
+      - 1.1 7827f24b0495f2c77467698f3e94d58a.cloudfront.net (CloudFront)
+      X-Amz-Cf-Pop:
+      - NBO50-P1
+      X-Amz-Cf-Id:
+      - pVMyj0Z-ObOl03iTJlKjTyFswKI3N-lR_KagoxalvV4JIrIr7qSOVg==
+    body:
+      encoding: ASCII-8BIT
+      string: '{"id":"8c2ef394-4e14-40cb-b947-75a458bd416e","object":"chat.completion","created":1783990234,"model":"deepseek-v4-flash","choices":[{"index":0,"message":{"role":"assistant","content":"","reasoning_content":"The
+        user wants me to calculate 2+3 using the calculator tool.","tool_calls":[{"index":0,"id":"call_00_uZBE0hUGj43us91KEGpB2330","type":"function","function":{"name":"calculator","arguments":"{\"a\":
+        2, \"b\": 3}"}}]},"logprobs":null,"finish_reason":"tool_calls"}],"usage":{"prompt_tokens":512,"completion_tokens":74,"total_tokens":586,"prompt_tokens_details":{"cached_tokens":0},"completion_tokens_details":{"reasoning_tokens":15},"prompt_cache_hit_tokens":0,"prompt_cache_miss_tokens":512},"system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402"}'
+  recorded_at: Tue, 14 Jul 2026 00:50:35 GMT
 recorded_with: VCR 6.4.0
