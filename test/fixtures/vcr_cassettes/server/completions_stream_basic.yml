@@ -267,5 +267,93 @@ http_interactions:
         data: [DONE]
 
   recorded_at: Thu, 18 Jun 2026 18:12:10 GMT
+- request:
+    method: post
+    uri: https://api.deepseek.com/chat/completions
+    body:
+      encoding: UTF-8
+      string: '{"model":"deepseek-v4-flash","messages":[{"role":"system","content":"You
+        are running as model: deepseek-v4-flash (provider: deepseek)."},{"role":"user","content":"Say
+        hello in one word"}],"stream":true,"tools":[{"type":"function","function":{"name":"apply_patch","description":"Edit
+        files using unified diff format. Wrap changes in *** Begin Patch / *** End
+        Patch envelope.","parameters":{"type":"object","properties":{"patchText":{"type":"string","description":"The
+        full patch text"}},"required":["patchText"]}}},{"type":"function","function":{"name":"web_search","description":"Search
+        the web for current information. Get up-to-date results, recent events, or
+        facts.","parameters":{"type":"object","properties":{"query":{"type":"string","description":"The
+        search query"}},"required":["query"]}}}]}'
+    headers:
+      Content-Type:
+      - application/json
+      Authorization:
+      - Bearer <BEARER_TOKEN>
+      User-Agent:
+      - Faraday v2.14.3
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Content-Type:
+      - text/event-stream; charset=utf-8
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Date:
+      - Tue, 14 Jul 2026 00:36:19 GMT
+      X-Content-Type-Options:
+      - nosniff
+      Server:
+      - elb
+      Cache-Control:
+      - no-cache
+      Vary:
+      - origin, access-control-request-method, access-control-request-headers
+      Access-Control-Allow-Credentials:
+      - 'true'
+      X-Ds-Trace-Id:
+      - '009ce041925d9401cfe76cd9a7247e8e'
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains; preload
+      X-Cache:
+      - Miss from cloudfront
+      Via:
+      - 1.1 a9374984807710a3becf6aa7d2bd2bae.cloudfront.net (CloudFront)
+      X-Amz-Cf-Pop:
+      - NBO50-P1
+      X-Amz-Cf-Id:
+      - orFC5J3bA5B8w--A-9YMyFohocvK_dv9AR1BZne5GLMKyY-ZzniC6Q==
+    body:
+      encoding: UTF-8
+      string: |+
+        data: {"id":"fd54ac35-14c6-4493-b545-d28fd7559962","object":"chat.completion.chunk","created":1783989379,"model":"deepseek-v4-flash","system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402","choices":[{"index":0,"delta":{"role":"assistant","content":null,"reasoning_content":""},"logprobs":null,"finish_reason":null}]}
+
+        data: {"id":"fd54ac35-14c6-4493-b545-d28fd7559962","object":"chat.completion.chunk","created":1783989379,"model":"deepseek-v4-flash","system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402","choices":[{"index":0,"delta":{"content":null,"reasoning_content":"The"},"logprobs":null,"finish_reason":null}]}
+
+        data: {"id":"fd54ac35-14c6-4493-b545-d28fd7559962","object":"chat.completion.chunk","created":1783989379,"model":"deepseek-v4-flash","system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402","choices":[{"index":0,"delta":{"content":null,"reasoning_content":" user"},"logprobs":null,"finish_reason":null}]}
+
+        data: {"id":"fd54ac35-14c6-4493-b545-d28fd7559962","object":"chat.completion.chunk","created":1783989379,"model":"deepseek-v4-flash","system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402","choices":[{"index":0,"delta":{"content":null,"reasoning_content":" wants"},"logprobs":null,"finish_reason":null}]}
+
+        data: {"id":"fd54ac35-14c6-4493-b545-d28fd7559962","object":"chat.completion.chunk","created":1783989379,"model":"deepseek-v4-flash","system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402","choices":[{"index":0,"delta":{"content":null,"reasoning_content":" a"},"logprobs":null,"finish_reason":null}]}
+
+        data: {"id":"fd54ac35-14c6-4493-b545-d28fd7559962","object":"chat.completion.chunk","created":1783989379,"model":"deepseek-v4-flash","system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402","choices":[{"index":0,"delta":{"content":null,"reasoning_content":" one"},"logprobs":null,"finish_reason":null}]}
+
+        data: {"id":"fd54ac35-14c6-4493-b545-d28fd7559962","object":"chat.completion.chunk","created":1783989379,"model":"deepseek-v4-flash","system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402","choices":[{"index":0,"delta":{"content":null,"reasoning_content":"-word"},"logprobs":null,"finish_reason":null}]}
+
+        data: {"id":"fd54ac35-14c6-4493-b545-d28fd7559962","object":"chat.completion.chunk","created":1783989379,"model":"deepseek-v4-flash","system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402","choices":[{"index":0,"delta":{"content":null,"reasoning_content":" greeting"},"logprobs":null,"finish_reason":null}]}
+
+        data: {"id":"fd54ac35-14c6-4493-b545-d28fd7559962","object":"chat.completion.chunk","created":1783989379,"model":"deepseek-v4-flash","system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402","choices":[{"index":0,"delta":{"content":null,"reasoning_content":"."},"logprobs":null,"finish_reason":null}]}
+
+        data: {"id":"fd54ac35-14c6-4493-b545-d28fd7559962","object":"chat.completion.chunk","created":1783989379,"model":"deepseek-v4-flash","system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402","choices":[{"index":0,"delta":{"content":"Hello","reasoning_content":null},"logprobs":null,"finish_reason":null}]}
+
+        data: {"id":"fd54ac35-14c6-4493-b545-d28fd7559962","object":"chat.completion.chunk","created":1783989379,"model":"deepseek-v4-flash","system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402","choices":[{"index":0,"delta":{"content":"","reasoning_content":null},"logprobs":null,"finish_reason":"stop"}],"usage":{"prompt_tokens":386,"completion_tokens":10,"total_tokens":396,"prompt_tokens_details":{"cached_tokens":384},"completion_tokens_details":{"reasoning_tokens":8},"prompt_cache_hit_tokens":384,"prompt_cache_miss_tokens":2}}
+
+        data: [DONE]
+
+  recorded_at: Tue, 14 Jul 2026 00:36:19 GMT
 recorded_with: VCR 6.4.0
 ...
