@@ -3,20 +3,15 @@ require "tmpdir"
 require "fileutils"
 
 describe LLMProxy::ZCode do
-  # A small, deterministic catalog for entry-construction assertions.
-  def build_catalog(models)
-    LLMProxy::ModelCatalog.new(
-      LLMProxy::Config.new(server: { port: 8765 }, models: models)
-    )
-  end
-
-  def model(id, provider: "deepseek", context_window: 1000, max_tokens: 100,
-            capabilities: [])
-    LLMProxy::ModelConfig.new(
-      id: id, provider: provider, display_name: id,
-      context_window: context_window, max_tokens: max_tokens,
+  def model_struct(id, provider: "deepseek", context_window: 1000,
+                   max_output_tokens: 100, capabilities: [])
+    OpenStruct.new(
+      id: id, provider: provider,
+      context_window: context_window, max_output_tokens: max_output_tokens,
       capabilities: capabilities
-    )
+    ).tap do |m|
+      m.define_singleton_method(:supports?) { |cap| capabilities.include?(cap.to_s) }
+    end
   end
 
   # ----- Provider entry construction (no file I/O) -----
@@ -26,7 +21,7 @@ describe LLMProxy::ZCode do
       entry = LLMProxy::ZCode.build_provider_entry(
         port: 8765, token: "tok123",
         default_model: "deepseek-v4-flash",
-        models: [model("deepseek-v4-flash")]
+        models: [model_struct("deepseek-v4-flash")]
       )
 
       _(entry["name"]).must_equal "LLM Proxy"
@@ -50,7 +45,7 @@ describe LLMProxy::ZCode do
     end
 
     it "includes every catalog model in the models map" do
-      models = [model("deepseek-v4-flash"), model("kimi-k2.6"), model("gpt-4o")]
+      models = [model_struct("deepseek-v4-flash"), model_struct("kimi-k2.6"), model_struct("gpt-4o")]
       entry = LLMProxy::ZCode.build_provider_entry(
         port: 8765, token: "t", default_model: "deepseek-v4-flash", models: models
       )
@@ -61,7 +56,7 @@ describe LLMProxy::ZCode do
   describe "build_models_map" do
     it "carries context window and max_tokens into limit" do
       map = LLMProxy::ZCode.build_models_map(
-        [model("m1", context_window: 200_000, max_tokens: 8192)],
+        [model_struct("m1", context_window: 200_000, max_output_tokens: 8192)],
         "m1"
       )
       _(map["m1"]["limit"]["context"]).must_equal 200_000
@@ -69,21 +64,21 @@ describe LLMProxy::ZCode do
     end
 
     it "sets text-only modalities by default" do
-      map = LLMProxy::ZCode.build_models_map([model("m1")], "m1")
+      map = LLMProxy::ZCode.build_models_map([model_struct("m1")], "m1")
       _(map["m1"]["modalities"]["input"]).must_equal ["text"]
       _(map["m1"]["modalities"]["output"]).must_equal ["text"]
     end
 
     it "adds image input modality for vision-capable models" do
       map = LLMProxy::ZCode.build_models_map(
-        [model("gpt-4o", capabilities: ["vision"])], "gpt-4o"
+        [model_struct("gpt-4o", capabilities: ["vision"])], "gpt-4o"
       )
       _(map["gpt-4o"]["modalities"]["input"]).must_include "image"
     end
 
     it "enables reasoning for reasoning-capable models" do
       map = LLMProxy::ZCode.build_models_map(
-        [model("kimi", capabilities: ["reasoning"])], "kimi"
+        [model_struct("kimi", capabilities: ["reasoning"])], "kimi"
       )
       _(map["kimi"]["reasoning"]["enabled"]).must_equal true
       _(map["kimi"]["reasoning"]["variants"]).must_equal ["enabled", "off"]
@@ -91,8 +86,8 @@ describe LLMProxy::ZCode do
 
     it "defaults the highlighted model's reasoning to enabled, others to off" do
       models = [
-        model("default", capabilities: ["reasoning"]),
-        model("other", capabilities: ["reasoning"])
+        model_struct("default", capabilities: ["reasoning"]),
+        model_struct("other", capabilities: ["reasoning"])
       ]
       map = LLMProxy::ZCode.build_models_map(models, "default")
       _(map["default"]["reasoning"]["defaultVariant"]).must_equal "enabled"
@@ -114,9 +109,11 @@ describe LLMProxy::ZCode do
       ENV["ZCODE_CONFIG"] = @config_file
       ENV["ZCODE_RUNTIME_DIR"] = @runtime_dir
 
+      Ask::ModelCatalog.reset_instance!
+      Ask::LLM::Catalog.load!
+
       @cfg = LLMProxy::Config.new(
-        server: { port: 8765 },
-        models: [model("deepseek-v4-flash", capabilities: ["reasoning", "tools"])]
+        server: { port: 8765 }
       )
     end
 

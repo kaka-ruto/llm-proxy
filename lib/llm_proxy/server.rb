@@ -106,7 +106,7 @@ module LLMProxy
 
     get "/health" do
       content_type :json
-      { status: "ok", models: LLMProxy.catalog.all.size }.to_json
+      { status: "ok", models: Ask::ModelCatalog.instance.all.size }.to_json
     end
 
     post "/api/goals" do
@@ -196,7 +196,9 @@ module LLMProxy
 
     get "/v1/models" do
       content_type :json
-      { object: "list", data: LLMProxy.catalog.to_openai_list }.to_json
+      { object: "list", data: Ask::ModelCatalog.instance.all.map { |m|
+        { id: m.id, object: "model", created: Time.now.to_i, owned_by: m.provider }
+      } }.to_json
     end
 
     [
@@ -214,7 +216,7 @@ module LLMProxy
         body = resolve_model(body, protocol)
         normalized = protocol.normalize(body, logger: @log)
         model_id = body["model"] || normalized[:model]
-        model_info = LLMProxy.catalog.lookup(model_id)
+        model_info = lookup_model(model_id)
         is_streaming = normalized[:stream] != false
 
         unless model_info
@@ -280,14 +282,14 @@ module LLMProxy
     # Resolve model, with fallback logic for unknown models.
     def resolve_model(body, protocol)
       model_id = protocol.model_from(body)
-      model_info = LLMProxy.catalog.lookup(model_id)
+      model_info = lookup_model(model_id)
 
       if model_info
         body
       else
         fallback_id = LLMProxy.default_model
-        fallback = fallback_id ? LLMProxy.catalog.lookup(fallback_id) : nil
-        fallback ||= LLMProxy.catalog.all.first
+        fallback = fallback_id ? lookup_model(fallback_id) : nil
+        fallback ||= Ask::ModelCatalog.instance.all.first
         if fallback
           @log.warn("  Unknown model: #{model_id}, falling back to #{fallback.id}")
           body.merge("model" => fallback.id)
@@ -295,6 +297,12 @@ module LLMProxy
           body
         end
       end
+    end
+
+    def lookup_model(model_id)
+      Ask::ModelCatalog.find(model_id)
+    rescue Ask::ModelNotFound
+      nil
     end
 
 # Tools that the proxy can execute directly without MCP routing.
@@ -633,7 +641,8 @@ end
         Ask::ModelInfo.new(
           id: model_info.id,
           provider: model_info.provider,
-          context_window: model_info.context_window
+          context_window: model_info.context_window,
+          capabilities: model_info.capabilities
         )
       )
     end

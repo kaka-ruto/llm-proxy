@@ -9,7 +9,8 @@ describe "Manual: Web Search Integration" do
   include VCRTestHelpers
 
   before do
-    LLMProxy.catalog = LLMProxy::ModelCatalog.new(LLMProxy::Config.load(CONFIG_PATH))
+    Ask::ModelCatalog.reset_instance!
+    Ask::LLM::Catalog.load!
     LLMProxy.default_model = "deepseek-v4-flash"
   end
 

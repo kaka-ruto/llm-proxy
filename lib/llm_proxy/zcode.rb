@@ -35,7 +35,7 @@ module LLMProxy
       # Public: write a custom provider into ZCode's config pointing at the proxy.
       #
       # model_id  - the catalog model id to highlight as default (String).
-      # config    - the LLMProxy::Config (for server port + model catalog).
+      # config    - the LLMProxy::Config (for server port).
       def enable(model_id, config)
         port = config.server[:port] || 8765
         token = SecureRandom.hex(32)
@@ -55,7 +55,7 @@ module LLMProxy
           port: port,
           token: token,
           default_model: model_id,
-          models: config.models
+          models: Ask::ModelCatalog.instance.all
         )
         providers[PROVIDER_KEY] = entry
 
@@ -147,7 +147,7 @@ module LLMProxy
         entry = {
           "limit" => {
             "context" => model.context_window,
-            "output" => model.max_tokens
+            "output" => model.max_output_tokens
           },
           "modalities" => {
             "input" => ["text"],

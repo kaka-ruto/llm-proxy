@@ -6,21 +6,21 @@ require "ask/agent"
 require "ask/tools/shell/apply_patch"
 require "ask/web_search"
 
+require "ask/llm/catalog"
+
 module LLMProxy
   class Error < StandardError; end
   class ToolCallStop < Error; end
 
   class << self
-    attr_accessor :catalog, :default_model
+    attr_accessor :default_model
   end
 
-  self.catalog = nil
   self.default_model = nil
 end
 
 require_relative "llm_proxy/auth"
 require_relative "llm_proxy/config"
-require_relative "llm_proxy/model_catalog"
 require_relative "llm_proxy/protocols/base"
 require_relative "llm_proxy/protocols/openai_completions"
 require_relative "llm_proxy/protocols/openai_responses"

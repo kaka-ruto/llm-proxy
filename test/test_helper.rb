@@ -86,7 +86,7 @@ module TestSupport
   end
 
   def setup_catalog
-    LLMProxy.catalog = LLMProxy::ModelCatalog.new(test_config)
+    Ask::LLM::Catalog.load!
     LLMProxy.default_model = test_config.server[:default_model]
   end
 

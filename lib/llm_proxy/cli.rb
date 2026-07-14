@@ -7,9 +7,11 @@ module LLMProxy
     def self.run!(args = ARGV)
       load_env
 
+      require "ask/llm/catalog"
+      Ask::LLM::Catalog.load!
+
       config_path = ENV.fetch("LLM_PROXY_CONFIG", File.expand_path("../../config.yml", __dir__))
       config = LLMProxy::Config.load(config_path)
-      LLMProxy.catalog = LLMProxy::ModelCatalog.new(config)
       LLMProxy.default_model = config.server[:default_model]
 
       command = args.first
@@ -116,10 +118,10 @@ module LLMProxy
 
     # Resolve the model id from --model, else default_model, else first catalog
     # model id. Matches the fallback chain the Codex tests previously asserted.
-    def self.resolve_model(explicit, config)
+    def self.resolve_model(explicit, _config)
       explicit ||
         LLMProxy.default_model ||
-        config.models.first&.id ||
+        Ask::ModelCatalog.instance.all.first&.id ||
         "model"
     end
 
@@ -131,7 +133,7 @@ module LLMProxy
       default_model = LLMProxy.default_model || "not set"
       puts "LLM Proxy v0.1.0 — http://#{host}:#{port}"
       puts "  Config: #{ENV.fetch("LLM_PROXY_CONFIG", "config.yml")}"
-      puts "  Models: #{LLMProxy.catalog.all.size} (default: #{default_model})"
+      puts "  Models: #{Ask::ModelCatalog.instance.all.size} (default: #{default_model})"
       puts ""
       puts "  POST /v1/chat/completions   — OpenAI Chat (Cursor, Aider)"
       puts "  POST /v1/responses           — OpenAI Responses (Codex Desktop)"

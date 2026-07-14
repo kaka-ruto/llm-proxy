@@ -13,7 +13,8 @@ describe "LLM Proxy — Chat Completions" do
   REQ_HEADERS = { "CONTENT_TYPE" => "application/json", "HTTP_HOST" => "localhost" }.freeze
 
   before do
-    LLMProxy.catalog = LLMProxy::ModelCatalog.new(LLMProxy::Config.load(CONFIG_PATH))
+    Ask::ModelCatalog.reset_instance!
+    Ask::LLM::Catalog.load!
     LLMProxy.default_model = "deepseek-v4-flash"
   end
 
