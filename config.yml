@@ -5,8 +5,8 @@ server:
 
 models:
   - id: "deepseek-v4-flash"
-    provider: "deepseek"
-    display_name: "DeepSeek V4 Flash (Direct)"
+    provider: "opencode"
+    display_name: "DeepSeek V4 Flash (OpenCode Zen)"
     context_window: 1000000
     max_tokens: 384000
     capabilities: ["tools", "streaming", "reasoning"]

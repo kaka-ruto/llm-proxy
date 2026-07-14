@@ -2,254 +2,11 @@
 http_interactions:
 - request:
     method: post
-    uri: https://api.deepseek.com/chat/completions
-    body:
-      encoding: UTF-8
-      string: '{"model":"deepseek-v4-flash","messages":[{"role":"user","content":"Say
-        hello in one word"}],"stream":false}'
-    headers:
-      Content-Type:
-      - application/json
-      Authorization:
-      - Bearer <BEARER_TOKEN>
-      User-Agent:
-      - Faraday v2.14.2
-      Accept-Encoding:
-      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
-      Accept:
-      - "*/*"
-  response:
-    status:
-      code: 200
-      message: OK
-    headers:
-      Content-Type:
-      - application/json
-      Transfer-Encoding:
-      - chunked
-      Connection:
-      - keep-alive
-      Date:
-      - Thu, 18 Jun 2026 03:49:22 GMT
-      Server:
-      - elb
-      Vary:
-      - origin, access-control-request-method, access-control-request-headers
-      Access-Control-Allow-Credentials:
-      - 'true'
-      X-Ds-Trace-Id:
-      - 71108164f8d73c3fd9cfef73c0768473
-      Strict-Transport-Security:
-      - max-age=31536000; includeSubDomains; preload
-      X-Content-Type-Options:
-      - nosniff
-      X-Cache:
-      - Miss from cloudfront
-      Via:
-      - 1.1 6407f446730d4a015477359b48f9a2a4.cloudfront.net (CloudFront)
-      X-Amz-Cf-Pop:
-      - NBO50-P1
-      X-Amz-Cf-Id:
-      - rFvMvpZi73pTKLJNsqE9V2rR1HmvZ5mjpWzS4cQMUubJESNS5MYblg==
-    body:
-      encoding: ASCII-8BIT
-      string: '{"id":"30afc3e5-bbd0-4b69-892c-8c366561d05d","object":"chat.completion","created":1781754562,"model":"deepseek-v4-flash","choices":[{"index":0,"message":{"role":"assistant","content":"Hello","reasoning_content":"We
-        are asked: \"Say hello in one word\". So response should be a single word
-        greeting. Commonly \"Hello\" or \"Hi\". But since it says \"in one word\",
-        just \"Hello.\""},"logprobs":null,"finish_reason":"stop"}],"usage":{"prompt_tokens":9,"completion_tokens":43,"total_tokens":52,"prompt_tokens_details":{"cached_tokens":0},"completion_tokens_details":{"reasoning_tokens":41},"prompt_cache_hit_tokens":0,"prompt_cache_miss_tokens":9},"system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402"}'
-  recorded_at: Thu, 18 Jun 2026 03:49:23 GMT
-- request:
-    method: post
-    uri: https://api.deepseek.com/chat/completions
+    uri: https://opencode.ai/zen/v1/chat/completions
     body:
       encoding: UTF-8
       string: '{"model":"deepseek-v4-flash","messages":[{"role":"system","content":"You
-        are running as model: deepseek-v4-flash (provider: deepseek)."},{"role":"user","content":"Say
-        hello in one word"}],"stream":false}'
-    headers:
-      Content-Type:
-      - application/json
-      Authorization:
-      - Bearer <BEARER_TOKEN>
-      User-Agent:
-      - Faraday v2.14.3
-      Accept-Encoding:
-      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
-      Accept:
-      - "*/*"
-  response:
-    status:
-      code: 200
-      message: OK
-    headers:
-      Content-Type:
-      - application/json
-      Transfer-Encoding:
-      - chunked
-      Connection:
-      - keep-alive
-      Date:
-      - Thu, 18 Jun 2026 18:12:16 GMT
-      Server:
-      - elb
-      Vary:
-      - origin, access-control-request-method, access-control-request-headers
-      Access-Control-Allow-Credentials:
-      - 'true'
-      X-Ds-Trace-Id:
-      - 4fc44c64c4afe4a8c185a37b9b8845cc
-      Strict-Transport-Security:
-      - max-age=31536000; includeSubDomains; preload
-      X-Content-Type-Options:
-      - nosniff
-      X-Cache:
-      - Miss from cloudfront
-      Via:
-      - 1.1 e83fef0199e70c3c661f13d1e0b1b14e.cloudfront.net (CloudFront)
-      X-Amz-Cf-Pop:
-      - NBO50-P1
-      X-Amz-Cf-Id:
-      - I9M_WMevBow_kYhP8pMnrZzCzHyWKWHteRFVUozb5NOXtZS0rzb0IQ==
-    body:
-      encoding: ASCII-8BIT
-      string: '{"id":"58b200db-ff67-43e7-b282-ccb2b4ce98c0","object":"chat.completion","created":1781806336,"model":"deepseek-v4-flash","choices":[{"index":0,"message":{"role":"assistant","content":"Hello","reasoning_content":"We
-        need to respond with a single word greeting. \"Hello\" is one word."},"logprobs":null,"finish_reason":"stop"}],"usage":{"prompt_tokens":27,"completion_tokens":19,"total_tokens":46,"prompt_tokens_details":{"cached_tokens":0},"completion_tokens_details":{"reasoning_tokens":17},"prompt_cache_hit_tokens":0,"prompt_cache_miss_tokens":27},"system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402"}'
-  recorded_at: Thu, 18 Jun 2026 18:12:17 GMT
-- request:
-    method: post
-    uri: https://api.deepseek.com/chat/completions
-    body:
-      encoding: UTF-8
-      string: '{"model":"deepseek-v4-flash","messages":[{"role":"system","content":"You
-        are running as model: deepseek-v4-flash (provider: deepseek)."},{"role":"user","content":"Say
-        hello in one word"}],"stream":false,"tools":[{"type":"function","function":{"name":"apply_patch","description":"Edit
-        files using unified diff format. Wrap changes in *** Begin Patch / *** End
-        Patch envelope.","parameters":{"type":"object","properties":{"patchText":{"type":"string","description":"The
-        full patch text"}},"required":["patchText"]}}},{"type":"function","function":{"name":"web_search","description":"Search
-        the web for current information. Get up-to-date results, recent events, or
-        facts.","parameters":{"type":"object","properties":{"query":{"type":"string","description":"The
-        search query"}},"required":["query"]}}}]}'
-    headers:
-      Content-Type:
-      - application/json
-      Authorization:
-      - Bearer <BEARER_TOKEN>
-      User-Agent:
-      - Faraday v2.14.3
-      Accept-Encoding:
-      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
-      Accept:
-      - "*/*"
-  response:
-    status:
-      code: 200
-      message: OK
-    headers:
-      Content-Type:
-      - application/json
-      Transfer-Encoding:
-      - chunked
-      Connection:
-      - keep-alive
-      Date:
-      - Tue, 14 Jul 2026 00:36:15 GMT
-      Server:
-      - elb
-      Vary:
-      - origin, access-control-request-method, access-control-request-headers
-      Access-Control-Allow-Credentials:
-      - 'true'
-      X-Ds-Trace-Id:
-      - ca7ee8bb117206314577317ce336292f
-      Strict-Transport-Security:
-      - max-age=31536000; includeSubDomains; preload
-      X-Content-Type-Options:
-      - nosniff
-      X-Cache:
-      - Miss from cloudfront
-      Via:
-      - 1.1 770e7dd62f159e02d9e2f53c7d3a8486.cloudfront.net (CloudFront)
-      X-Amz-Cf-Pop:
-      - NBO50-P2
-      X-Amz-Cf-Id:
-      - JUI76Tbpb64Vugjw4zdUbscNt54jxXronT2iGNPBle4elsLRWiKwNQ==
-    body:
-      encoding: ASCII-8BIT
-      string: '{"id":"4dfdfa6c-e674-4218-940c-6deea69fef6a","object":"chat.completion","created":1783989374,"model":"deepseek-v4-flash","choices":[{"index":0,"message":{"role":"assistant","content":"Hello","reasoning_content":"The
-        user is asking me to say hello in one word."},"logprobs":null,"finish_reason":"stop"}],"usage":{"prompt_tokens":386,"completion_tokens":14,"total_tokens":400,"prompt_tokens_details":{"cached_tokens":0},"completion_tokens_details":{"reasoning_tokens":12},"prompt_cache_hit_tokens":0,"prompt_cache_miss_tokens":386},"system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402"}'
-  recorded_at: Tue, 14 Jul 2026 00:36:15 GMT
-- request:
-    method: post
-    uri: https://api.deepseek.com/chat/completions
-    body:
-      encoding: UTF-8
-      string: '{"model":"deepseek-v4-flash","messages":[{"role":"system","content":"You
-        are running as model: deepseek-v4-flash (provider: deepseek)."},{"role":"user","content":"Say
-        hello in one word"}],"stream":false,"tools":[{"type":"function","function":{"name":"apply_patch","description":"Edit
-        files using a unified diff format. Wrap all changes in a \"*** Begin Patch\"
-        / \"*** End Patch\" envelope. Each file section starts with a header: \"***
-        Add File: <path>\" for new files, \"*** Update File: <path>\" for changes,
-        or \"*** Delete File: <path>\" for removals. Prefix new lines with +.","parameters":{"type":"object","properties":{"patchText":{"type":"string","description":"The
-        full patch text describing all file changes"}},"required":["patchText"]}}},{"type":"function","function":{"name":"web_search","description":"Search
-        the web for current information. Get up-to-date results, recent events, or
-        facts that may have changed.","parameters":{"type":"object","properties":{"query":{"type":"string","description":"The
-        search query"}},"required":["query"]}}}]}'
-    headers:
-      Content-Type:
-      - application/json
-      Authorization:
-      - Bearer <BEARER_TOKEN>
-      User-Agent:
-      - Faraday v2.14.3
-      Accept-Encoding:
-      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
-      Accept:
-      - "*/*"
-  response:
-    status:
-      code: 200
-      message: OK
-    headers:
-      Content-Type:
-      - application/json
-      Transfer-Encoding:
-      - chunked
-      Connection:
-      - keep-alive
-      Date:
-      - Tue, 14 Jul 2026 00:50:38 GMT
-      Server:
-      - elb
-      Vary:
-      - origin, access-control-request-method, access-control-request-headers
-      Access-Control-Allow-Credentials:
-      - 'true'
-      X-Ds-Trace-Id:
-      - a26bc6f0ebde8cf8985b00192a0b8efc
-      Strict-Transport-Security:
-      - max-age=31536000; includeSubDomains; preload
-      X-Content-Type-Options:
-      - nosniff
-      X-Cache:
-      - Miss from cloudfront
-      Via:
-      - 1.1 7de10c127bf742921612565cdc62e340.cloudfront.net (CloudFront)
-      X-Amz-Cf-Pop:
-      - NBO50-P1
-      X-Amz-Cf-Id:
-      - upGln3wn_DawiZT2Ux08C_5Q9QsJPPYd38ZRwgm4V_CBNbcGHSXeMg==
-    body:
-      encoding: ASCII-8BIT
-      string: '{"id":"e32d35fa-8c5d-4bf0-8ff2-baf8b73b9ad3","object":"chat.completion","created":1783990238,"model":"deepseek-v4-flash","choices":[{"index":0,"message":{"role":"assistant","content":"Hello","reasoning_content":"The
-        user wants me to say hello in one word."},"logprobs":null,"finish_reason":"stop"}],"usage":{"prompt_tokens":451,"completion_tokens":13,"total_tokens":464,"prompt_tokens_details":{"cached_tokens":384},"completion_tokens_details":{"reasoning_tokens":11},"prompt_cache_hit_tokens":384,"prompt_cache_miss_tokens":67},"system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402"}'
-  recorded_at: Tue, 14 Jul 2026 00:50:38 GMT
-- request:
-    method: post
-    uri: https://api.deepseek.com/chat/completions
-    body:
-      encoding: UTF-8
-      string: '{"model":"deepseek-v4-flash","messages":[{"role":"system","content":"You
-        are running as model: deepseek-v4-flash (provider: deepseek)."},{"role":"user","content":"Say
+        are running as model: deepseek-v4-flash (provider: opencode)."},{"role":"user","content":"Say
         hello in one word"}],"stream":false,"tools":[{"type":"function","function":{"name":"mcp__ask_tools__apply_patch","description":"Edit
         files using a unified diff format. Wrap all changes in a \"*** Begin Patch\"
         / \"*** End Patch\" envelope. Each file section starts with a header: \"***
@@ -275,37 +32,25 @@ http_interactions:
       code: 200
       message: OK
     headers:
+      Date:
+      - Tue, 14 Jul 2026 04:19:13 GMT
       Content-Type:
       - application/json
       Transfer-Encoding:
       - chunked
       Connection:
       - keep-alive
-      Date:
-      - Tue, 14 Jul 2026 00:55:57 GMT
+      Cache-Control:
+      - private, no-store, no-cache, max-age=0
+      Cf-Placement:
+      - remote-ORD
       Server:
-      - elb
-      Vary:
-      - origin, access-control-request-method, access-control-request-headers
-      Access-Control-Allow-Credentials:
-      - 'true'
-      X-Ds-Trace-Id:
-      - 84ccca27e34948d1363721300a2689f1
-      Strict-Transport-Security:
-      - max-age=31536000; includeSubDomains; preload
-      X-Content-Type-Options:
-      - nosniff
-      X-Cache:
-      - Miss from cloudfront
-      Via:
-      - 1.1 55319de59b7ca95c6df929a903349cd4.cloudfront.net (CloudFront)
-      X-Amz-Cf-Pop:
-      - NBO50-P1
-      X-Amz-Cf-Id:
-      - j6RQwkz_1OJCYYCATR7M6Hraf_RkVV3opQvxRzYVbpnGFaGcQNL3Fg==
+      - cloudflare
+      Cf-Ray:
+      - a1adba539eee8141-ATL
     body:
       encoding: ASCII-8BIT
-      string: '{"id":"46b7e6f4-b793-4810-8f47-b0d3c3086866","object":"chat.completion","created":1783990557,"model":"deepseek-v4-flash","choices":[{"index":0,"message":{"role":"assistant","content":"Hello","reasoning_content":"The
-        user wants me to say hello in one word."},"logprobs":null,"finish_reason":"stop"}],"usage":{"prompt_tokens":465,"completion_tokens":13,"total_tokens":478,"prompt_tokens_details":{"cached_tokens":0},"completion_tokens_details":{"reasoning_tokens":11},"prompt_cache_hit_tokens":0,"prompt_cache_miss_tokens":465},"system_fingerprint":"fp_8b330d02d0_prod0820_fp8_kvcache_20260402"}'
-  recorded_at: Tue, 14 Jul 2026 00:55:58 GMT
+      string: '{"id":"30dd8193-30ce-4498-b591-e10929238827-chatcmpl-df0194c","object":"chat.completion","created":1784002753,"model":"deepseek-v4-flash","choices":[{"index":0,"finish_reason":"stop","message":{"role":"assistant","content":"Hello","reasoning_content":"The
+        user is asking me to say hello in one word."}}],"usage":{"prompt_tokens":468,"completion_tokens":15,"total_tokens":483,"prompt_tokens_details":{"cached_tokens":0}},"cost":"0.00006972"}'
+  recorded_at: Tue, 14 Jul 2026 04:19:13 GMT
 recorded_with: VCR 6.4.0

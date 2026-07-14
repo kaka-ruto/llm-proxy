@@ -297,6 +297,56 @@ module LLMProxy
       end
     end
 
+# Tools that the proxy can execute directly without MCP routing.
+PROXY_EXECUTABLE_TOOLS = %w[
+  apply_patch mcp__ask_tools__apply_patch
+  web_search mcp__ask_tools__web_search
+].freeze
+
+# Execute tool calls for proxy-owned tools and feed results back to the chat.
+# Returns the final response after all proxy tool calls are resolved.
+def execute_proxy_tool_loop(chat)
+  max_rounds = 10
+  response = nil
+  max_rounds.times do |round|
+    response = chat.ask(nil)
+    break unless response&.tool_call?
+
+    proxy_calls = response.tool_calls.values.select { |tc| PROXY_EXECUTABLE_TOOLS.include?(tc.name) }
+    break if proxy_calls.empty?
+
+    @log.info("  Executing #{proxy_calls.length} proxy tool(s) (round #{round + 1})")
+    executed = {}
+    proxy_calls.each do |tc|
+      result = execute_tool_call(tc.name, tc.arguments)
+      executed[tc.id] = result.to_s
+    end
+    chat.add_message(role: :assistant, content: nil, tool_calls: executed)
+    executed.each { |id, result| chat.add_message(role: :tool, content: result, tool_call_id: id) }
+  end
+  response
+end
+
+def execute_tool_call(name, arguments)
+  args = arguments.is_a?(String) ? (JSON.parse(arguments) rescue {}) : (arguments || {})
+  sym_args = args.transform_keys(&:to_sym)
+
+  result = case name
+  when "apply_patch", "mcp__ask_tools__apply_patch"
+    Ask::Tools::ApplyPatch.new.execute(**sym_args)
+  when "web_search", "mcp__ask_tools__web_search"
+    Ask::Tools::WebSearch.new.execute(**sym_args)
+  end
+
+  if result.is_a?(Ask::Result)
+    result.error? ? "[Error] #{result.message}" : (result.data[:summary] || result.data.to_s)
+  else
+    result.to_s
+  end
+rescue => e
+  "[Error] #{e.class}: #{e.message}"
+end
+
     def handle_nonstreaming(protocol, chat, model_info)
       response = chat.ask(nil)
       log_model_response(response)
