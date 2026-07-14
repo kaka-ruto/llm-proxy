@@ -18,6 +18,11 @@ module LLMProxy
                 end
         prev_messages = input.filter_map { |item| response_item_to_message(item) }
         raw_tools = body["tools"] || []
+        # Extract tools from additional_tools input items and merge with top-level tools
+        input_tools = input.select { |item| item["type"] == "additional_tools" }
+                           .flat_map { |item| item["tools"] || [] }
+        raw_tools = raw_tools + input_tools unless input_tools.empty?
+        raw_tools = raw_tools.uniq { |t| t["name"] || t.dig("function", "name") }
         tools = raw_tools.filter_map do |t|
           type = t["type"]
           # For "function" type, the definition is nested under t["function"].
@@ -375,6 +380,8 @@ module LLMProxy
           text = summary.map { |s| s["text"] }.compact.join("")
           { role: :assistant, content: nil, summary: summary, thinking: text }
         when "item_reference"
+          nil
+        when "additional_tools"
           nil
         else
           { role: "user", content: item.to_s }
