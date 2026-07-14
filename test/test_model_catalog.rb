@@ -12,36 +12,38 @@ describe "Ask::LLM::Catalog (via proxy)" do
     _(Ask::ModelCatalog.instance.all.size).must_be :>, 50
   end
 
-  it "looks up models by id" do
+  it "finds a model by id (single result)" do
     model = Ask::ModelCatalog.find("deepseek-v4-flash")
-    _(model).wont_be_nil
     _(model.id).must_equal "deepseek-v4-flash"
+  end
+
+  it "finds a model scoped to provider" do
+    model = Ask::ModelCatalog.find("deepseek-v4-flash", provider: "opencode")
     _(model.provider).must_equal "opencode"
   end
 
-  it "returns nil for unknown models" do
-    _(Ask::ModelCatalog.find("nonexistent")).must_be_nil
-  rescue Ask::ModelNotFound
-    :expected
+  it "raises for unknown models" do
+    _{ Ask::ModelCatalog.find("nonexistent") }.must_raise Ask::ModelNotFound
+  end
+
+  it "returns all matches via where" do
+    models = Ask::ModelCatalog.where("deepseek-v4-flash")
+    _(models.length).must_be :>=, 2
+    _(models.map(&:provider)).must_include "opencode"
+    _(models.map(&:provider)).must_include "deepseek"
+  end
+
+  it "returns empty array for unknown via where" do
+    _(Ask::ModelCatalog.where("nonexistent")).must_equal []
   end
 
   it "resolves model aliases" do
     model = Ask::ModelCatalog.find("deepseek-v4")
-    _(model).wont_be_nil
     _(model.id).must_equal "deepseek-v4"
   end
 
-  it "generates OpenAI-compatible model list" do
-    list = Ask::ModelCatalog.instance.all.map { |m|
-      { id: m.id, object: "model", created: Time.now.to_i, owned_by: m.provider }
-    }
-    _(list).must_be_kind_of Array
-    _(list.first).must_include :id
-    _(list.first).must_include :owned_by
-  end
-
   it "checks model capabilities" do
-    model = Ask::ModelCatalog.find("deepseek-v4-flash")
+    model = Ask::ModelCatalog.find("deepseek-v4-flash", provider: "opencode")
     _(model.supports?(:reasoning)).must_equal true
     _(model.supports?(:function_calling)).must_equal true
   end

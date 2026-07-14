@@ -88,6 +88,7 @@ module TestSupport
   def setup_catalog
     Ask::LLM::Catalog.load!
     LLMProxy.default_model = test_config.server[:default_model]
+    LLMProxy.default_provider = test_config.server[:default_provider]
   end
 
   # Build a mock Ask::Chunk for testing protocols

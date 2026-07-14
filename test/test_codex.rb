@@ -6,6 +6,7 @@ describe LLMProxy::Codex do
     Ask::LLM::Catalog.load!
     config = LLMProxy::Config.load(CONFIG_PATH)
     LLMProxy.default_model = config.server[:default_model]
+    LLMProxy.default_provider = config.server[:default_provider]
   end
 
   describe "default_model from config" do

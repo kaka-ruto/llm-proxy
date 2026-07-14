@@ -13,10 +13,11 @@ module LLMProxy
   class ToolCallStop < Error; end
 
   class << self
-    attr_accessor :default_model
+    attr_accessor :default_model, :default_provider
   end
 
   self.default_model = nil
+  self.default_provider = nil
 end
 
 require_relative "llm_proxy/auth"

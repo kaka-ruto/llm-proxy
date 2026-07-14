@@ -300,7 +300,11 @@ module LLMProxy
     end
 
     def lookup_model(model_id)
-      Ask::ModelCatalog.find(model_id)
+      if LLMProxy.default_provider
+        Ask::ModelCatalog.find(model_id, provider: LLMProxy.default_provider)
+      else
+        Ask::ModelCatalog.find(model_id)
+      end
     rescue Ask::ModelNotFound
       nil
     end
@@ -559,6 +563,7 @@ end
       debug_log "Registered #{tools.length} dynamic tools: #{tools.map(&:name).join(', ')}"
       chat = Ask::Agent::Chat.new(
         model: model_info.id,
+        provider: model_info.provider,
         tools: tools,
         temperature: normalized[:temperature]
       )

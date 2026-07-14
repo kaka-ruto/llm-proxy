@@ -13,6 +13,7 @@ module LLMProxy
       config_path = ENV.fetch("LLM_PROXY_CONFIG", File.expand_path("../../config.yml", __dir__))
       config = LLMProxy::Config.load(config_path)
       LLMProxy.default_model = config.server[:default_model]
+      LLMProxy.default_provider = config.server[:default_provider]
 
       command = args.first
       rest = args.drop(1)

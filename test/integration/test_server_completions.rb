@@ -16,6 +16,7 @@ describe "LLM Proxy — Chat Completions" do
     Ask::ModelCatalog.reset_instance!
     Ask::LLM::Catalog.load!
     LLMProxy.default_model = "deepseek-v4-flash"
+    LLMProxy.default_provider = "opencode"
   end
 
   def completions_body(overrides = {})
