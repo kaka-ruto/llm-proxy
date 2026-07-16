@@ -1,17 +1,33 @@
 GEM
   remote: https://rubygems.org/
   specs:
+    activesupport (8.1.3)
+      base64
+      bigdecimal
+      concurrent-ruby (~> 1.0, >= 1.3.1)
+      connection_pool (>= 2.2.5)
+      drb
+      i18n (>= 1.6, < 2)
+      json
+      logger (>= 1.4.2)
+      minitest (>= 5.1)
+      securerandom (>= 0.3)
+      tzinfo (~> 2.0, >= 2.0.5)
+      uri (>= 0.13.1)
     addressable (2.9.0)
       public_suffix (>= 2.0.2, < 8.0)
-    ask-agent (0.2.2)
+    ask-agent (0.3.1)
       ask-core (>= 0.1)
+      ask-instrumentation (>= 0.1)
       ask-llm-providers (>= 0.1)
       ask-skills (>= 0.1)
       ask-tools (>= 0.1)
     ask-auth (0.1.1)
       base64 (~> 0.2)
-    ask-core (0.2.3)
-    ask-llm-providers (0.3.1)
+    ask-core (0.2.5)
+    ask-instrumentation (0.2.1)
+      activesupport (>= 7.0)
+    ask-llm-providers (0.8.2)
       ask-auth (>= 0.1)
       ask-core (>= 0.2.0)
       base64 (~> 0.2)
@@ -33,12 +49,15 @@ GEM
       ask-tools (>= 0.1)
     base64 (0.3.0)
     bigdecimal (4.1.2)
+    concurrent-ruby (1.3.7)
+    connection_pool (3.0.2)
     crack (1.0.1)
       bigdecimal
       rexml
     debug (1.11.1)
       irb (~> 1.10)
       reline (>= 0.3.8)
+    drb (2.2.3)
     erb (6.0.4)
     faraday (2.14.3)
       faraday-net_http (>= 2.0, < 3.5)
@@ -52,6 +71,8 @@ GEM
     http-2 (1.2.0)
     httpx (1.8.0)
       http-2 (>= 1.2.0)
+    i18n (1.15.2)
+      concurrent-ruby (~> 1.0)
     io-console (0.8.2)
     irb (1.18.0)
       pp (>= 0.6.0)
@@ -104,6 +125,7 @@ GEM
       io-console (~> 0.5)
     rexml (3.4.4)
     ruby2_keywords (0.0.5)
+    securerandom (0.4.1)
     sinatra (4.2.1)
       logger (>= 1.6.0)
       mustermann (~> 3.0)
@@ -123,6 +145,8 @@ GEM
     sqlite3 (2.9.5-x86_64-linux-musl)
     tilt (2.7.0)
     tsort (0.2.0)
+    tzinfo (2.0.6)
+      concurrent-ruby (~> 1.0)
     uri (1.1.1)
     vcr (6.4.0)
     webmock (3.26.2)
@@ -165,11 +189,13 @@ DEPENDENCIES
   webmock (~> 3.26)
 
 CHECKSUMS
+  activesupport (8.1.3) sha256=21a5e0dfbd4c3ddd9e1317ec6a4d782fa226e7867dc70b0743acda81a1dca20e
   addressable (2.9.0) sha256=7fdf6ac3660f7f4e867a0838be3f6cf722ace541dd97767fa42bc6cfa980c7af
-  ask-agent (0.2.2)
+  ask-agent (0.3.1) sha256=facf74f158113fb91f617ecf5b22fbe6ea734d524f4fdf2c17579bdc0d68841c
   ask-auth (0.1.1) sha256=ee3cbe3239145ab1b27f9760fb13ad8a25129a29a5c4b2355a9ead633f002ada
-  ask-core (0.2.3) sha256=06171f923ead8027ce8bdaa67f442dccc50d681ca173547b4856c746a2b73770
-  ask-llm-providers (0.3.1) sha256=e1d16b12d833ca2052b4726a7f0938238773efba09aa1e46d22017ecc418c53e
+  ask-core (0.2.5) sha256=43efc547078946a90139280746e952676618a5271a00ee9ab587bac85518081c
+  ask-instrumentation (0.2.1) sha256=0a8d2e2d6653d1b6f551eda0fbabd068c0a9076939f36fa605cd0a13112cdba1
+  ask-llm-providers (0.8.2) sha256=49263e06423b38a14a54dbdd4242d30028923cf01083c08b3f74f77a4a04e462
   ask-mcp (0.4.0) sha256=3578ee0cbe19e65f20c206710f7c57af69b362c9647dc51acee111ed18a7b9dc
   ask-sandbox-providers (0.1.2) sha256=388d2486d6d8f0b78a5fc87f90d56095892f88dff6197b74e081ea96833c0500
   ask-schema (0.1.1) sha256=1be1c107c2f7cdacde9cf8d4dfc004e586f652c2b979e1829fab748f66ca98bd
@@ -180,8 +206,11 @@ CHECKSUMS
   base64 (0.3.0) sha256=27337aeabad6ffae05c265c450490628ef3ebd4b67be58257393227588f5a97b
   bigdecimal (4.1.2) sha256=53d217666027eab4280346fba98e7d5b66baaae1b9c3c1c0ffe89d48188a3fbd
   bundler (4.0.12) sha256=7f8b757d28dfb636e7b24fba2344ac6dd13b5b24f4b46d62573d483f211825ac
+  concurrent-ruby (1.3.7) sha256=4412caec3a5ea2e5fdc52076724c071a81f2c0593d83b2ac8cbb8ca63b3151b0
+  connection_pool (3.0.2) sha256=33fff5ba71a12d2aa26cb72b1db8bba2a1a01823559fb01d29eb74c286e62e0a
   crack (1.0.1) sha256=ff4a10390cd31d66440b7524eb1841874db86201d5b70032028553130b6d4c7e
   debug (1.11.1) sha256=2e0b0ac6119f2207a6f8ac7d4a73ca8eb4e440f64da0a3136c30343146e952b6
+  drb (2.2.3) sha256=0b00d6fdb50995fe4a45dea13663493c841112e4068656854646f418fda13373
   erb (6.0.4) sha256=38e3803694be357fe2bfe312487c74beaf9fb4e5beb3e22498952fe1645b95d9
   faraday (2.14.3) sha256=1882247e6766615c8220b4392bf1d27f6ebb63d8e28267587cef1fb0bf37f278
   faraday-multipart (1.2.0) sha256=7d89a949693714176f612323ca13746a2ded204031a6ba528adee788694ef757
@@ -189,6 +218,7 @@ CHECKSUMS
   hashdiff (1.2.1) sha256=9c079dbc513dfc8833ab59c0c2d8f230fa28499cc5efb4b8dd276cf931457cd1
   http-2 (1.2.0) sha256=5bed923379ae67895d3bde440502219543da2885104b46ed7d604f5990efad1c
   httpx (1.8.0) sha256=10b300875be99cbc3497397278cf99632262567886f3582ee25ce492bdadbe2a
+  i18n (1.15.2) sha256=00f9eb62412fe593b2a65a97daa75300d37abb8f7202ec748e94b6d46a9dd1b5
   io-console (0.8.2) sha256=d6e3ae7a7cc7574f4b8893b4fca2162e57a825b223a177b7afa236c5ef9814cc
   irb (1.18.0) sha256=de9454a0703a54704b9811a5ef31a60c86949fbf4013fcf244fabc7c775248e3
   json (2.21.1) sha256=13a43df75d95641443f5702dff350f237164a9d811ff0f2c2800d4d980220583
@@ -217,6 +247,7 @@ CHECKSUMS
   reline (0.6.3) sha256=1198b04973565b36ec0f11542ab3f5cfeeec34823f4e54cebde90968092b1835
   rexml (3.4.4) sha256=19e0a2c3425dfbf2d4fc1189747bdb2f849b6c5e74180401b15734bc97b5d142
   ruby2_keywords (0.0.5) sha256=ffd13740c573b7301cf7a2e61fc857b2a8e3d3aff32545d6f8300d8bae10e3ef
+  securerandom (0.4.1) sha256=cc5193d414a4341b6e225f0cb4446aceca8e50d5e1888743fac16987638ea0b1
   sinatra (4.2.1) sha256=b7aeb9b11d046b552972ade834f1f9be98b185fa8444480688e3627625377080
   sqlite3 (2.9.5-aarch64-linux-gnu) sha256=78075b6337d3d182c6d2b4691049ed45cd220826160c9ea18946bf6a1de200dc
   sqlite3 (2.9.5-aarch64-linux-musl) sha256=18c801185deb4adc01ddb281e8f672a39e3d1729979ca91e39439cd3eac0402d
@@ -230,6 +261,7 @@ CHECKSUMS
   sqlite3 (2.9.5-x86_64-linux-musl) sha256=e7d3a7474e8af0f96150c21abc203fbab5437206bfcdf11deab7741c0ca516f2
   tilt (2.7.0) sha256=0d5b9ba69f6a36490c64b0eee9f6e9aad517e20dcc848800a06eb116f08c6ab3
   tsort (0.2.0) sha256=9650a793f6859a43b6641671278f79cfead60ac714148aabe4e3f0060480089f
+  tzinfo (2.0.6) sha256=8daf828cc77bcf7d63b0e3bdb6caa47e2272dcfaf4fbfe46f8c3a9df087a829b
   uri (1.1.1) sha256=379fa58d27ffb1387eaada68c749d1426738bd0f654d812fcc07e7568f5c57c6
   vcr (6.4.0) sha256=077ac92cc16efc5904eb90492a18153b5e6ca5398046d8a249a7c96a9ea24ae6
   webmock (3.26.2) sha256=774556f2ea6371846cca68c01769b2eac0d134492d21f6d0ab5dd643965a4c90

@@ -15,8 +15,11 @@ gem "ask-schema"
 gem "ask-web-search", "~> 0.2"
 gem "ask-tools-shell"
 gem "ask-mcp", "~> 0.4"
+
 # Local development overrides (uncomment to use local copies):
-# gem "ask-core", path: "../ask-core"
+# %w[ask-core ask-llm-providers ask-agent ask-tools ask-tools-shell ask-schema ask-web-search ask-mcp ask-auth ask-instrumentation ask-skills].each do |name|
+#   gem name, path: "../#{name}" if Dir.exist?("../#{name}")
+# end
 
 gem "sinatra", "~> 4.0"
 gem "sqlite3", "~> 2.0"
