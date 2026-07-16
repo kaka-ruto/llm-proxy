@@ -27,7 +27,7 @@ GEM
     ask-core (0.2.5)
     ask-instrumentation (0.2.1)
       activesupport (>= 7.0)
-    ask-llm-providers (0.8.2)
+    ask-llm-providers (0.8.3)
       ask-auth (>= 0.1)
       ask-core (>= 0.2.0)
       base64 (~> 0.2)
@@ -58,7 +58,7 @@ GEM
       irb (~> 1.10)
       reline (>= 0.3.8)
     drb (2.2.3)
-    erb (6.0.4)
+    erb (6.0.5)
     faraday (2.14.3)
       faraday-net_http (>= 2.0, < 3.5)
       json
@@ -68,7 +68,7 @@ GEM
     faraday-net_http (3.4.4)
       net-http (~> 0.5)
     hashdiff (1.2.1)
-    http-2 (1.2.0)
+    http-2 (1.2.1)
     httpx (1.8.0)
       http-2 (>= 1.2.0)
     i18n (1.15.2)
@@ -143,7 +143,7 @@ GEM
     sqlite3 (2.9.5-x86_64-darwin)
     sqlite3 (2.9.5-x86_64-linux-gnu)
     sqlite3 (2.9.5-x86_64-linux-musl)
-    tilt (2.7.0)
+    tilt (2.8.0)
     tsort (0.2.0)
     tzinfo (2.0.6)
       concurrent-ruby (~> 1.0)
@@ -195,7 +195,7 @@ CHECKSUMS
   ask-auth (0.1.1) sha256=ee3cbe3239145ab1b27f9760fb13ad8a25129a29a5c4b2355a9ead633f002ada
   ask-core (0.2.5) sha256=43efc547078946a90139280746e952676618a5271a00ee9ab587bac85518081c
   ask-instrumentation (0.2.1) sha256=0a8d2e2d6653d1b6f551eda0fbabd068c0a9076939f36fa605cd0a13112cdba1
-  ask-llm-providers (0.8.2) sha256=49263e06423b38a14a54dbdd4242d30028923cf01083c08b3f74f77a4a04e462
+  ask-llm-providers (0.8.3) sha256=46e256d8d46adb613286f160f7ad606a9ee0f75d80fde24c7dc8fe249a52ac64
   ask-mcp (0.4.0) sha256=3578ee0cbe19e65f20c206710f7c57af69b362c9647dc51acee111ed18a7b9dc
   ask-sandbox-providers (0.1.2) sha256=388d2486d6d8f0b78a5fc87f90d56095892f88dff6197b74e081ea96833c0500
   ask-schema (0.1.1) sha256=1be1c107c2f7cdacde9cf8d4dfc004e586f652c2b979e1829fab748f66ca98bd
@@ -211,12 +211,12 @@ CHECKSUMS
   crack (1.0.1) sha256=ff4a10390cd31d66440b7524eb1841874db86201d5b70032028553130b6d4c7e
   debug (1.11.1) sha256=2e0b0ac6119f2207a6f8ac7d4a73ca8eb4e440f64da0a3136c30343146e952b6
   drb (2.2.3) sha256=0b00d6fdb50995fe4a45dea13663493c841112e4068656854646f418fda13373
-  erb (6.0.4) sha256=38e3803694be357fe2bfe312487c74beaf9fb4e5beb3e22498952fe1645b95d9
+  erb (6.0.5) sha256=858e63488cb796c9daba8b6e9ff4b3879c395022049be9a66a8e00980e612eac
   faraday (2.14.3) sha256=1882247e6766615c8220b4392bf1d27f6ebb63d8e28267587cef1fb0bf37f278
   faraday-multipart (1.2.0) sha256=7d89a949693714176f612323ca13746a2ded204031a6ba528adee788694ef757
   faraday-net_http (3.4.4) sha256=0e78af151747ed1b00f33e25973b4bc220d7f16c00c39676817c8b12331eb588
   hashdiff (1.2.1) sha256=9c079dbc513dfc8833ab59c0c2d8f230fa28499cc5efb4b8dd276cf931457cd1
-  http-2 (1.2.0) sha256=5bed923379ae67895d3bde440502219543da2885104b46ed7d604f5990efad1c
+  http-2 (1.2.1) sha256=d290f3b7daa70b8be8cd2260306c01243c73ec4df9d598feadaf0ed26e00b9b7
   httpx (1.8.0) sha256=10b300875be99cbc3497397278cf99632262567886f3582ee25ce492bdadbe2a
   i18n (1.15.2) sha256=00f9eb62412fe593b2a65a97daa75300d37abb8f7202ec748e94b6d46a9dd1b5
   io-console (0.8.2) sha256=d6e3ae7a7cc7574f4b8893b4fca2162e57a825b223a177b7afa236c5ef9814cc
@@ -259,7 +259,7 @@ CHECKSUMS
   sqlite3 (2.9.5-x86_64-darwin) sha256=8e9caae38bd7ebb29cbeee3e7ab1d12dc2327d9a1b92c7fcf0dda05589627a81
   sqlite3 (2.9.5-x86_64-linux-gnu) sha256=233dbcb6714148dd23bc5aeb33e8efd6eac974969564ddd5794c23d5f52b231e
   sqlite3 (2.9.5-x86_64-linux-musl) sha256=e7d3a7474e8af0f96150c21abc203fbab5437206bfcdf11deab7741c0ca516f2
-  tilt (2.7.0) sha256=0d5b9ba69f6a36490c64b0eee9f6e9aad517e20dcc848800a06eb116f08c6ab3
+  tilt (2.8.0) sha256=ba472eb2716fe1e04112d6d219a9dae938ec09a6a1e2ad3ecc7922e79bde3721
   tsort (0.2.0) sha256=9650a793f6859a43b6641671278f79cfead60ac714148aabe4e3f0060480089f
   tzinfo (2.0.6) sha256=8daf828cc77bcf7d63b0e3bdb6caa47e2272dcfaf4fbfe46f8c3a9df087a829b
   uri (1.1.1) sha256=379fa58d27ffb1387eaada68c749d1426738bd0f654d812fcc07e7568f5c57c6
